@@ -1,22 +1,83 @@
 console.log("executing app.js");
 
 (function() {
-
-    var app = {};
+    window.stallionClubhouseApp = window.stallionClubhouseApp || {};
+    var app = window.stallionClubhouseApp;
 
     app.init = function() {
         var Bar = { template: '<div>bar</div>' }
 
 
         var routes = [
-            {path: '/encryption-demo', component: 'encryption-demo'}
+            {
+                path: '/encryption-demo',
+                component: 'encryption-demo'
+            },
+            {
+                path: '/manual-key-generation',
+                component: 'manual-key-generation'
+            },
+            {
+                path: '/login',
+                component: 'clubhouse-login'
+            },
+            {
+                path: '/channel/:channelId',
+                component: 'channel-feed'
+            },
+            
+            {
+                path: '/',
+                component: 'app-home-v3'
+            }            
         ];
+
+        var store = new Vuex.Store({
+            state: {
+                user: null,
+                userProfile: null,
+                publicKey: null,
+                privateKey: null,
+                activeChannelId: null
+            },
+            mutations: {
+                publicKey: function(state, publicKey) {
+                    state.publicKey = publicKey;
+                },
+                privateKey: function(state, privateKey) {
+                    state.privateKey = privateKey;
+                },
+                login: function(state, o) {
+                    state.user = o.user;
+                    state.userProfile = o.userProfile;
+                },
+                activeChannelId: function(state, channelId) {
+                    console.log('set active channelid ', channelId);
+                    state.activeChannelId = channelId;
+                }
+            }            
+        });
+
+
+        app.store = store;
+
         
         var router = new VueRouter({
+            store: store,
             routes: routes
         });
 
+        router.afterEach(function(to, from) {
+            if (to.params.channelId) {
+                store.commit('activeChannelId', parseInt(to.params.channelId, 10));
+            } else {
+                store.commit('activeChannelId', null);
+            }
+        });
+
+        
         var vueApp = new Vue({
+            store: store,
             router: router
         }).$mount('#vue-app')
 
@@ -91,6 +152,9 @@ function convertStringToArrayBufferView(str)
 
 function convertArrayBufferViewtoString(buffer)
 {
+    if (buffer.byteLength !== undefined) {
+        buffer = new Uint8Array(buffer);
+    }
     var str = "";
     for (var iii = 0; iii < buffer.byteLength; iii++) 
     {

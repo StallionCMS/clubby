@@ -1,5 +1,6 @@
 package io.stallion.clubhouse;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,9 @@ import javax.persistence.Table;
 public class ChannelMember extends ModelBase {
     private Long userId = 0L;
     private Long channelId = 0L;
+    private boolean owner = false;
+    private ZonedDateTime joinedAt;
+    private boolean canPost = true;
 
     @Column
     public Long getUserId() {
@@ -33,6 +37,37 @@ public class ChannelMember extends ModelBase {
 
     public ChannelMember setChannelId(Long channelId) {
         this.channelId = channelId;
+        return this;
+    }
+
+
+    @Column(nullable = false)
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public ChannelMember setOwner(boolean owner) {
+        this.owner = owner;
+        return this;
+    }
+
+    @Column
+    public ZonedDateTime getJoinedAt() {
+        return joinedAt;
+    }
+
+    public ChannelMember setJoinedAt(ZonedDateTime joinedAt) {
+        this.joinedAt = joinedAt;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isCanPost() {
+        return canPost;
+    }
+
+    public ChannelMember setCanPost(boolean canPost) {
+        this.canPost = canPost;
         return this;
     }
 }

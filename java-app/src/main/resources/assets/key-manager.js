@@ -1,10 +1,113 @@
 var _spki = null;
 
+var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
+
+    var vueStore = stallionClubhouseApp.store;
+    var self = this;
+    self.encryptionPassword = encryptionPassword;
+    self.callback = callback;
+    self.userProfile = userProfile || vueStore.state.userProfile;
+    
+    
+    if (self.userProfile === null || self.userProfile === undefined) {
+        throw new Error('stallionClubhouseApp.state.userProfile is null and userProfile not passed in.');
+    }
+
+    self.importPublicAndPrivate = function() {
+        step1ImportPublic();
+    };
+    
+    function step1ImportPublic() {
+        var spkiBytes = hexToArray(self.userProfile.publicKeyHex);
+        crypto.subtle.importKey(
+            'spki',
+            spkiBytes.buffer,
+            {
+                name: "RSA-OAEP",
+                modulusLength: 2048,
+                publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+                hash: {name: "SHA-256"}
+            },
+            true,
+            ["encrypt"]
+        ).then(function(result) {
+            console.log('v1. got publick key ', result);
+            vueStore.commit('publicKey', result);
+            step2DecryptPrivate();
+        }).catch(function(err) {
+            console.error(err);
+        });  
+    };
+
+    function step2DecryptPrivate() {
+        new PrivateKeyFetcher().fetch(
+            self.userProfile.encryptedPrivateKeyHex,
+            self.userProfile.encryptedPrivateKeyInitializationVectorHex,
+            self.encryptionPassword,
+            function(result) {
+                console.log('decrypted private key!!! ', result);
+                vueStore.commit('privateKey', result);
+                step3TestEncrypt();
+            }
+        );
+    }
+
+    function step3TestEncrypt() {
+        var message = 'a-test-message-' + new Date().getTime();
+        var vector = crypto.getRandomValues(new Uint8Array(16));
+        crypto.subtle.encrypt(
+            {
+                name: "RSA-OAEP",
+                iv: vector
+            },
+            vueStore.state.publicKey,
+            stringToArrayBuffer(message)
+        ).then(
+            function(result){
+                var encryptedBytes = new Uint8Array(result);
+                console.log('encrypted test phrase');
+                step4TestDecrypt(message, vector, encryptedBytes);
+            }, 
+            function(e){
+                console.error(e);
+            }
+        );              
+        
+    }
+
+    function step4TestDecrypt(message, vector, encryptedBytes) {
+        crypto.subtle.decrypt(
+            {
+                name: "RSA-OAEP",
+                iv: vector
+            },
+            vueStore.state.privateKey,
+            encryptedBytes.buffer
+        ).then(
+            function(result){
+                var decryptedMessage = convertArrayBufferViewtoString(result);
+                if (message === decryptedMessage) {
+                    console.log('encrypt/decrypt test passed!');
+                    self.callback();
+                } else {
+                    throw new Error('The message was ' + message + ' but after decryption was ' + decryptedMessage);
+                }
+            },
+            function(e){
+                console.error(e);
+                
+            }
+        );     
+    }
+    
+
+};
+
 (function() {
 
     var km = {};
 
-    window.KeyManager = km;    
+    window.KeyManager = km;
 
     km.generateIfNotExists = function(user, password, callback) {
         if (localStorage['st_clubhouse_public_key_' + user]) {
@@ -45,7 +148,7 @@ var _spki = null;
 
     km.getMyPrivateKey = function(user, password, callback) {
         console.log('get private key ' + user);
-        new PrivateKeyFetcher().fetch(user, password, callback);
+        new PrivateKeyFetcher().fetchFromLocalStorage(user, password, callback);
     };
 
 
@@ -55,23 +158,26 @@ var PrivateKeyFetcher = function() {
     var kf = this;
     var self = this;
 
-    self.fetch = function(user, password, callback) {
-        console.log('PrivateKeyFetcher.fetch ', user);
-        self.user = user;
+    self.fetchFromLocalStorage = function(user, password, callback) {
+        var privateKeyEncryptedHex = localStorage['st_clubhouse_private_key_' + user];
+        console.log('vector json ' + localStorage['st_clubhouse_private_key_vector_' + user]);
+        var privateKeyEncryptedVector = localStorage['st_clubhouse_private_key_vector_' + user];
+        self.fetch(privateKeyEncryptedHex, privateKeyEncryptedVector, password, callback);
+    };
+
+    self.fetch = function(privateKeyHex, privateKeyVectorHex, password, callback) {
+        console.log('PrivateKeyFetcher.fetch ');
         self.password = password;
         self.callback = callback;
-        self.privateKeyEncryptedHex = null;
+        self.privateKeyEncryptedHex = privateKeyHex;
+        self.privateKeyEncryptedVector = hexToArray(privateKeyVectorHex);
         self.passwordDerivedKey = null;
-        self.privateKeyEncryptedVector = null;
         self.privateKeyPkcs8 = null;
         step1LoadEncryptedPrivateKey();
     };
 
     function step1LoadEncryptedPrivateKey() {
-        console.log('f1. load private key for ', self.user);
-        self.privateKeyEncryptedHex = localStorage['st_clubhouse_private_key_' + self.user];
-        console.log('vector json ' + localStorage['st_clubhouse_private_key_vector_' + self.user]);
-        self.privateKeyEncryptedVector = hexToArray(localStorage['st_clubhouse_private_key_vector_' + self.user]);
+        console.log('f1. load private key');
         step2DerivePrivateKeyEncryptionKey();
     }
 
@@ -195,6 +301,7 @@ var KeyGenerator = function() {
                 spki:       arrayBufferToHexString(spki)
             };
             localStorage['st_clubhouse_public_key_' + self.user] = JSON.stringify(savedObject);
+            self.publicKeyHex = arrayBufferToHexString(spki);
             step3ExportPrivateKey();
         });
     };
@@ -240,6 +347,7 @@ var KeyGenerator = function() {
     function step5EncryptPrivateKey() {
         var vector = crypto.getRandomValues(new Uint8Array(16));
         self.privateKeyEncryptionVector = vector;
+        self.privateKeyEncryptionVectorHex = arrayToHex(vector);
         var encryptPromise = crypto.subtle.encrypt(
             {
                 name: "AES-CBC",

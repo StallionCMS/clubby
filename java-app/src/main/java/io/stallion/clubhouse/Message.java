@@ -1,5 +1,6 @@
 package io.stallion.clubhouse;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -13,24 +14,71 @@ import javax.persistence.Table;
 
 @Table(name="sch_messages")
 public class Message extends ModelBase {
-    private long deleteAt = 0L;
+    private ZonedDateTime createdAt;
+    private ZonedDateTime updatedAt;
+    private ZonedDateTime purgeAt;
+    private ZonedDateTime expiresAt;
+    private long deletedAt = 0L;
     private long fromUserId = 0L;
+    private String fromUsername = "";
     private long channelId = 0L;
-    private long toUserId = 0L;
     private String messageEncryptedJson;
+    private String messageJson;
     private long parentMessageId = 0L;
+    private boolean edited = false;
+    private ZonedDateTime editedAt;
 
     @Column
-    public long getDeleteAt() {
-        return deleteAt;
+    public ZonedDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public Message setDeleteAt(long deleteAt) {
-        this.deleteAt = deleteAt;
+    public Message setCreatedAt(ZonedDateTime createdAt) {
+        this.createdAt = createdAt;
         return this;
     }
 
     @Column
+    public ZonedDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Message setUpdatedAt(ZonedDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+        return this;
+    }
+
+    @Column
+    public ZonedDateTime getPurgeAt() {
+        return purgeAt;
+    }
+
+    public Message setPurgeAt(ZonedDateTime purgeAt) {
+        this.purgeAt = purgeAt;
+        return this;
+    }
+
+    @Column
+    public ZonedDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public Message setExpiresAt(ZonedDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public long getDeletedAt() {
+        return deletedAt;
+    }
+
+    public Message setDeletedAt(long deletedAt) {
+        this.deletedAt = deletedAt;
+        return this;
+    }
+
+    @Column(nullable = false)
     public long getFromUserId() {
         return fromUserId;
     }
@@ -41,6 +89,16 @@ public class Message extends ModelBase {
     }
 
     @Column
+    public String getFromUsername() {
+        return fromUsername;
+    }
+
+    public Message setFromUsername(String fromUsername) {
+        this.fromUsername = fromUsername;
+        return this;
+    }
+
+    @Column(nullable = false)
     public long getChannelId() {
         return channelId;
     }
@@ -50,17 +108,8 @@ public class Message extends ModelBase {
         return this;
     }
 
-    @Column
-    public long getToUserId() {
-        return toUserId;
-    }
 
-    public Message setToUserId(long toUserId) {
-        this.toUserId = toUserId;
-        return this;
-    }
-
-    @Column
+    @Column(columnDefinition = "longtext")
     public String getMessageEncryptedJson() {
         return messageEncryptedJson;
     }
@@ -70,13 +119,43 @@ public class Message extends ModelBase {
         return this;
     }
 
-    @Column
+    @Column(columnDefinition = "longtext")
+    public String getMessageJson() {
+        return messageJson;
+    }
+
+    public Message setMessageJson(String messageJson) {
+        this.messageJson = messageJson;
+        return this;
+    }
+
+    @Column(nullable = false)
     public long getParentMessageId() {
         return parentMessageId;
     }
 
     public Message setParentMessageId(long parentMessageId) {
         this.parentMessageId = parentMessageId;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isEdited() {
+        return edited;
+    }
+
+    public Message setEdited(boolean edited) {
+        this.edited = edited;
+        return this;
+    }
+
+    @Column
+    public ZonedDateTime getEditedAt() {
+        return editedAt;
+    }
+
+    public Message setEditedAt(ZonedDateTime editedAt) {
+        this.editedAt = editedAt;
         return this;
     }
 }

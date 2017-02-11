@@ -1,6 +1,9 @@
+/vendor/bootstrap.min.css
+/vendor/stallion.css
 /app.scss
 /vendor/jquery-1.11.3.js
 /vendor/stallion.js
+/vendor/md5.js
 /vendor/vue.js
 /vendor/vue-router.js
 /vendor/vuex.js

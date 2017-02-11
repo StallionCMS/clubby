@@ -1,7 +1,7 @@
 package io.stallion.clubhouse;
 
 public enum ChannelType {
-    PUBLIC,
-    PRIVATE,
-    AD_HOC
+    CHANNEL,
+    DIRECT_MESSAGE,
+    FORUM
 }
