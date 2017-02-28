@@ -8,6 +8,7 @@ import static io.stallion.utils.Literals.*;
 import io.stallion.Context;
 import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
+import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
 
@@ -21,6 +22,20 @@ public class ChannelController extends StandardModelController<Channel> {
         DataAccessRegistry.instance().registerDbModel(Channel.class, ChannelController.class, true);
     }
 
+    public List<ChannelUserWrapper> listChannelUsers(Long channelId) {
+        List<ChannelUserWrapper> channelUsers = DB.instance().queryBean(
+                ChannelUserWrapper.class,
+                "" +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyHex " +
+                        " FROM stallion_users AS su" +
+                        " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
+                        " INNER JOIN sch_channel_members as cm ON cm.userId=su.id " +
+                        " WHERE cm.channelId=? ",
+                channelId
+        );
+        return channelUsers;
+    }
+
     public Channel getIfViewable(Long channelId) {
         Channel channel = forIdOrNotFound(channelId);
         ChannelMember cm = ChannelMemberController.instance()
@@ -32,5 +47,7 @@ public class ChannelController extends StandardModelController<Channel> {
         }
         return channel;
     }
+
+
 
 }

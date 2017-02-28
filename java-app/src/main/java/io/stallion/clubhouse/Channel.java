@@ -6,6 +6,9 @@ import java.util.Map;
 import static io.stallion.utils.Literals.*;
 
 import io.stallion.dataAccess.ModelBase;
+import io.stallion.dataAccess.UniqueKey;
+import io.stallion.dataAccess.db.Converter;
+import io.stallion.dataAccess.db.converters.JsonLongListConverter;
 import io.stallion.services.Log;
 
 import javax.persistence.Column;
@@ -22,6 +25,9 @@ public class Channel extends ModelBase {
     private boolean inviteOnly = false;
     private boolean allowReactions = true;
     private boolean displayEmbeds = true;
+    private boolean encrypted = false;
+    private String uniqueHash = null;
+    private List<Long> directMessageUserIds = list();
 
 
     @Column
@@ -111,6 +117,39 @@ public class Channel extends ModelBase {
 
     public Channel setDisplayEmbeds(boolean displayEmbeds) {
         this.displayEmbeds = displayEmbeds;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public Channel setEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
+        return this;
+    }
+
+    @Column
+    @UniqueKey
+    public String getUniqueHash() {
+        return uniqueHash;
+    }
+
+    public Channel setUniqueHash(String uniqueHash) {
+        this.uniqueHash = uniqueHash;
+        return this;
+    }
+
+
+    @Column
+    @Converter(cls= JsonLongListConverter.class)
+    public List<Long> getDirectMessageUserIds() {
+        return directMessageUserIds;
+    }
+
+    public Channel setDirectMessageUserIds(List<Long> directMessageUserIds) {
+        this.directMessageUserIds = directMessageUserIds;
         return this;
     }
 }

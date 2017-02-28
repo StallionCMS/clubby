@@ -8,6 +8,8 @@ import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.templating.TemplateRenderer;
 import io.stallion.Context;
 import io.stallion.utils.Sanitize;
+import io.stallion.utils.json.JSON;
+
 import static io.stallion.utils.Literals.*;
 
 import javax.ws.rs.GET;
@@ -23,16 +25,33 @@ public class Endpoints implements EndpointResource {
     @Path("/")
     @Produces("text/html")
     public Object app() {
+        UserProfile profile = new UserProfile();
+        if (!Context.getUser().isAnon()) {
+            profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
+        }
         Map ctx = map(
             val("pluginName", "clubhouse"),
             val("theApplicationContextJson", Sanitize.htmlSafeJson(
                  map(
-                     val("user", Context.getUser())
+                     val("user", Context.getUser()),
+                     val("profile", profile)
                  )
             ))
         );
         return TemplateRenderer.instance().renderTemplate("clubhouse:app.jinja", ctx);
     }
+
+    @GET
+    @Path("/oembed-iframe")
+    @Produces("text/html")
+    public Object oembedIframe() {
+        Map ctx = map(
+                val("embedUrl", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("embedUrl", ""))),
+                val("iframeId", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("iframeId", "")))
+        );
+        return TemplateRenderer.instance().renderTemplate("clubhouse:oembed.jinja", ctx);
+    }
+
 
     @GET
     @Path("/hello-world")

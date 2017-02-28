@@ -166,10 +166,10 @@
              KeyManager.getMyPrivateKey(ep.username, self[ep.username + 'Password'], function(privateKey) {
                  new Decrypter().decryptMessage(
                      privateKey,
-                     info.encryptedMessageBytes,
-                     info.messageVector,
-                     ep.encryptedPasswordBytes,
-                     ep.passwordVector,
+                     hexToArray(info.encryptedMessageHex),//info.encryptedMessageBytes,
+                     hexToArray(info.messageVectorHex),//info.messageVector,
+                     hexToArray(ep.encryptedPasswordHex),//ep.encryptedPasswordBytes,
+                     hexToArray(ep.passwordVectorHex),//ep.passwordVector,
                      function(message) {
                          console.log('decrypted message ', message);
                          if (ep.username === 'john') {

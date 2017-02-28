@@ -16,6 +16,7 @@ var Encrypter = function() {
         enc.encryptedMessageBytes = null;
         enc.passwordVector = null;
         enc.messageVector = null;
+        enc.messageVectorHex = null;
         enc.callback = callback;
         step1GenerateSymettricKey();
     };
@@ -55,6 +56,7 @@ var Encrypter = function() {
     function step2EncryptMessage() {
         var vector = crypto.getRandomValues(new Uint8Array(16));
         enc.messageVector = vector;
+        enc.messageVectorHex = arrayBufferToHexString(enc.messageVector);
         console.log('e2. message ', enc.message);
         encrypt_promise = crypto.subtle.encrypt(
             {
@@ -69,7 +71,7 @@ var Encrypter = function() {
                 var encrypted_data = new Uint8Array(result);
                 enc.encryptedMessageBytes = result;
                 //info.encryptedMessageHex = arrayBufferToHexString(encrypted_data);
-                enc.encryptedMessageHex = result;
+                enc.encryptedMessageHex = arrayBufferToHexString(result);
                 console.log('e2. encryptedMessageHex ', enc.encryptedMessageHex);
                 step3EncryptPassword();
             }, 
@@ -109,6 +111,7 @@ var Encrypter = function() {
                         userId: to.userId,
                         username: to.username,
                         passwordVector: vector,
+                        passwordVectorHex: arrayBufferToHexString(vector),
                         encryptedPasswordHex: encryptedPasswordHex,
                         encryptedPasswordBytes: encPasswordBytes
                     })

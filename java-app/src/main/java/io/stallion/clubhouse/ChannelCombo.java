@@ -5,7 +5,9 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.stallion.services.Log;
+import io.stallion.utils.json.JSON;
 
 import javax.persistence.Column;
 
@@ -18,6 +20,7 @@ public class ChannelCombo {
     private ChannelType channelType;
     private boolean hasNew = false;
     private int mentionsCount = 0;
+    private String directMessageUserIds = "";
 
     public Long getId() {
         return id;
@@ -79,6 +82,24 @@ public class ChannelCombo {
 
     public ChannelCombo setMentionsCount(int mentionsCount) {
         this.mentionsCount = mentionsCount;
+        return this;
+    }
+
+    public List<Long> getDirectMessageUserIdsList() {
+        if (empty(directMessageUserIds)) {
+            return list();
+        } else {
+            TypeReference<List<Long>> typeRef = new TypeReference<List<Long>>() {};
+            return JSON.parse(directMessageUserIds, typeRef);
+        }
+    }
+
+    public String getDirectMessageUserIds() {
+        return directMessageUserIds;
+    }
+
+    public ChannelCombo setDirectMessageUserIds(String directMessageUserIds) {
+        this.directMessageUserIds = directMessageUserIds;
         return this;
     }
 }

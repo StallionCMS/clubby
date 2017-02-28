@@ -17,7 +17,8 @@ public class UserMessage extends ModelBase {
     private Long messageId;
     private Long channelId;
     private Long userId;
-    private String encryptedMessageDecryptionKey;
+    private String encryptedPasswordHex = "";
+    private String passwordVectorHex = "";
     private ZonedDateTime date;
     private boolean read = false;
     private boolean mentioned = false;
@@ -54,15 +55,26 @@ public class UserMessage extends ModelBase {
         return this;
     }
 
-    @Column
-    public String getEncryptedMessageDecryptionKey() {
-        return encryptedMessageDecryptionKey;
+    @Column(columnDefinition = "text")
+    public String getEncryptedPasswordHex() {
+        return encryptedPasswordHex;
     }
 
-    public UserMessage setEncryptedMessageDecryptionKey(String encryptedMessageDecryptionKey) {
-        this.encryptedMessageDecryptionKey = encryptedMessageDecryptionKey;
+    public UserMessage setEncryptedPasswordHex(String encryptedPasswordHex) {
+        this.encryptedPasswordHex = encryptedPasswordHex;
         return this;
     }
+
+    @Column
+    public String getPasswordVectorHex() {
+        return passwordVectorHex;
+    }
+
+    public UserMessage setPasswordVectorHex(String passwordVectorHex) {
+        this.passwordVectorHex = passwordVectorHex;
+        return this;
+    }
+
 
     @Column
     public ZonedDateTime getDate() {

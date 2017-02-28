@@ -67,6 +67,7 @@
                      });
                      new VueKeyImporter(self.encryptionPassword, function() {
                          console.log('private key loaded, login complete');
+                         sessionStorage.privateKeyPassphrase = self.encryptionPassword;
                          window.location.hash = '/channel/' + o.defaultChannelId;
                      }).importPublicAndPrivate();
                  },

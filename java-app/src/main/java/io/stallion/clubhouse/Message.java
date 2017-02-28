@@ -23,6 +23,7 @@ public class Message extends ModelBase {
     private String fromUsername = "";
     private long channelId = 0L;
     private String messageEncryptedJson;
+    private String messageEncryptedJsonVector;
     private String messageJson;
     private long parentMessageId = 0L;
     private boolean edited = false;
@@ -116,6 +117,16 @@ public class Message extends ModelBase {
 
     public Message setMessageEncryptedJson(String messageEncryptedJson) {
         this.messageEncryptedJson = messageEncryptedJson;
+        return this;
+    }
+
+    @Column
+    public String getMessageEncryptedJsonVector() {
+        return messageEncryptedJsonVector;
+    }
+
+    public Message setMessageEncryptedJsonVector(String messageEncryptedJsonVector) {
+        this.messageEncryptedJsonVector = messageEncryptedJsonVector;
         return this;
     }
 
