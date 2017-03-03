@@ -2,59 +2,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Stallion" />
   <meta name="description" content="An internal chat and discussion app">
   <meta name="referrer" content="no-referrer" />
 
-
-  <script src="/st-resource/clubhouse/vendor/jquery-1.11.3.js" type="text/javascript"></script>
-  <script src="/st-resource/clubhouse/vendor/jquery.oembed.js" type="text/javascript"></script>
   <script type="text/javascript">
     var embedUrl = {{ embedUrl }};
-    $(document).ready(function() {
-        console.log('embed');
-        
-        function updateParentHeight() {
-            parent.postMessage({
-                iframeHeight: $('body').outerHeight(true),
-                iframeId: {{ iframeId }}
-             }, 'https://clubhouse.local');
-            console.log('message posted!');
-        }
-        var watchedCount = 0;
-        var theHeight = $('body').outerHeight(true);
-        var theInterval = setInterval(function() {
-            watchedCount++;
-            var newHeight = $('body').outerHeight(true);
-            if (newHeight !== theHeight) {
-                theHeight = newHeight;
-                updateParentHeight();
-            }
-             if (watchedCount > 100) {
-                 clearInterval(theInterval);
-             }
-        }, 2000);
-    $("#container").oembed(embedUrl, {embedMethod: 'fill'});
-    });    
+    var iframeId = {{ iframeId }};
   </script>
-  <style>
-    body, html {
-    font-family: sans-serif;
-    margin: 0px;
-    padding: 0px;
-    padding-left: 4px;
-    overflow:hidden;
-    }
-    .oembedall-container { margin-top: -2em; }
-    .oembedall-closehide { display: none; }
- 
-  </style>  
-  <body>
+  <script src="/st-resource/clubhouse/vendor/jquery-1.11.3.js" type="text/javascript"></script>
+  <script src="/st-resource/clubhouse/vendor/jquery.oembed.js" type="text/javascript"></script>
+  <script src="/st-resource/clubhouse/oembed/oembed.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="{{ assets.resource('oembed/oembed.css', 'clubhouse')}}" />
+</head>
+<body>
     <div style="width: 600px; overflow:hidden;" id="container"></div>
-  </body>
+</body>
 </html>
 
 

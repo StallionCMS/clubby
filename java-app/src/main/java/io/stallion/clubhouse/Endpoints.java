@@ -29,6 +29,7 @@ public class Endpoints implements EndpointResource {
         if (!Context.getUser().isAnon()) {
             profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
         }
+        Context.getResponse().getMeta().setTitle("Clubhouse");
         Map ctx = map(
             val("pluginName", "clubhouse"),
             val("theApplicationContextJson", Sanitize.htmlSafeJson(

@@ -9,6 +9,8 @@ import static io.stallion.utils.Literals.*;
 
 import io.stallion.services.Log;
 
+import javax.persistence.Column;
+
 
 /**
  * "SELECT m.id, m.messageEncryptedJson, m.messageJson, m.edited, m.fromUserId, m.fromUsername, m.createdAt," +
@@ -17,6 +19,7 @@ import io.stallion.services.Log;
  */
 public class MessageCombo {
     private Long id = null;
+    private Long channelId = null;
     private String messageEncryptedJson = null;
     private String messageEncryptedJsonVector = "";
     private String messageJson = null;
@@ -26,9 +29,13 @@ public class MessageCombo {
 
     private boolean edited = false;
     private Long fromUserId = null;
+    private Long toUserId = null;
     private String fromUsername = null;
     private ZonedDateTime createdAt = null;
     private boolean read = true;
+    private Map<String, List<String>> reactions = map();
+    private Long userMessageId = 0L;
+    private boolean mentioned = false;
 
     public Long getId() {
         return id;
@@ -102,6 +109,16 @@ public class MessageCombo {
         return this;
     }
 
+
+    public Long getToUserId() {
+        return toUserId;
+    }
+
+    public MessageCombo setToUserId(Long toUserId) {
+        this.toUserId = toUserId;
+        return this;
+    }
+
     public String getFromUsername() {
         return fromUsername;
     }
@@ -126,6 +143,44 @@ public class MessageCombo {
 
     public MessageCombo setRead(boolean read) {
         this.read = read;
+        return this;
+    }
+
+
+    public Map<String, List<String>> getReactions() {
+        return reactions;
+    }
+
+    public MessageCombo setReactions(Map<String, List<String>> reactions) {
+        this.reactions = reactions;
+        return this;
+    }
+
+
+    public Long getUserMessageId() {
+        return userMessageId;
+    }
+
+    public MessageCombo setUserMessageId(Long userMessageId) {
+        this.userMessageId = userMessageId;
+        return this;
+    }
+
+    public Long getChannelId() {
+        return channelId;
+    }
+
+    public MessageCombo setChannelId(Long channelId) {
+        this.channelId = channelId;
+        return this;
+    }
+
+    public boolean isMentioned() {
+        return mentioned;
+    }
+
+    public MessageCombo setMentioned(boolean mentioned) {
+        this.mentioned = mentioned;
         return this;
     }
 }

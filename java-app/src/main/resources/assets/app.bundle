@@ -2,8 +2,10 @@
 /vendor/stallion.css
 /app.scss
 /vendor/jquery-1.11.3.js
+/vendor/bootstrap.js
 /vendor/stallion.js
 /vendor/ifvisible.js
+/vendor/material-icons.css
 /vendor/md5.js
 /vendor/moment.js
 /vendor/moment-timezone-with-data-2010-2020.js
@@ -11,9 +13,13 @@
 /vendor/vue.js
 /vendor/vue-router.js
 /vendor/vuex.js
-/common/file1.js
+/emoji/emoji.js
+/emoji/wdt-emoji-bundle.css
+/emoji/wdt-emoji-bundle.js
+/components/modal-base.vue        
 /encryption.js
 /key-manager.js
+/global-state-manager.js
 /components/*.vue
 /screens/*.vue
 /app.js

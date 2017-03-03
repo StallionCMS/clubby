@@ -23,7 +23,7 @@ public class UserMessage extends ModelBase {
     private boolean read = false;
     private boolean mentioned = false;
     private boolean hereMentioned = false;
-
+    private boolean emailNotifySent = false;
 
     @Column
     public Long getMessageId() {
@@ -113,6 +113,16 @@ public class UserMessage extends ModelBase {
 
     public UserMessage setHereMentioned(boolean hereMentioned) {
         this.hereMentioned = hereMentioned;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isEmailNotifySent() {
+        return emailNotifySent;
+    }
+
+    public UserMessage setEmailNotifySent(boolean emailNotifySent) {
+        this.emailNotifySent = emailNotifySent;
         return this;
     }
 }

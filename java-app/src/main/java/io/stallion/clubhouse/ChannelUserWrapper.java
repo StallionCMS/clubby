@@ -9,6 +9,8 @@ import static io.stallion.utils.Literals.*;
 import io.stallion.services.Log;
 import io.stallion.utils.DateUtils;
 
+import javax.persistence.Column;
+
 
 public class ChannelUserWrapper {
     private String username;
@@ -19,6 +21,9 @@ public class ChannelUserWrapper {
     private Long id = 0L;
     private String displayName = "";
     private ZonedDateTime lastActiveAt = DateUtils.utcNow();
+    private String state = "";
+    private String avatarUrl = "";
+    private Long channelMemberId = 0L;
 
     public String getUsername() {
         return username;
@@ -89,6 +94,34 @@ public class ChannelUserWrapper {
 
     public ChannelUserWrapper setLastActiveAt(ZonedDateTime lastActiveAt) {
         this.lastActiveAt = lastActiveAt;
+        return this;
+    }
+
+
+    public String getState() {
+        return state;
+    }
+
+    public ChannelUserWrapper setState(String state) {
+        this.state = state;
+        return this;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public ChannelUserWrapper setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+        return this;
+    }
+
+    public Long getChannelMemberId() {
+        return channelMemberId;
+    }
+
+    public ChannelUserWrapper setChannelMemberId(Long channelMemberId) {
+        this.channelMemberId = channelMemberId;
         return this;
     }
 }

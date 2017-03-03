@@ -1,0 +1,11 @@
+
+
+[email]
+host = "smtp.postmarkapp.com"
+username = "secret:::postmark_key_local"
+password = "secret:::postmark_key_local"
+defaultFromAddress = "maker@stallion.io"
+allowedTestingOutboundEmailPatterns = ['[^@]*@stallion\.io']
+outboundEmailTestAddress = "maker@stallion.io"
+adminEmails = ["maker@stallion.io"]
+

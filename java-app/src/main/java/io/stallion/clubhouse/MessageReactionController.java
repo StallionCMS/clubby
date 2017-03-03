@@ -12,7 +12,7 @@ import io.stallion.services.Log;
 
 public class MessageReactionController extends StandardModelController<MessageReaction> {
     public static MessageReactionController instance() {
-        return (MessageReactionController) DataAccessRegistry.instance().get("message_reactions");
+        return (MessageReactionController) DataAccessRegistry.instance().get("sch_message_reactions");
     }
 
     public static void register() {

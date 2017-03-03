@@ -4,6 +4,9 @@ import io.stallion.Context;
 import io.stallion.boot.ServeCommandOptions;
 import io.stallion.clubhouse.webSockets.WebSocketBooter;
 import io.stallion.hooks.HookRegistry;
+import io.stallion.jobs.JobCoordinator;
+import io.stallion.jobs.JobDefinition;
+import io.stallion.jobs.Schedule;
 import io.stallion.plugins.StallionJavaPlugin;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.services.Log;
@@ -40,6 +43,24 @@ public class ClubhousePlugin extends StallionJavaPlugin {
         MessageReactionController.register();
         UserMessageController.register();
         UserProfileController.register();
+        UserStateController.register();
+
+
+
+        JobCoordinator.instance().registerJob(
+                new JobDefinition()
+                        .setJobClass(EmailMessagesJob.class)
+                        .setName("email-messages")
+                        .setAlertThresholdMinutes(90)
+                        .setSchedule(
+                                new Schedule()
+                                        .everyMonth()
+                                        .everyDay()
+                                        .everyHour()
+                                        .minutes(0, 10, 20, 30, 40, 50)
+                        )
+
+        );
 
 
     }

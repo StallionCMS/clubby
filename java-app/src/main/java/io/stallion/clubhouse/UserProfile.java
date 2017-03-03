@@ -22,6 +22,8 @@ public class UserProfile extends ModelBase {
     private String webSite = "";
     private String email = "";
     private boolean emailMeWhenMentioned = true;
+    private boolean notifyWhenMentioned = true;
+    private String avatarUrl = "";
 
     @Column
     @UniqueKey
@@ -101,6 +103,26 @@ public class UserProfile extends ModelBase {
 
     public UserProfile setEmailMeWhenMentioned(boolean emailMeWhenMentioned) {
         this.emailMeWhenMentioned = emailMeWhenMentioned;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isNotifyWhenMentioned() {
+        return notifyWhenMentioned;
+    }
+
+    public UserProfile setNotifyWhenMentioned(boolean notifyWhenMentioned) {
+        this.notifyWhenMentioned = notifyWhenMentioned;
+        return this;
+    }
+
+    @Column
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public UserProfile setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
         return this;
     }
 }

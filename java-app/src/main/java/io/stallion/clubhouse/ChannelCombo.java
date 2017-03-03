@@ -6,6 +6,7 @@ import java.util.Map;
 import static io.stallion.utils.Literals.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.stallion.Context;
 import io.stallion.services.Log;
 import io.stallion.utils.json.JSON;
 
@@ -21,6 +22,10 @@ public class ChannelCombo {
     private boolean hasNew = false;
     private int mentionsCount = 0;
     private String directMessageUserIds = "";
+    private List<Long> directMessageUserIdsList = list();
+    private boolean owner;
+    private boolean canPost;
+
 
     public Long getId() {
         return id;
@@ -90,7 +95,8 @@ public class ChannelCombo {
             return list();
         } else {
             TypeReference<List<Long>> typeRef = new TypeReference<List<Long>>() {};
-            return JSON.parse(directMessageUserIds, typeRef);
+            List<Long> userIds = JSON.parse(directMessageUserIds, typeRef);
+            return filter(userIds, uid->!Context.getUser().getId().equals(uid));
         }
     }
 
@@ -100,6 +106,25 @@ public class ChannelCombo {
 
     public ChannelCombo setDirectMessageUserIds(String directMessageUserIds) {
         this.directMessageUserIds = directMessageUserIds;
+        return this;
+    }
+
+
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public ChannelCombo setOwner(boolean owner) {
+        this.owner = owner;
+        return this;
+    }
+
+    public boolean isCanPost() {
+        return canPost;
+    }
+
+    public ChannelCombo setCanPost(boolean canPost) {
+        this.canPost = canPost;
         return this;
     }
 }

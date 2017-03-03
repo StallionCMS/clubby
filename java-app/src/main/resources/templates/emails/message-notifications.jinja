@@ -1,0 +1,18 @@
+{% extends "stallion:email/email-base.jinja" %}
+{% block main %}
+<h4>{{ subject }}</h4>
+{% for message in messages %}
+<div class="message-row" style="border-top: 1px solid #CCC; margin-top: 1em;">
+  <h6>From {{ message.fromUsername }} at {{ message.createdAt }}</h6>
+  <div><a href="{{ site.url }}/#/channel/{{message.channelId}}">Go to channel</a></div>
+  {% if message.messageJson %}
+  <div></div>
+  {% endif %}
+</div>
+{% endfor %}
+<hr>
+<br>
+<a href="{{ site.url }}/#/my-settings">Edit your email settings</a>
+{% endblock %}
+
+

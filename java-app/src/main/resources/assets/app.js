@@ -7,6 +7,15 @@ console.log("executing app.js");
     app.init = function() {
         var Bar = { template: '<div>bar</div>' }
 
+        var conv = new EmojiConvertor();
+        conv.img_sets.apple.path = '/st-resource/clubhouse/emoji/sheets/';
+        conv.img_sets.apple.sheet = '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png';
+        // Configure this library to use the sheets defined in `img_sets` (see above)
+        conv.use_sheet = true;
+        conv.img_set = 'apple';
+        conv.replace_mode = 'img';
+        conv.text_mode = false;
+        app.emojiConverter = conv;        
 
         var routes = [
             {
@@ -22,11 +31,27 @@ console.log("executing app.js");
                 component: 'clubhouse-login'
             },
             {
+                path: '/my-settings',
+                component: 'my-settings'
+            },
+            {
                 path: '/channel/:channelId',
                 component: 'channel-feed',
                 meta: {
                     keyRequired: true
                 }
+            },
+            {
+                path: '/channel-settings/:channelId',
+                component: 'channel-settings'
+            },
+            {
+                path: '/channel-settings',
+                component: 'channel-settings'
+            },
+            {
+                path: '/channel-members/:channelId',
+                component: 'channel-members'
             },
             {
                 path: '/open-direct-message',
@@ -41,44 +66,8 @@ console.log("executing app.js");
             }            
         ];
 
-        var store = new Vuex.Store({
-            state: {
-                user: null,
-                userProfile: null,
-                publicKey: null,
-                privateKey: null,
-                activeChannelId: null
-            },
-            mutations: {
-                publicKey: function(state, publicKey) {
-                    state.publicKey = publicKey;
-                },
-                privateKey: function(state, privateKey) {
-                    state.privateKey = privateKey;
-                },
-                login: function(state, o) {
-                    state.user = o.user;
-                    state.userProfile = o.userProfile;
-                    /*
-                    new PrivateKeyFetcher().fetch(
-                        o.userProfile.encryptedPrivateKeyHex,
-                        o.userProfile.encryptedPrivateKeyInitializationVectorHex,
-                        sessionStorage.privateKeyPassphrase,
-                        function(privateKey) {
-                            console.log('loaded private key!');
-                            store.commit('privateKey', privateKey);
-                        }
-                    );
-                    */
-                },
-                activeChannelId: function(state, channelId) {
-                    console.log('set active channelid ', channelId);
-                    state.activeChannelId = channelId;
-                }
-            }            
-        });
-
-
+        var store = ClubhouseMakeVuex();
+        
         app.store = store;
 
         if (window.theApplicationContext.user && sessionStorage.privateKeyPassphrase) {
@@ -87,7 +76,6 @@ console.log("executing app.js");
                 userProfile: window.theApplicationContext.profile
             });
         }
-
         
         var router = new VueRouter({
             store: store,
@@ -126,72 +114,13 @@ console.log("executing app.js");
             router: router
         });
         vueApp.currentChannelComponent = null;
+
+        vueApp.stateManager = new ClubhouseGlobalStateManager(vueApp);
+        vueApp.stateManager.start();
+        
         vueApp.$mount('#vue-app');
 
-        window.addEventListener("message", function(e) {
-            console.log('received message!', e);
-            if (!e.data.iframeId) {
-                return;
-            }
-            var $frame = $('#' + e.data.iframeId);
-            var newHeight = e.data.iframeHeight + 30;
-            var oldHeight = $frame.height();
-            
-            if ($frame.css('display') === 'none') {
-                oldHeight = 0;
-            }
-            var diff = newHeight - oldHeight;
-            if (diff < 0) {
-                return;
-            }
-            if (e.data.iframeHeight === 0) {
-                debugger;
-            }
-            
-            $frame.height(newHeight);
-            $frame.css({display: 'block'});
-            console.log('new height for frame ', newHeight, oldHeight, $frame.attr('src'), e.data.iframeId);
-            setTimeout(function() {
-                var objDiv = $('.channel-messages').get(0);
-                if (objDiv) {
-                    console.log('diff is ', diff);
-                    if (objDiv.scrollTop > (objDiv.scrollHeight / 2)) {
-                        var newTop = objDiv.scrollTop + diff;
-                        if (newTop < 0) {
-                            newTop = 0;
-                        }
-                        objDiv.scrollTop = newTop;
-                        console.log('iframe updated scroll to ', newTop);                        
-                    }
-
-                }
-            }, 20);
-            
-        }, false);
         
-
-        function setupWebSocket() {
-            window.clubhouseSocket = new WebSocket("wss://clubhouse.local/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
-            console.log('setup web socket.');
-            window.clubhouseSocket.onmessage = function (event) {
-                console.log(event.data);
-                var data = JSON.parse(event.data);
-                if (data.type === 'new-message') {
-                    console.log('new-message');
-                    if (window.ClubhouseVueApp.currentChannelComponent) {
-                        console.log('handleIncomingMessage');
-                        window.ClubhouseVueApp.currentChannelComponent.handleIncomingMessage(data.message, data, event);
-                    }
-                }
-            }
-            window.clubhouseSocket.onclose = function(event) {
-                console.log('web socket closed, re-setup');
-                setTimeout(setupWebSocket, 200);
-            }
-        }
-        setupWebSocket();
-
-    
         
     }
 

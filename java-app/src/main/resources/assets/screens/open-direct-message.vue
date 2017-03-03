@@ -7,7 +7,7 @@
 <template>
     <div class="open-direct-message-vue">
         <h1>Direct Messages</h1>
-        <div class="member-row" v-for="member in members" v-if="user.id!=member.id">
+        <div class="member-row" v-for="member in $store.state.allUsers" v-if="user.id!=member.id">
             <div><a @click="openDirectMessage(member)" href="javascript:;">{{ member.displayName }} {{ member.username }}</a></div>
         </div>
     </div>
@@ -29,13 +29,6 @@
      },     
      methods: {
          fetchData: function() {
-             var self = this;
-             stallion.request({
-                 url: '/clubhouse-api/users/all-users',
-                 success: function(o) {
-                     self.members = o.users;
-                 }
-             });
          },
          openDirectMessage: function(member) {
              stallion.request({

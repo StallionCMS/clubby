@@ -28,6 +28,9 @@ public class Message extends ModelBase {
     private long parentMessageId = 0L;
     private boolean edited = false;
     private ZonedDateTime editedAt;
+    private boolean hereMentioned = false;
+    private boolean channelMentioned = false;
+    private List<String> usersMentioned = list();
 
     @Column
     public ZonedDateTime getCreatedAt() {
@@ -167,6 +170,39 @@ public class Message extends ModelBase {
 
     public Message setEditedAt(ZonedDateTime editedAt) {
         this.editedAt = editedAt;
+        return this;
+    }
+
+    /**
+     * These columns only come from JSON, are not saved to the database
+     * @return
+     */
+    public boolean isHereMentioned() {
+        return hereMentioned;
+    }
+
+    public Message setHereMentioned(boolean hereMentioned) {
+        this.hereMentioned = hereMentioned;
+        return this;
+    }
+
+
+    public boolean isChannelMentioned() {
+        return channelMentioned;
+    }
+
+    public Message setChannelMentioned(boolean channelMentioned) {
+        this.channelMentioned = channelMentioned;
+        return this;
+    }
+
+
+    public List<String> getUsersMentioned() {
+        return usersMentioned;
+    }
+
+    public Message setUsersMentioned(List<String> usersMentioned) {
+        this.usersMentioned = usersMentioned;
         return this;
     }
 }

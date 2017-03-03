@@ -19,6 +19,8 @@ public class ChannelMember extends ModelBase {
     private boolean owner = false;
     private ZonedDateTime joinedAt;
     private boolean canPost = true;
+    private boolean hidden = false;
+
 
     @Column
     public Long getUserId() {
@@ -68,6 +70,18 @@ public class ChannelMember extends ModelBase {
 
     public ChannelMember setCanPost(boolean canPost) {
         this.canPost = canPost;
+        return this;
+    }
+
+
+    @Column(nullable = false)
+    public boolean isHidden() {
+        return hidden;
+    }
+
+
+    public ChannelMember setHidden(boolean hidden) {
+        this.hidden = hidden;
         return this;
     }
 }

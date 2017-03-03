@@ -1,5 +1,5 @@
 <template>
-    <textarea @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short" @input="onInput"></textarea>
+    <textarea data-emojiable="true" @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short" @input="onInput"></textarea>
 </template>
 
 <script>
@@ -7,9 +7,19 @@
      props: {
          value: ''
      },
+     data: function() {
+         return {
+
+         };
+     },
      mounted: function() {
          this.$el.value = this.value;
          stallion.autoGrow({}, $(this.$el));
+         //new EmojiPicker({
+         //    emojiable_selector: this.$el,
+         //    assetsPath: '/st-resource/clubhouse/emoji/img'
+         //}).discover();
+         //$(this.$el).emojiarea();
      },
      methods: {
          onEnter: function(evt) {
