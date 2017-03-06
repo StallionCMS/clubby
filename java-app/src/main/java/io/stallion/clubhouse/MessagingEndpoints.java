@@ -35,6 +35,25 @@ import javax.ws.rs.*;
 public class MessagingEndpoints implements EndpointResource {
 
     @GET
+    @Path("/my-channels")
+    public Object myChannels() {
+        List<ChannelCombo> channels = DB.instance().queryBean(
+                ChannelCombo.class,
+                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, " +
+                        " cm.owner, cm.canPost, cm.userId as channelMemberId " +
+                        " FROM sch_channels AS c " +
+                        " LEFT OUTER JOIN sch_channel_members AS cm ON c.id=cm.channelId AND cm.userId=?" +
+                        " WHERE (cm.userId=? OR c.inviteOnly=0) AND c.deleted=0 AND c.channelType='CHANNEL' ",
+                Context.getUser().getId(),
+                Context.getUser().getId()
+        );
+        channels.sort((a, b)->a.getName().compareTo(b.getName()));
+        Map ctx = map();
+        ctx.put("channels", channels);
+        return ctx;
+    }
+
+    @GET
     @Path("/get-channel-members/:channelId")
     public Object getChannelMembers(@PathParam("channelId") Long channelId) {
         Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
@@ -127,7 +146,8 @@ public class MessagingEndpoints implements EndpointResource {
         Channel channel = new Channel();
 
         new SafeMerger()
-                .optional("name", "inviteOnly", "encrypted", "purgeAfterDays")
+                .nonEmpty("name")
+                .optional("inviteOnly", "encrypted", "purgeAfterDays")
                 .merge(updatedChannel, channel);
         channel.setName(Sanitize.stripAll(channel.getName()));
         channel.setChannelType(ChannelType.CHANNEL);
@@ -160,8 +180,10 @@ public class MessagingEndpoints implements EndpointResource {
         Map ctx = map();
 
         new SafeMerger()
-                .optional("name", "inviteOnly", "encrypted", "purgeAfterDays")
+                .nonEmpty("name")
+                .optional("inviteOnly", "encrypted", "purgeAfterDays")
                 .merge(updatedChannel, channel);
+
         ChannelController.instance().save(channel);
         ctx.put("channel", channel);
         return ctx;
@@ -244,7 +266,7 @@ public class MessagingEndpoints implements EndpointResource {
                 " SELECT DISTINCT(sch_user_messages.channelId) FROM sch_user_messages " +
                 " INNER JOIN sch_messages ON sch_user_messages.messageId=sch_messages.id " +
                 " WHERE `read`=0 AND userId=? AND sch_messages.deleted=0 AND sch_user_messages.deleted=0 AND sch_messages.fromUserId!=? " +
-                " GROUP BY channelId;",
+                " GROUP BY channelId; ",
                 Context.getUser().getId(),
                 Context.getUser().getId()
         );
@@ -317,6 +339,7 @@ public class MessagingEndpoints implements EndpointResource {
         Map ctx = map();
 
         ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
+        ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
         ctx.put("messages", MessageController.instance().loadMessagesForChannel(Context.getUser().getId(), channelId, page, true));
         ctx.put("members", ChannelController.instance().listChannelUsers(channelId));
         return ctx;
@@ -469,6 +492,67 @@ public class MessagingEndpoints implements EndpointResource {
         }
 
         return message;
+    }
+
+    @POST
+    @Path("/add-channel-member")
+    public Object addChannelMember(@BodyParam("userId") Long memberId, @BodyParam("channelId") Long channelId) {
+        Channel channel = ChannelController.instance().forIdOrNotFound(channelId);
+        boolean allowed = false;
+        ChannelMember adder = ChannelMemberController.instance()
+                .filter("userId", Context.getUser().getId())
+                .filter("channelId", channelId)
+                .first();
+        if (adder != null && adder.isOwner()) {
+            allowed = true;
+        }
+        if (!allowed && !channel.isInviteOnly() && Context.getUser().getId().equals(memberId)) {
+            allowed = true;
+        }
+        if (!allowed) {
+            throw new ClientException("You are not allowed to add a member to this channel.");
+        }
+        ChannelMember cm = new ChannelMember();
+        cm.setOwner(false);
+        cm.setCanPost(true);
+        cm.setHidden(false);
+        cm.setJoinedAt(DateUtils.utcNow());
+        cm.setUserId(memberId);
+        cm.setChannelId(channelId);
+        ChannelMemberController.instance().save(cm);
+        WebSocketEventHandler.notifyChannelChanges(memberId, channel, "added");
+        return map(val("channelMemberId", cm.getId()));
+    }
+
+    @POST
+    @Path("/remove-channel-member")
+    public Object removeChannelMember(@BodyParam("userId") Long memberId, @BodyParam("channelId") Long channelId) {
+        Channel channel = ChannelController.instance().forIdOrNotFound(channelId);
+        boolean allowed = false;
+        if (Context.getUser().getId().equals(memberId)) {
+            allowed = true;
+        } else {
+            ChannelMember adder = ChannelMemberController.instance()
+                    .filter("userId", Context.getUser().getId())
+                    .filter("channelId", channelId)
+                    .first();
+            if (adder != null && adder.isOwner()) {
+                allowed = true;
+            }
+        }
+        if (!allowed) {
+            throw new ClientException("You are not allowed remove this member from this channel.");
+        }
+        ChannelMember cm = ChannelMemberController.instance()
+                .filter("userId", memberId)
+                .filter("channelId", channelId)
+                .first();
+        if (cm != null) {
+            ChannelMemberController.instance().hardDelete(cm);
+        }
+        WebSocketEventHandler.notifyChannelChanges(memberId, channel, "removed");
+        return map(val("succeeded", true));
+
     }
 
 

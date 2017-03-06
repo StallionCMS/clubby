@@ -116,13 +116,18 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     var manager = this;
     manager.reconnectWait = 200;
     manager.reconnectFailCount = 0;
+    manager.started = false;
 
     
     manager.start = function() {
-        if (vueApp.$store.state.user) {
-            manager.setupWebSocket();
+        if (manager.started) {
+            console.log('manager already started');
         }
-        manager.setupIframeResizeListener();
+        if (vueApp.$store.state.user) {
+            manager.started = true;            
+            manager.setupWebSocket();
+            manager.setupIframeResizeListener();
+        }
     };
     
 
@@ -152,7 +157,9 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             
             console.log(event.data);
             var data = JSON.parse(event.data);
-            if (data.type === 'new-channel') {
+            if (data.type === 'channel-changes') {
+                manager.loadContext();
+            } else if (data.type === 'new-channel') {
                 vueApp.$store.commit('channelAdded', data.channel);
             } else if (data.type === 'channel-updated') {
                 vueApp.$store.commit('channelUpdated', data.channel);

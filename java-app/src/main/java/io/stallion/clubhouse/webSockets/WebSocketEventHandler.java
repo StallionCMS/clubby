@@ -7,10 +7,7 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
-import io.stallion.clubhouse.ChannelCombo;
-import io.stallion.clubhouse.ChannelUserWrapper;
-import io.stallion.clubhouse.UserStateController;
-import io.stallion.clubhouse.UserStateType;
+import io.stallion.clubhouse.*;
 import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
 import io.stallion.users.IUser;
@@ -62,6 +59,15 @@ public class WebSocketEventHandler {
     public static void notifyMemberUpdated(ChannelUserWrapper user) {
         String message = JSON.stringify(map(val("type", "member-updated"), val("member", user)));
         notifyAll(message);
+    }
+
+    public static void notifyChannelChanges(Long userId, Channel channel, String change) {
+        String message = JSON.stringify(map(val("type", "channel-changes"), val("channel", channel), val("change", change)));
+        for (Session session : sessionsByUserId.getOrDefault(userId, map()).values()) {
+            if (session.isOpen()) {
+                session.getAsyncRemote().sendText(message);
+            }
+        }
     }
 
 

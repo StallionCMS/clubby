@@ -32,8 +32,8 @@
                     {{ member.displayName }}
                 </div>
                 
-                <a v-if="member.channelMemberId"  class="btn btn-default">Remove from Channel</a>
-                <a v-else class="btn btn-default">Add to Channel</a>                
+                <a v-if="member.channelMemberId"  class="btn btn-default" @click="removeMemberFromChannel(member)">Remove from Channel</a>
+                <a v-else class="btn btn-default" @click="addMemberToChannel(member)">Add to Channel</a>                
             </div>
         </div>
     </div>
@@ -55,6 +55,35 @@
          '$route': 'onRoute'
      },
      methods: {
+         addMemberToChannel: function(member) {
+             var self = this;
+             stallion.request({
+                 url: '/clubhouse-api/messaging/add-channel-member',
+                 method: 'POST',
+                 data: {
+                     userId: member.id,
+                     channelId: self.channelId
+                 },
+                 success: function(o) {
+                     member.channelMemberId = o.channelMemberId;
+                 }
+             });
+             
+         },
+         removeMemberFromChannel: function(member) {
+             var self = this;
+             stallion.request({
+                 url: '/clubhouse-api/messaging/remove-channel-member',
+                 method: 'POST',
+                 data: {
+                     userId: member.id,
+                     channelId: self.channelId
+                 },
+                 success: function(o) {
+                     member.channelMemberId = null;
+                 }
+             });
+         },
          onRoute: function() {
              this.channelId = this.$route.params.channelId;
              this.fetchData();

@@ -16,6 +16,7 @@
 /emoji/emoji.js
 /emoji/wdt-emoji-bundle.css
 /emoji/wdt-emoji-bundle.js
+/common/loading-div.vue
 /components/modal-base.vue        
 /encryption.js
 /key-manager.js

@@ -22,6 +22,12 @@ public class ChannelController extends StandardModelController<Channel> {
         DataAccessRegistry.instance().registerDbModel(Channel.class, ChannelController.class, true);
     }
 
+    @Override
+    public void onPreSaveValidate(Channel obj) {
+        if (empty(obj.getName())) {
+            throw new ClientException("Channel must have a name.");
+        }
+    }
 
     public List<ChannelUserWrapper> listChannelPossibleUsers(Long channelId) {
         List<ChannelUserWrapper> channelUsers = DB.instance().queryBean(

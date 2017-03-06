@@ -2,8 +2,9 @@
 </style>
 
 <template>
-    <div class="clubhouse-login-vue">
-        <form @submit.prevent="doLogin">
+    <div class="clubhouse-login-vue one-column-screen">
+        <loading-div v-if="isLoading"></loading-div> 
+        <form v-if="!isLoading" @submit.prevent="doLogin">
             <div class="form-group">
                 <label>Username or Email</label>
                 <input type="text" class="form-group" v-model="username">
@@ -27,6 +28,7 @@
  module.exports = {
      data: function() {
          return {
+             isLoading: true,
              username: '',
              password: '',
              encryptionPassword: '',
@@ -43,8 +45,13 @@
          loadFromQuery: function() {
              this.password = this.$route.query.password;
              this.username = this.$route.query.username;
-             this.encryptionPassword = this.$route.query.encryptionPassword;
-             this.processing = false;
+             this.encryptionPassword = this.$route.query.passphrase;
+             if (this.password && this.username && this.encryptionPassword) {
+                 this.doLogin();
+             } else {
+                 this.processing = false;
+                 this.isLoading = false;
+             }
          },
          doLogin: function() {
              var self = this;
@@ -68,11 +75,17 @@
                      new VueKeyImporter(self.encryptionPassword, function() {
                          console.log('private key loaded, login complete');
                          sessionStorage.privateKeyPassphrase = self.encryptionPassword;
-                         window.location.hash = '/channel/' + o.defaultChannelId;
+                         
+                         ClubhouseVueApp.stateManager.start();
+                         ClubhouseVueApp.stateManager.loadContext();
+                         Vue.nextTick(function() {
+                             window.location.hash = '/channel/' + o.defaultChannelId;
+                         });
                      }).importPublicAndPrivate();
                  },
                  error: function(o) {
                      self.processing = false;
+                     self.isLoading = false;
                      stallion.showError(o);
                  }
              });

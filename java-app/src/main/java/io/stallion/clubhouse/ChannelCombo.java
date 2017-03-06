@@ -1,16 +1,12 @@
 package io.stallion.clubhouse;
 
 import java.util.List;
-import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.stallion.Context;
-import io.stallion.services.Log;
 import io.stallion.utils.json.JSON;
-
-import javax.persistence.Column;
 
 
 public class ChannelCombo {
@@ -23,8 +19,9 @@ public class ChannelCombo {
     private int mentionsCount = 0;
     private String directMessageUserIds = "";
     private List<Long> directMessageUserIdsList = list();
-    private boolean owner;
-    private boolean canPost;
+    private Boolean owner = false;
+    private Boolean canPost = false;
+    private Long channelMemberId = 0L;
 
 
     public Long getId() {
@@ -110,21 +107,30 @@ public class ChannelCombo {
     }
 
 
-    public boolean isOwner() {
+    public Boolean isOwner() {
         return owner;
     }
 
-    public ChannelCombo setOwner(boolean owner) {
+    public ChannelCombo setOwner(Boolean owner) {
         this.owner = owner;
         return this;
     }
 
-    public boolean isCanPost() {
+    public Boolean isCanPost() {
         return canPost;
     }
 
-    public ChannelCombo setCanPost(boolean canPost) {
+    public ChannelCombo setCanPost(Boolean canPost) {
         this.canPost = canPost;
+        return this;
+    }
+
+    public Long getChannelMemberId() {
+        return channelMemberId;
+    }
+
+    public ChannelCombo setChannelMemberId(Long channelMemberId) {
+        this.channelMemberId = channelMemberId;
         return this;
     }
 }

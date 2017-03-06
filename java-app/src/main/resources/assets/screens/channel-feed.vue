@@ -168,8 +168,9 @@
             {{ channelName }}
             <span v-if="channel.inviteOnly"><i class="material-icons">lock</i></span>
             <span v-if="isEncrypted"><i class="material-icons">security</i></span>
-            <a class="settings-link" :href="'#/channel-members/' + channelId"><span>{{ members.length }} <i class="material-icons">people</i></span></a>
-            <a class="settings-link" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
+            <a v-if="isChannelOwner" class="settings-link" :href="'#/channel-members/' + channelId"><span>{{ members.length }} <i class="material-icons">people</i></span></a>
+            <span v-if="!isChannelOwner">{{ members.length }} <i class="material-icons">people</i></span>
+            <a v-if="isChannelOwner" class="settings-link" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
         </div>
         <div v-if="!isLoaded" style="padding-top: 40px;">
             Loading messages...
@@ -579,6 +580,7 @@
              stallion.request({
                  url: '/clubhouse-api/messaging/my-channel-context/' + self.channelId + '?page=' + self.page, 
                  success: function(o) {
+                     self.isChannelOwner = o.channelMembership.owner;
                      self.fetching = false;
                      self.page++;
                      if (o.messages.length >= 50) {

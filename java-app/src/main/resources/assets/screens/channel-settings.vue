@@ -17,7 +17,7 @@
             <form v-if="channel" @submit.prevent="saveChanges" class="form">
                 <div class="form-group">
                     <label>Channel Name</label>
-                    <input type="text" class="form-control" v-model="channel.name" autofocus="autofocus">
+                    <input type="text" class="form-control" v-model="channel.name" autofocus="autofocus" required="true">
                 </div>
                 <div class="checkbox">
                     <label><input type="checkbox" v-model="channel.inviteOnly"> Invite only?</label>

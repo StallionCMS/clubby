@@ -35,6 +35,10 @@ console.log("executing app.js");
                 component: 'my-settings'
             },
             {
+                path: '/my-channels',
+                component: 'my-channels'
+            },
+            {
                 path: '/channel/:channelId',
                 component: 'channel-feed',
                 meta: {
@@ -50,6 +54,10 @@ console.log("executing app.js");
                 component: 'channel-settings'
             },
             {
+                path: '/clubhouse-settings',
+                component: 'clubhouse-settings'
+            },
+            {
                 path: '/channel-members/:channelId',
                 component: 'channel-members'
             },
@@ -59,6 +67,14 @@ console.log("executing app.js");
                 meta: {
                     keyRequired: true
                 }
+            },
+            {
+                path: '/invite-user',
+                component: 'invite-user'
+            },
+            {
+                path: '/accept-invite',
+                component: 'accept-invite'
             },
             {
                 path: '/',

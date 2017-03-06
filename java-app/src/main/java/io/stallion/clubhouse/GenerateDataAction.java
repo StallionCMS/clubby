@@ -72,6 +72,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                                     .setGivenName("George")
                                     .setEncryptionSecret("41XMF2YvTWvs")
                                     .setFamilyName("Washington")
+                                    .setRole(Role.ADMIN)
                                     .setId(GEORGE_ID)
 
                         )
@@ -81,6 +82,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                                 PROFILE_PAUL
                         ).setUser(
                             new User()
+                                    .setRole(Role.MEMBER)
                                     .setEmail("paulrevere@stallion.io")
                                     .setEncryptionSecret("iO5D9pXLms0k")
                                     .setGivenName("Paul")
@@ -92,6 +94,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                                 PROFILE_JOHN
                         ).setUser(
                            new User()
+                                   .setRole(Role.MEMBER)
                                    .setEncryptionSecret("iO5D9pXLms0k")
                                    .setEmail("johnadams@stallion.io")
                                    .setGivenName("John")
@@ -105,7 +108,6 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
             user.setApproved(true);
             user.setEmailVerified(true);
             user.setUsername(user.getEmail().substring(0, user.getEmail().indexOf("@")));
-            user.setRole(Role.MEMBER);
             user.setDisplayName(user.getGivenName() + " " + user.getFamilyName());
             // password is "winfox"
             user.setBcryptedPassword("$2a$12$he7ULJLH.sh4fRlM4RTPouk0IhK.a95bbTaT/nTxAiQRqf3iPinkS");
