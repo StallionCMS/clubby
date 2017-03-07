@@ -18,6 +18,7 @@ import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.json.JSON;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Column;
 
@@ -150,6 +151,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                 new Channel()
                         .setName("Long Discussions")
                         .setChannelType(ChannelType.FORUM)
+                        .setNewUsersSeeOldMessages(true)
                         .setId(newId(503))
         );
 
@@ -185,12 +187,13 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
         for(Map.Entry<Long, int[]> entry: membership.entrySet()) {
             for (int channelIdBase: entry.getValue()) {
                 x++;
+                Long id = newId(x);
                 ChannelMember cm = new ChannelMember()
                         .setUserId(entry.getKey())
                         .setJoinedAt(ZonedDateTime.of(2011, 1, 1, 12, 0, 0, 0, UTC).plusDays(channelIdBase))
                         .setChannelId(getId(channelIdBase))
                         .setOwner(entry.getKey().equals(GEORGE_ID))
-                        .setId(newId(x));
+                        .setId(id);
                 ChannelMemberController.instance().save(cm);
             }
         }
@@ -203,8 +206,8 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
         int i = 0;
         String[] froms = {"paulrevere", "georgewashington", "johnadams"};
         Long[] fromIds = {PAUL_ID, GEORGE_ID, JOHN_ID};
-        for(;base<820;base++) {
-            String body = lines[i];
+        for(;base<880;base++) {
+            String body = lines[i % lines.length];
             Map data = map(val("bodyMarkdown", body));
 
             Message message = new Message()
@@ -214,6 +217,24 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                     .setCreatedAt(ZonedDateTime.of(2016, 5, 1, 12, 0, 0, 0, UTC).plusHours(base))
                     .setMessageJson(JSON.stringify(data))
                     .setId(newId(base));
+            if (base >= 820) {
+                message.setThreadId(message.getId());
+                message.setChannelId(getId(503));
+                message.setCreatedAt(DateUtils.utcNow().minusDays((base-820) * 2));
+                message.setThreadUpdatedAt(DateUtils.utcNow().minusDays((base-820) * 2));
+                message.setTitle(StringUtils.capitalize(titles[(base - 820) % titles.length].toLowerCase()));
+                message.setParentMessageId(0);
+                if (base > 837) {
+                    message.setPinned(true);
+                }
+                if (base > 840) {
+                    message.setPinned(false);
+                    message.setTitle("");
+                    message.setParentMessageId(820 + (base % 20));
+                    message.setThreadId(message.getParentMessageId());
+                }
+            }
+
             MessageController.instance().save(message);
             i++;
             for (Long userId: list(GEORGE_ID, JOHN_ID, PAUL_ID)) {
@@ -226,9 +247,18 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                         .setMessageId(message.getId())
                         .setDate(message.getCreatedAt())
                         .setId(newId(2000 + x));
-                if (base >= 818) {
-                    um.setRead(false);
+                if (base > 834 && base < 837) {
+                    um.setWatched(true);
                 }
+                if ((base >= 818 && base <= 820)) {
+                    um.setRead(false);
+                } else if (base > 820 && base % 5 == 0) {
+                    um.setRead(false);
+                    if (base % 15 == 0) {
+                        um.setMentioned(true);
+                    }
+                }
+
                 UserMessageController.instance().save(um);
             }
         }
@@ -239,6 +269,9 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
             "Hare ahead under recast invidious versus more redoubtably crud like cordial the gorilla tore broke trenchant characteristically that much this before.", "Goodness owl this even moaned and horse black ireful salamander abidingly less reindeer poutingly cheered jeez this dachshund in imaginative touched much had fought lucky one hey.", "Then and ground panther badly cozy brave unheedfully much lynx some alas and until grinned hen various out misheard robustly annoying this far in yawned barring smelled one.", "That completely leered swept darn concomitant portentous less trim much more oyster one so much grizzly regardless therefore avowed much eagle saliently and chose far the directed juggled through dear far did some.", "Jeering vulture more stung hello sheep up far dizzily and smoked this one sardonically manatee so some among jeez ahead panther goodness the oh punitively expeditious much crud arousing ouch over far.", "Dear hardheaded incongruously much one after sporadic out dear ground some some far goodness astride with suspicious specially where oh conjoint more and yikes and well opposite persistently.", "Ouch below that a goodness emptied flung this amidst wildebeest extraordinary contrary set after overpaid llama when underneath wrongly more one.", "Kiwi far dalmatian dear this bastard turbulent much much ouch brusquely a due broad far less camel a contumacious woodchuck continual that retrospectively this lethargic told healthy conjoint gosh impalpable thus.", "Buffalo dear goldfish and winced far a ardent noble and one more because because pinched one coasted gull porpoise hey rakish one climbed honey and some among.", "That caught tapir but jeez tamarin whispered much far conscientiously far darn after crud adequate sparing despicably thus lemming lion crud strove more.", "That globefish jeez where shoddily said far one up hey thick a this that alas one abstrusely exorbitantly gazed imaginative cow more unblushing fiendish as goodness wow much turgidly scurrilously far climbed knelt statically.", "Since beneath some excepting less before over spontaneously grabbed bandicoot blithely handsome that caustically wrongly took ambidextrous beat and past dear less fell owl sniffed gosh much.", "Conjointly sane manful egret piteously undid snapped alas one terrier rode labrador the more manatee ouch emu less jeez in bald more inconspicuously hardy gosh underneath because hawk far.", "At lemming and boastfully boastfully hey dear so one the ravingly badger ethereally outside much more where above about alas flamingo by alas close some free disbanded.", "About melodious commendable dropped purely out hilarious tore ouch beneath truthfully far warthog crud consoled ravenous as timid creepily idiotic a that goodness cringed goodness outside tapir much more goodness.", "Hello crud above robust panther a wherever beside much ecstatic and some gorilla hey testy less terse darn more casually jeez rattlesnake jeepers the domestic much amongst that some due.", "Sociable simple in piranha hatchet excursive far that one religiously a however overdrew well yikes kangaroo stiff busily peculiar goose tautly successful.", "Far placed alas oh more and ecstatically on desolate orca crud beside goodness far aside one much and overate darn wombat artificially waved tellingly reined yet ruggedly a.", "Jeepers and forgetfully heard deliberately ruthlessly jeez peered less vigorously more less froze fumed before froze some excellent macaw and one the outbid ouch the soggy far the accidentally dear emoted however.", "Much jeez wishful far alas extraordinarily where musically more oyster due far jeez ouch overrode ungraceful wallaby below flailed truthful crucially outside much spoke cast triumphantly creatively weird."
     };
 
+    String[] titles = new String[] {
+            "THE BOOK OF THE FORBIDDEN DEMONS", "SAVING THE WORTHY BANDITS", "HER LAST SNIPER", "HOUR OF THE ARMOURED RING", "GOODBYE MR HAIRY PLANET", "DAWN OF THE SPACE SCUM", "SNAKES ON THE CRAZY RABBITS", "OUR LONELY SPIES", "THE SECRET LIFE OF ARMOURED DOGS", "DAWN OF THE SPACE MONSTERS", "THE CITY OF THE CRAZY DEVILS", "ONE DAY TO SAVE THE EXCELLENT MAN", "HARRY POTTER AND THE LONELY SPIES", "FLIGHT OF THE DANGEROUS RABBITS", "ESCAPE FROM THE NERDY ADVENTURERS", "ANOTHER ANGRY DALEK", "THE UNEXPECTED VIRTUE OF THE FAST RENEGADE", "FIND ME THE WARPED WEREWOLF", "THE LEGEND OF THE WONDERFUL WITCH", "MORE OF THE FOUL KNIGHT", "MIDNIGHT WITH THE FASCIST KNIGHT", "WHERE'S MY ALBINO GODMOTHER", "THE SECRET OF THE OLD SMUGGLERS", "I LOVE YOU LIVING DOCTOR", "THE WOMAN WITH THE BLUE GRANDMA", "RAIDERS OF THE MAGIC MUMMY", "YET MORE TEENAGE TRIPODS", "ESCAPE FROM THE FORGOTTEN MOTHERS", "THE MYSTERIOUS ISLAND OF LAZY SAILORS", "REVENGE OF THE BLUE CAT", "ATTACK OF THE HAIRY MURDERER", "CRY OF THE HAUNTED GHOUL", "THE JOURNEY TO THE UNDER-WATER ASTRONAUT", "EDUCATING THE GOLDEN CASTLE", "CRY OF THE MISSUNDERSTOOD NUNS", "YET MORE ARMOURED WARRIOR", "A NIGHT WITH A PLASTIC SAMURAI", "SEARCHING FOR THE MURDEROUS WAITRESS", "WAIT FOR THE BLOODTHIRSTY SAMURAI", "THE CITY OF THE IRON BARBARIAN", "GOODBYE TO THE DUMB DEVILS"
+    };
 
 
     public class Combo {

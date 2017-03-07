@@ -60,7 +60,7 @@
          activate: function(up) {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/users/activate',
+                 url: '/clubhouse-api/admin/activate',
                  method: 'POST',
                  data: {
                      userId: up.user.id
@@ -73,7 +73,7 @@
          deactivate: function(up) {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/users/deactivate',
+                 url: '/clubhouse-api/admin/deactivate',
                  method: 'POST',
                  data: {
                      userId: up.user.id
@@ -87,7 +87,7 @@
          fetchData: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/users/clubhouse-settings',
+                 url: '/clubhouse-api/admin/clubhouse-settings',
                  success: function(o) {
                      self.isLoading = false;
                      console.log(o.userAndProfiles);

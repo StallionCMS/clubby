@@ -25,6 +25,12 @@
                 <div class="checkbox">
                     <label><input type="checkbox" v-model="channel.encrypted"> End-to-End Encrypted? (maximum 50 people in the channel)</label>
                 </div>
+                <div class="checkbox" v-if="!channel.encrypted">
+                    <label><input type="checkbox" v-model="channel.newUsersSeeOldMessages"> New channel members can see messages from before they joined?</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" v-model="channel.defaultForNewUsers"> New users automatically added to this channel?</label>
+                </div>
                 <div class="form-group">
                     <label>Purge after days? (Zero for never purging)</label>
                     <input type="number" class="form-control" style="max-width: 100px;" v-model="channel.purgeAfterDays"> 

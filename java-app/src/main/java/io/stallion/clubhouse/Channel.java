@@ -22,6 +22,7 @@ public class Channel extends ModelBase {
     private boolean purgeAfterRead = false;
     private boolean hidden = false;
     private boolean defaultForNewUsers = false;
+    private boolean newUsersSeeOldMessages = true;
     private boolean inviteOnly = false;
     private boolean allowReactions = true;
     private boolean displayEmbeds = true;
@@ -87,6 +88,16 @@ public class Channel extends ModelBase {
 
     public Channel setDefaultForNewUsers(boolean defaultForNewUsers) {
         this.defaultForNewUsers = defaultForNewUsers;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isNewUsersSeeOldMessages() {
+        return newUsersSeeOldMessages;
+    }
+
+    public Channel setNewUsersSeeOldMessages(boolean newUsersSeeOldMessages) {
+        this.newUsersSeeOldMessages = newUsersSeeOldMessages;
         return this;
     }
 

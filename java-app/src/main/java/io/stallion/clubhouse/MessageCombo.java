@@ -24,6 +24,7 @@ public class MessageCombo {
     private String messageEncryptedJsonVector = "";
     private String messageJson = null;
 
+
     private String encryptedPasswordHex = "";
     private String passwordVectorHex = "";
 
@@ -32,7 +33,7 @@ public class MessageCombo {
     private Long toUserId = null;
     private String fromUsername = null;
     private ZonedDateTime createdAt = null;
-    private boolean read = true;
+    private Boolean read = true;
     private Map<String, List<String>> reactions = map();
     private Long userMessageId = 0L;
     private boolean mentioned = false;
@@ -137,11 +138,11 @@ public class MessageCombo {
         return this;
     }
 
-    public boolean isRead() {
+    public Boolean isRead() {
         return read;
     }
 
-    public MessageCombo setRead(boolean read) {
+    public MessageCombo setRead(Boolean read) {
         this.read = read;
         return this;
     }

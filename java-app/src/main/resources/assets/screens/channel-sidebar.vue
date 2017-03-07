@@ -119,7 +119,7 @@
             <h2>My Clubhouse <a style="display: inline-block;" href="#/clubhouse-settings" v-if="$store.state.user.role === 'ADMIN'"><i class="material-icons">settings</i></a></h2>
             <h3>Forums</h3>
             <div v-if="$store.state.forumChannels.length === 0" class="explain">No forums</div>
-            <a :class="{'channel-unread': channel.hasNew, 'channel-link': true, active: channel.id === activeChannelId}" v-for="channel in $store.state.forumChannels" :href="'#/channel/' + channel.id"><i style="font-size:12px;" class="material-icons">forum</i> {{ channel.name }} <span v-if="channel.mentionsCount>0" class="unread-mentions-count">{{ channel.mentionsCount }}</span></a>                
+            <a :class="{'channel-unread': channel.hasNew, 'channel-link': true, active: channel.id === activeChannelId}" v-for="channel in $store.state.forumChannels" :href="'#/forum/' + channel.id"><i style="font-size:12px;" class="material-icons">forum</i> {{ channel.name }} <span v-if="channel.mentionsCount>0" class="unread-mentions-count">{{ channel.mentionsCount }}</span></a>                
             <h3><a style="display: inline-block" href="#/my-channels">Channels</a> <a class="add-channel-link" href="#/channel-settings"><i class="material-icons">add_circle_outline</i></a></h3>
             <a :class="{'channel-unread': channel.hasNew, 'channel-link': true, active: channel.id === activeChannelId}" v-for="channel in $store.state.standardChannels" :href="'#/channel/' + channel.id"># {{ channel.name }} <span v-if="channel.mentionsCount>0" class="unread-mentions-count">{{ channel.mentionsCount }}</span></a>        
             <h3><a href="#/open-direct-message">Direct Messages</a></h3>

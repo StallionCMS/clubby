@@ -345,6 +345,31 @@ public class MessagingEndpoints implements EndpointResource {
         return ctx;
     }
 
+
+    @GET
+    @Path("/forum-top-level/:channelId")
+    public Object forumTopLevel(@PathParam("channelId") Long channelId, @QueryParam("page") Integer page) {
+        Map ctx = map();
+
+        ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
+        ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
+        ctx.put("topicContext", MessageController.instance().loadMessagesForForumTopLevel(Context.getUser().getId(), channelId, page));
+        return ctx;
+    }
+
+
+    @GET
+    @Path("/forum-thread/:channelId/:parentMessageId")
+    public Object forumThread(@PathParam("channelId") Long channelId, @PathParam("parentMessageId") Long parentMessageId, @QueryParam("page") Integer page) {
+        Map ctx = map();
+
+        ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
+        ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
+        ctx.put("threadContext", MessageController.instance().loadMessagesForForumThread(Context.getUser().getId(), channelId, parentMessageId, page, true));
+        return ctx;
+    }
+
+
     @POST
     @Path("/mark-read")
     public Object markRead(@BodyParam("messageId") Long messageId) {

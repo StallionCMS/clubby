@@ -46,6 +46,20 @@ console.log("executing app.js");
                 }
             },
             {
+                path: '/forum/:channelId',
+                component: 'forum-top-level',
+                meta: {
+                    keyRequired: true
+                }
+            },
+            {
+                path: '/forum/:channelId/:parentMessageId',
+                component: 'forum-thread',
+                meta: {
+                    keyRequired: true
+                }
+            },
+            {
                 path: '/channel-settings/:channelId',
                 component: 'channel-settings'
             },

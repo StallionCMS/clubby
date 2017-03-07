@@ -59,7 +59,7 @@
          sendInvite: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/users/send-invite',
+                 url: '/clubhouse-api/admin/send-invite',
                  method: 'POST',
                  data: self.user,
                  form: $(self.$el).find('form'),

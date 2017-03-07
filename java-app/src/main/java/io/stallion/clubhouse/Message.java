@@ -25,12 +25,17 @@ public class Message extends ModelBase {
     private String messageEncryptedJson;
     private String messageEncryptedJsonVector;
     private String messageJson;
+    private String title = "";
     private long parentMessageId = 0L;
+    private long threadId = 0L;
     private boolean edited = false;
     private ZonedDateTime editedAt;
     private boolean hereMentioned = false;
     private boolean channelMentioned = false;
     private List<String> usersMentioned = list();
+    private boolean pinned = false;
+    private ZonedDateTime threadUpdatedAt;
+    private boolean isWiki = false;
 
     @Column
     public ZonedDateTime getCreatedAt() {
@@ -133,6 +138,17 @@ public class Message extends ModelBase {
         return this;
     }
 
+    @Column
+    public String getTitle() {
+        return title;
+    }
+
+    public Message setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+
     @Column(columnDefinition = "longtext")
     public String getMessageJson() {
         return messageJson;
@@ -154,6 +170,16 @@ public class Message extends ModelBase {
     }
 
     @Column(nullable = false)
+    public long getThreadId() {
+        return threadId;
+    }
+
+    public Message setThreadId(long threadId) {
+        this.threadId = threadId;
+        return this;
+    }
+
+    @Column(nullable = false)
     public boolean isEdited() {
         return edited;
     }
@@ -170,6 +196,36 @@ public class Message extends ModelBase {
 
     public Message setEditedAt(ZonedDateTime editedAt) {
         this.editedAt = editedAt;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public Message setPinned(boolean pinned) {
+        this.pinned = pinned;
+        return this;
+    }
+
+    @Column
+    public ZonedDateTime getThreadUpdatedAt() {
+        return threadUpdatedAt;
+    }
+
+    public Message setThreadUpdatedAt(ZonedDateTime threadUpdatedAt) {
+        this.threadUpdatedAt = threadUpdatedAt;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isWiki() {
+        return isWiki;
+    }
+
+    public Message setWiki(boolean wiki) {
+        isWiki = wiki;
         return this;
     }
 
@@ -205,4 +261,5 @@ public class Message extends ModelBase {
         this.usersMentioned = usersMentioned;
         return this;
     }
+
 }

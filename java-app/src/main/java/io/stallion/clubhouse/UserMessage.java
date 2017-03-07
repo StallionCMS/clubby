@@ -24,6 +24,7 @@ public class UserMessage extends ModelBase {
     private boolean mentioned = false;
     private boolean hereMentioned = false;
     private boolean emailNotifySent = false;
+    private Boolean watched = false;
 
     @Column
     public Long getMessageId() {
@@ -123,6 +124,16 @@ public class UserMessage extends ModelBase {
 
     public UserMessage setEmailNotifySent(boolean emailNotifySent) {
         this.emailNotifySent = emailNotifySent;
+        return this;
+    }
+
+    @Column
+    public Boolean isWatched() {
+        return watched;
+    }
+
+    public UserMessage setWatched(Boolean watched) {
+        this.watched = watched;
         return this;
     }
 }

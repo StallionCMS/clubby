@@ -22,5 +22,6 @@
 /key-manager.js
 /global-state-manager.js
 /components/*.vue
+/screens/children/*.vue
 /screens/*.vue
 /app.js
