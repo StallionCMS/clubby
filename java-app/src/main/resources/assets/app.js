@@ -145,6 +145,9 @@ console.log("executing app.js");
         });
         vueApp.currentChannelComponent = null;
 
+
+        
+
         vueApp.stateManager = new ClubhouseGlobalStateManager(vueApp);
         vueApp.stateManager.start();
         
