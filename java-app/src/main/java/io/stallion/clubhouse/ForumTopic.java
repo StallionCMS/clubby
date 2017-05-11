@@ -20,11 +20,17 @@ public class ForumTopic {
     private Long channelId = 0L;
     private ZonedDateTime threadUpdatedAt = null;
 
+
+
+    private Long firstMentionId = 0L;
+    private Long firstUnreadId = 0L;
+
     private Boolean watched = false;
     private boolean pinned = false;
 
     private Long unreadCount = 0L;
     private Long mentions = 0L;
+    private Long totalCount = 0L;
 
     public Long getId() {
         return id;
@@ -122,6 +128,34 @@ public class ForumTopic {
 
     public ForumTopic setPinned(boolean pinned) {
         this.pinned = pinned;
+        return this;
+    }
+
+    public Long getFirstMentionId() {
+        return firstMentionId;
+    }
+
+    public ForumTopic setFirstMentionId(Long firstMentionId) {
+        this.firstMentionId = firstMentionId;
+        return this;
+    }
+
+    public Long getFirstUnreadId() {
+        return firstUnreadId;
+    }
+
+    public ForumTopic setFirstUnreadId(Long firstUnreadId) {
+        this.firstUnreadId = firstUnreadId;
+        return this;
+    }
+
+
+    public Long getTotalCount() {
+        return totalCount;
+    }
+
+    public ForumTopic setTotalCount(Long totalCount) {
+        this.totalCount = totalCount;
         return this;
     }
 }

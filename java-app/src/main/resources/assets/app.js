@@ -4,95 +4,144 @@ console.log("executing app.js");
     window.stallionClubhouseApp = window.stallionClubhouseApp || {};
     var app = window.stallionClubhouseApp;
 
+
+    
     app.init = function() {
         var Bar = { template: '<div>bar</div>' }
 
-        var conv = new EmojiConvertor();
-        conv.img_sets.apple.path = '/st-resource/clubhouse/emoji/sheets/';
-        conv.img_sets.apple.sheet = '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png';
-        // Configure this library to use the sheets defined in `img_sets` (see above)
-        conv.use_sheet = true;
-        conv.img_set = 'apple';
-        conv.replace_mode = 'img';
-        conv.text_mode = false;
-        app.emojiConverter = conv;        
-
+        app.setupEmojiConverter();
+        
+        // Load global directives
+        clubhouseLoadDirectives();
+        
         var routes = [
             {
                 path: '/encryption-demo',
-                component: 'encryption-demo'
+                component: vueComponents['encryption-demo'],
+                meta: {
+                    authRequired: false
+                }
             },
             {
                 path: '/manual-key-generation',
-                component: 'manual-key-generation'
+                component: vueComponents['manual-key-generation'],
+                meta: {
+                    authRequired: false
+                }                
             },
             {
                 path: '/login',
-                component: 'clubhouse-login'
+                component: vueComponents['clubhouse-login'],
+                meta: {
+                    authRequired: false
+                }                
             },
             {
                 path: '/my-settings',
-                component: 'my-settings'
+                component: vueComponents['my-settings'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/my-channels',
-                component: 'my-channels'
+                component: vueComponents['my-channels'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/channel/:channelId',
-                component: 'channel-feed',
+                component: vueComponents['channel-feed'],
+                meta: {
+                    keyRequired: true,
+                    authRequired: true
+                }
+            },
+            {
+                path: '/forum/:channelId',
+                component: vueComponents['forum-top-level'],
+                meta: {
+                    keyRequired: true,
+                    authRequired: true
+                }
+            },
+            {
+                path: '/forum/:channelId/new-thread',
+                component: vueComponents['forum-create-or-edit-post'],
                 meta: {
                     keyRequired: true
                 }
             },
             {
-                path: '/forum/:channelId',
-                component: 'forum-top-level',
+                path: '/forum/:messageId/edit',
+                component: vueComponents['forum-create-or-edit-post'],
                 meta: {
                     keyRequired: true
                 }
             },
             {
                 path: '/forum/:channelId/:parentMessageId',
-                component: 'forum-thread',
+                component: vueComponents['forum-thread'],
                 meta: {
                     keyRequired: true
                 }
             },
             {
                 path: '/channel-settings/:channelId',
-                component: 'channel-settings'
+                component: vueComponents['channel-settings'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/channel-settings',
-                component: 'channel-settings'
+                component: vueComponents['channel-settings'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/clubhouse-settings',
-                component: 'clubhouse-settings'
+                component: vueComponents['clubhouse-settings'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/channel-members/:channelId',
-                component: 'channel-members'
+                component: vueComponents['channel-members'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/open-direct-message',
-                component: 'open-direct-message',
+                component: vueComponents['open-direct-message'],
                 meta: {
                     keyRequired: true
                 }
             },
             {
                 path: '/invite-user',
-                component: 'invite-user'
+                component: vueComponents['invite-user'],
+                meta: {
+                    authRequired: true
+                }
             },
             {
                 path: '/accept-invite',
-                component: 'accept-invite'
+                component: vueComponents['accept-invite'],
+                meta: {
+                    authRequired: false
+                }
             },
             {
                 path: '/',
-                component: 'app-home-v3'
+                component: vueComponents['app-home-v3'],
+                meta: {
+                    authRequired: false
+                }
             }            
         ];
 
@@ -113,6 +162,12 @@ console.log("executing app.js");
         });
 
         router.beforeEach(function(to, from, next) {
+            if (to.meta.keyRequired || to.meta.authRequired !== false) {
+                if (!app.store.state.user || !app.store.state.user.id) {
+                    next('/login');
+                    return;
+                }
+            }
             if (to.meta.keyRequired) {
                 if (store.state.privateKey) {
                     next();
@@ -157,7 +212,7 @@ console.log("executing app.js");
         
     }
 
-    $(document).ready(app.init);
+    
 
 
     app.sendNotifiction = function(text, data, link) {
@@ -189,11 +244,29 @@ console.log("executing app.js");
 
     }
 
+    app.setupEmojiConverter = function() {
+        var conv = new EmojiConvertor();
+            conv.img_sets.apple.path = '/st-resource/clubhouse/emoji/sheets/';
+            conv.img_sets.apple.sheet = '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png';
+            // Configure this library to use the sheets defined in `img_sets` (see above)
+            conv.use_sheet = true;
+            conv.img_set = 'apple';
+            conv.replace_mode = 'img';
+            conv.text_mode = false;
+            app.emojiConverter = conv;
+
+
+    };
+
     app.dmChannelName = function() {
         
     };
 
 
+    $(document).ready(function() {
+        app.init();
+    });
+    
 }());
 
 function generateUUID() {

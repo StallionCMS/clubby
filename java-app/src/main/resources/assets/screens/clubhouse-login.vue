@@ -5,6 +5,7 @@
     <div class="clubhouse-login-vue one-column-screen">
         <loading-div v-if="isLoading"></loading-div> 
         <form v-if="!isLoading" @submit.prevent="doLogin">
+            <h1>Login</h1>
             <div class="form-group">
                 <label>Username or Email</label>
                 <input type="text" class="form-group" v-model="username">

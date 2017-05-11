@@ -1,5 +1,5 @@
 <template>
-    <textarea data-emojiable="true" @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short" @input="onInput"></textarea>
+    <textarea data-emojiable="true" @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short" @input="onInput" v-user-autocomplete></textarea>
 </template>
 
 <script>
@@ -28,7 +28,7 @@
              }
              evt.stopPropagation();
              evt.preventDefault();
-             if (this.value) {
+             if (this.value && !$(this.$el).data('autocompleting')) {
                  this.$emit('submit');
              }
          },

@@ -1,5 +1,7 @@
 package io.stallion.clubhouse;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +14,14 @@ import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.dataAccess.filtering.Pager;
+import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
 import io.stallion.users.Role;
 import io.stallion.utils.DateUtils;
 import org.apache.commons.collections4.Get;
 import org.apache.commons.lang3.StringUtils;
+
+import javax.persistence.Column;
 
 
 public class MessageController extends StandardModelController<Message> {
@@ -80,14 +85,18 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.messageEncryptedJson," +
                 "    m.messageEncryptedJsonVector, " +
                 "    m.messageJson as messageJson," +
+                "    m.parentMessageId, " +
                 "    m.edited," +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
                 "    m.createdAt," +
+                "    m.channelId, " +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
                 "    um.passwordVectorHex, " +
-                "    um.read  " +
+                "    um.watched, " +
+                "    um.read" +
+                "  " +
                 "  " +
                 " FROM sch_messages as m" +
                 " INNER JOIN sch_user_messages AS um ON um.messageId=m.id " +
@@ -108,10 +117,12 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.messageEncryptedJson," +
                 "    m.messageEncryptedJsonVector, " +
                 "    m.messageJson as messageJson," +
+                "    m.parentMessageId,  " +
                 "    m.edited," +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
                 "    m.createdAt," +
+                "    m.title, " +
                 "    um.id AS userMessageId, " +
                 "    um.userId AS toUserId, " +
                 "    um.encryptedPasswordHex, " +
@@ -147,6 +158,8 @@ public class MessageController extends StandardModelController<Message> {
         Channel channel = ChannelController.instance().forId(channelId);
 
         Message parent = MessageController.instance().forId(parentMessageId);
+
+
         ForumTopic topic = new ForumTopic()
                 .setId(parent.getId())
                 .setChannelId(channelId)
@@ -156,17 +169,26 @@ public class MessageController extends StandardModelController<Message> {
                 .setTitle(parent.getTitle())
                 ;
 
+        UserMessage userMessage = UserMessageController.instance()
+                .filter("messageId", parentMessageId)
+                .filter("userId", userId)
+                .first();
+        if (userMessage != null && userMessage.isWatched()) {
+            topic.setWatched(true);
+        }
 
         String sql = "SELECT " +
                 "    m.id as id," +
                 "    m.channelId, " +
                 "    m.messageEncryptedJson," +
                 "    m.messageEncryptedJsonVector, " +
-                "    m.messageJson as messageJson," +
+                "    m.messageJson as messageJson, " +
+                "    m.parentMessageId, " +
                 "    m.edited," +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
                 "    m.createdAt," +
+                "    m.title, " +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
                 "    um.passwordVectorHex, " +
@@ -184,17 +206,110 @@ public class MessageController extends StandardModelController<Message> {
                 "   AND threadId=? " +
                 "   AND (um.userId=? OR um.userId IS NULL) " +
                 "   AND m.deleted=0 AND (um.deleted=0 OR um.deleted IS NULL)" +
-                " ORDER BY m.createdAt DESC " +
+                " ORDER BY m.createdAt ASC " +
                 " LIMIT " + offset + ", " + limit;
 
-        List<MessageCombo> messages = DB.instance().queryBean(MessageCombo.class, sql, userId, channelId, parentMessageId, userId);
+        List<MessageCombo> messages = DB.instance().queryBean(
+                MessageCombo.class, sql, userId, channelId, parentMessageId, userId);
+
+        // Find reactions
+        if (messages.size() > 0) {
+            Map<Long, MessageCombo> messageMap = map();
+            StringBuffer buf = new StringBuffer();
+            buf.append("(");
+            List<Long> messageIds = list();
+            int x = 0;
+            for (MessageCombo message : messages) {
+                messageIds.add(message.getId());
+                buf.append("?");
+                if (x < (messages.size() - 1)) {
+                    buf.append(",");
+                }
+                messageMap.put(message.getId(), message);
+                x++;
+            }
+            buf.append(")");
+
+            // join on reactions
+            List<MessageReaction> reactions = DB.instance().queryBean(
+                    MessageReaction.class,
+                    "" +
+                            " SELECT messageId, emoji, displayName FROM sch_message_reactions " +
+                            " WHERE messageId IN " + buf.toString(),
+                    asArray(messageIds, Long.class)
+            );
+            for(MessageReaction reaction: reactions) {
+                MessageCombo msg = messageMap.get(reaction.getMessageId());
+                if (!msg.getReactions().containsKey(reaction.getEmoji())) {
+                    msg.getReactions().put(reaction.getEmoji(), list());
+                }
+                msg.getReactions().get(reaction.getEmoji()).add(reaction.getDisplayName());
+            }
+        }
 
 
+
+        if (markRead) {
+            List<Long> params = list();
+            StringBuffer whereSql = new StringBuffer(" id IN (");
+            for (MessageCombo mc : messages) {
+                if (empty(mc.getUserMessageId())) {
+                    continue;
+                }
+                if (mc.isRead() == true) {
+                    continue;
+                }
+                params.add(mc.getUserMessageId());
+                whereSql.append("?,");
+            }
+            if (params.size() > 0) {
+                params.add(userId);
+                String sql2 = "UPDATE sch_user_messages SET `read`=1 WHERE " + StringUtils.stripEnd(whereSql.toString(), ",") + ") " +
+                        " AND userId=?";
+                DB.instance().execute(sql2, asArray(params, Long.class));
+            }
+        }
+
+
+
+        // Load all ID's and dates for righthand slider
+        String allMessagesSql = " SELECT " +
+                "    m.id as id," +
+                "    m.createdAt " +
+                " FROM sch_messages as m \n";
+        if (!channel.isEncrypted() && channel.isNewUsersSeeOldMessages()) {
+            allMessagesSql += " LEFT OUTER JOIN sch_user_messages AS um ON um.messageId=m.id AND um.userId=? ";
+        } else {
+            allMessagesSql += " INNER JOIN sch_user_messages AS um ON um.messageId=m.id AND um.userId=? ";
+        }
+        allMessagesSql += " WHERE " +
+                "       m.channelid=? " +
+                "   AND threadId=? " +
+                "   AND (um.userId=? OR um.userId IS NULL) " +
+                "   AND m.deleted=0 AND (um.deleted=0 OR um.deleted IS NULL) " +
+                "   ORDER BY createdAt ASC ";
+
+        List<Map<String, Object>> records = DB.instance().findRecords(
+                allMessagesSql,
+                userId, channelId, parentMessageId, userId
+        );
+
+        int pageCount = records.size() / limit;
+        if (records.size() % limit > 0) {
+            pageCount++;
+        }
         ThreadContext ctx = new ThreadContext()
                 .setMessages(messages)
                 .setTopic(topic)
                 .setPage(page)
+                .setPageCount(pageCount)
                 ;
+        for (Map<String, Object> record: records) {
+            ctx.getAllIdsDates().add(new Long[]{
+                    ((BigInteger)record.get("id")).longValue(),
+                    ((Timestamp)record.get("createdAt")).getTime()
+            });
+        }
         return ctx;
     }
 
@@ -203,6 +318,7 @@ public class MessageController extends StandardModelController<Message> {
         private List<MessageCombo> messages;
         private int page;
         private int pageCount;
+        private List<Long[]> allIdsDates = list();
 
         public ForumTopic getTopic() {
             return topic;
@@ -237,6 +353,15 @@ public class MessageController extends StandardModelController<Message> {
 
         public ThreadContext setPageCount(int pageCount) {
             this.pageCount = pageCount;
+            return this;
+        }
+
+        public List<Long[]> getAllIdsDates() {
+            return allIdsDates;
+        }
+
+        public ThreadContext setAllIdsDates(List<Long[]> allIdsDates) {
+            this.allIdsDates = allIdsDates;
             return this;
         }
     }
@@ -315,28 +440,54 @@ public class MessageController extends StandardModelController<Message> {
             }
         }
 
-        // Get unread a
+        // Get unread and mentioned counts
         if (allTopicIds.size() > 0) {
             DB.SqlAndParams inSql = DB.instance().toInQueryParams(allTopicIds);
-            String umSql = " " +
-                    " SELECT parentMessageId as parentId, COUNT(*) AS unreadCount, COUNT(mentioned) as mentions FROM sch_user_messages AS um " +
-                    "  INNER JOIN sch_messages AS m ON m.id=um.messageID " +
-                    " WHERE " +
-                    "    `parentMessageId` IN  " + inSql.getSql() + " " +
-                    "    AND `read`=0 " +
-                    "    AND userId=?" +
-                    " GROUP BY parentMessageId ";
             inSql.getParamsList().add(userId);
-            List<ForumTopicCounts> counts = DB.instance().queryBean(
-                    ForumTopicCounts.class,
-                    umSql,
-                    inSql.getParams()
-            );
 
-            for (ForumTopicCounts count : counts) {
-                ForumTopic topic = topicMap.get(count.getParentId());
-                topic.setMentions(or(count.getMentions(), 0L));
-                topic.setUnreadCount(or(count.getUnreadCount(), 0L));
+            {
+                String umSql = " " +
+                        " SELECT parentMessageId as parentId, MIN(m.id) as minId, COUNT(`read`) AS unreadCount, COUNT(IF(mentioned = '0', NULL, 1)) as mentions FROM sch_user_messages AS um " +
+                        "  INNER JOIN sch_messages AS m ON m.id=um.messageID " +
+                        " WHERE " +
+                        "    `parentMessageId` IN  " + inSql.getSql() + " " +
+                        "    AND `read`=0 " +
+                        "    AND userId=? " +
+                        "    AND m.deleted=0 " +
+                        " GROUP BY parentMessageId ";
+
+                List<ForumTopicCounts> counts = DB.instance().queryBean(
+                        ForumTopicCounts.class,
+                        umSql,
+                        inSql.getParams()
+                );
+
+                for (ForumTopicCounts count : counts) {
+                    ForumTopic topic = topicMap.get(count.getParentId());
+                    topic.setMentions(or(count.getMentions(), 0L));
+                    topic.setUnreadCount(or(count.getUnreadCount(), 0L));
+                    topic.setFirstMentionId(count.getMinId());
+                }
+
+            }
+            {
+                String umSql2 = " " +
+                        " SELECT parentMessageId as parentId, count(*) as totalCount FROM sch_user_messages AS um " +
+                        "  INNER JOIN sch_messages AS m ON m.id=um.messageID " +
+                        " WHERE " +
+                        "    `parentMessageId` IN  " + inSql.getSql() + " " +
+                        "    AND userId=?" +
+                        "    AND m.deleted=0 " +
+                        " GROUP BY parentMessageId ";
+                List<ForumTopicCounts> totalCounts = DB.instance().queryBean(
+                        ForumTopicCounts.class,
+                        umSql2,
+                        inSql.getParams()
+                );
+                for (ForumTopicCounts count : totalCounts) {
+                    ForumTopic topic = topicMap.get(count.getParentId());
+                    topic.setTotalCount(count.getTotalCount());
+                }
             }
         }
 
@@ -414,14 +565,17 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.channelId, " +
                 "    m.messageEncryptedJson," +
                 "    m.messageEncryptedJsonVector, " +
-                "    m.messageJson as messageJson," +
-                "    m.edited," +
+                "    m.messageJson as messageJson, " +
+                "    m.parentMessageId, " +
+                "    m.edited, " +
+                "    m.title, " +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
                 "    m.createdAt," +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
-                "    um.passwordVectorHex, " +
+                "    um.passwordVectorHex," +
+                "    um.watched,  " +
                 "    um.read  " +
                 "    " +
                 "  " +

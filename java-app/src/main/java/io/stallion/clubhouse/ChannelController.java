@@ -55,6 +55,27 @@ public class ChannelController extends StandardModelController<Channel> {
                 channelId
         );
         return channelUsers;
+
+
+
+    }
+
+    public ChannelCombo getChannelCombo(Long channelId) {
+        List<ChannelCombo> channels = DB.instance().queryBean(
+                ChannelCombo.class,
+                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, " +
+                        " cm.owner, cm.canPost, cm.userId as channelMemberId, c.encrypted, cm.favorite " +
+                        " FROM sch_channels AS c " +
+                        " LEFT OUTER JOIN sch_channel_members AS cm ON c.id=cm.channelId AND cm.userId=?" +
+                        " WHERE (cm.userId=? OR c.inviteOnly=0) AND c.deleted=0 AND c.id=? ",
+                Context.getUser().getId(),
+                Context.getUser().getId(),
+                channelId
+        );
+        if (channels.size() < 1) {
+            throw new ClientException("Channel not found or you do not have access.");
+        }
+        return channels.get(0);
     }
 
     public Channel getIfViewable(Long channelId) {

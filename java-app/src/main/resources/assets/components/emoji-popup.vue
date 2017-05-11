@@ -60,18 +60,31 @@
      methods: {
          toggle: function(evt) {
              $(this.$el).find('input.emoji-target-input').val('');
+             wdtEmojiBundle.togglePicker2(
+                 '#' + this.targetId,
+                 evt.clientX + 30,
+                 evt.clientY + 30,
+                 {closeOnClick: true}
+             );
+             
+             /*
+             
              console.log('toggle emoji picker');
              var self = this;
              self.isOpen = false
              var inputEle = $(this.$el).find('input.emoji-target-input').get(0);
-             wdtEmojiBundle.openPicker.bind(inputEle)(evt, inputEle, evt.clientX, evt.clientY);
+             //wdtEmojiBundle.openPicker.bind(inputEle)(evt, inputEle, evt.clientX, evt.clientY);
+             debugger;
+             wdtEmojiBundle.openPicker(evt);
              setTimeout(function() {
                  self.isOpen = true;
              }, 50);
+             */
              
              //$(this.$el).find('.wdt-emoji-picker').click();
          },
          onInput: function(e, b) {
+             console.log('emoji input onInput ', e, e.target.value);
              this.isOpen = false;
              this.$emit('input', e.target.value);
          }

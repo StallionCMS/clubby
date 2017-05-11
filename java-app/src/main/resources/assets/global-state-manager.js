@@ -74,14 +74,18 @@ function ClubhouseMakeVuex() {
                     state.allUsers = ctx.users;
                 },
                 newChannelMessage: function(state, message) {
-                    state.channelById[message.channelId].hasNew = true;
-                    if (message.mentioned || message.hereMentioned) {
-                        state.channelById[message.channelId].mentionsCount++;
+                    if (state.channelById[message.channelId]) {
+                        state.channelById[message.channelId].hasNew = true;
+                        if (message.mentioned || message.hereMentioned) {
+                            state.channelById[message.channelId].mentionsCount++;
+                        }
                     }
                 },
                 markChannelSeen: function(state, channelId) {
-                    state.channelById[channelId].mentionsCount = 0;
-                    state.channelById[channelId].hasNew = false;
+                    if (state.channelById[channelId]) {
+                        state.channelById[channelId].mentionsCount = 0;
+                        state.channelById[channelId].hasNew = false;
+                    }
                 },
                 updateCurrentUser: function(state, o) {
                     state.user = o.user;
@@ -123,7 +127,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         if (manager.started) {
             console.log('manager already started');
         }
-        if (vueApp.$store.state.user) {
+        if (vueApp.$store.state.user && vueApp.$store.state.user.id) {
             manager.started = true;            
             manager.setupWebSocket();
             manager.setupIframeResizeListener();
@@ -152,6 +156,25 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 vueApp.currentChannelComponent.refresh();
             }
         };
+
+        function eventMatchesCurrentChannel(channelId) {
+            if (!window.ClubhouseVueApp.currentChannelComponent) {
+                return false;
+            }
+            if (!window.ClubhouseVueApp.currentChannelComponent.channel) {
+                return false;
+            }
+            if (window.ClubhouseVueApp.currentChannelComponent.channel.id !== channelId) {
+                return false;
+            }
+            return true;
+            
+        }
+
+        manager.clubhouseSocket.onerror = function(event) {
+            console.log('websocket onerror ', event);
+            debugger;
+        }
         
         manager.clubhouseSocket.onmessage = function (event) {
             
@@ -170,15 +193,19 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             } else if (data.type === 'state-change') {
                 console.log('state change!', data.userId, data.newState);
                 vueApp.$store.commit('userStateChange', {userId: data.userId, newState: data.newState});
+            } else if (data.type === 'new-reaction') {
+                if (eventMatchesCurrentChannel(data.channelId)) {
+                    window.ClubhouseVueApp.currentChannelComponent.handleIncomingNewReaction(data.reaction);
+                }
+            } else if (data.type === 'removed-reaction') {
+                if (eventMatchesCurrentChannel(data.channelId)) {
+                    window.ClubhouseVueApp.currentChannelComponent.handleIncomingRemovedReaction(data.reaction);
+                }
             } else if (data.type === 'new-message' || data.type === 'message-edited') {
                 console.log('new-message');
-                if (window.ClubhouseVueApp.currentChannelComponent) {
-                    if (window.ClubhouseVueApp.currentChannelComponent.channel &&
-                        window.ClubhouseVueApp.currentChannelComponent.channel.id === data.message.channelId) {
-                        console.log('call handleIncomingMessage on channel');
-                        window.ClubhouseVueApp.currentChannelComponent.handleIncomingMessage(data.message, data.type, data, event);
-                        return;
-                    }
+                if (eventMatchesCurrentChannel(data.message.channelId)) {
+                    window.ClubhouseVueApp.currentChannelComponent.handleIncomingMessage(data.message, data.type, data, event);
+                    return;
                 }
                 if (data.type === 'message-edited') {
                     return;
@@ -200,6 +227,10 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                     if (u && u.avatarUrl) {
                         iconUrl = u.avatarUrl;
                     }
+                    var link = 'https://clubhouse.local/#/channel/' + data.message.channelId;
+                    if (data.message.threadId) {
+                        link = 'https://clubhouse.local/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
+                    }
                     stallionClubhouseApp.sendNotifiction(
                         'Message from ' + data.message.fromUsername,
                         {
@@ -207,7 +238,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                             icon: iconUrl,
                             silent: false
                         },
-                        'https://clubhouse.local/#/channel/' + data.message.channelId
+                        link
                     );
                 }
             }
@@ -242,7 +273,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 return;
             }
             if (e.data.iframeHeight === 0) {
-                debugger;
+
             }
             
             $frame.height(newHeight);

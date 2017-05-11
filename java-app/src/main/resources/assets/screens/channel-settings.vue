@@ -1,11 +1,7 @@
 <style lang="scss">
  .channel-settings-vue {
      .one-column-screen {
-         max-width: 800px;
-         margin-left: 20px;
-         margin-top: 2em;
      }
-
  }
 </style>
 

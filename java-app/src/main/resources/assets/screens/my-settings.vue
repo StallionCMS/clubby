@@ -1,10 +1,5 @@
 <style lang="scss">
  .my-settings-vue {
-     .one-column-screen {
-         max-width: 800px;
-         margin-left: 20px;
-         margin-top: 2em;
-     }
      .settings-form {
          
      }

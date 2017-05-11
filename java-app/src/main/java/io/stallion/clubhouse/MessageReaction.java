@@ -20,6 +20,7 @@ public class MessageReaction extends ModelBase {
     private String displayName;
     private ZonedDateTime createdAt;
     private Long recipientUserId;
+    private String username;
 
     @Column
     public Long getMessageId() {
@@ -78,6 +79,16 @@ public class MessageReaction extends ModelBase {
 
     public MessageReaction setRecipientUserId(Long recipientUserId) {
         this.recipientUserId = recipientUserId;
+        return this;
+    }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public MessageReaction setUsername(String username) {
+        this.username = username;
         return this;
     }
 }

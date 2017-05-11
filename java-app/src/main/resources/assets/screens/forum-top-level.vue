@@ -1,30 +1,76 @@
 
 <style lang="scss">
  .forum-top-level-vue {
-     padding: 1em 20px 20px 20px;
-     .forum-name {
-         margin-top: 0em;
-         margin-bottom: 1em;
+     border-top: 1px solid transparent;
+     background-color: white;
+     .forum-header {
+         margin-top: -2px;
+         border-bottom: 1px solid #F0F0F0;
+         padding: .8em 20px .8em 20px;
+         position: fixed;
+         width: 100%;
+         background-color: white;
+         .forum-name {
+             margin-top: 0em;
+             margin-bottom: 0em;
+             max-width: 700px;
+             a.btn {
+                 float: right;
+                 margin-top: -3px;
+             }
+             .material-icons {
+                 vertical-align: -15%;
+             }
+         }
+     }
+     .forum-top-body {
+         max-width: 900px;
+         border-top: 1px solid transparent;
+         margin-top: 70px;
+         padding: 0em 20px 20px 20px;
+         
      }
      .topic-section {
          margin-bottom: 2em;
      }
+     .channel-favorite {
+         float: right;
+         margin-right: 20px;
+     }
+     .channel-favorite.material-icons {
+         cursor: pointer;
+         opacity: .8;
+     }     
+     .material-icons.channel-favorite:hover {
+         opacity: 1;
+     }
+     .channel-favorite-on.material-icons {
+         color: #eae080;
+     }
+     
  }
 </style>
 
 
 <template>
     <div class="forum-top-level-vue">
-        <div v-if="isLoading"><loading-div></loading-div></div>
-        <div v-if="!isLoading">
-            <h3 class="forum-name">{{ channel.name }}</h3>
-            <div class="topic-section">
+        <div v-if="channel" class="forum-header">
+            <h3 class="forum-name">
+                <i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i>
+                {{ channel.name }}
+                <a class="btn btn-primary btn-md" :href="'#/forum/' + channelId  + '/new-thread'">New Thread</a>
+                <i @click="toggleFavorite" :class="['material-icons', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']">star</i> 
+            </h3>
+        </div>
+        <div v-if="isLoading"><loading-div></loading-div></div>        
+        <div v-if="!isLoading" class="forum-top-body">
+            <div class="topic-section" v-if="pinnedTopics.length">
                 <h5>Pinned Topics</h5>
                 <div v-for="topic in pinnedTopics">
                     <forum-topic-row :topic="topic"></forum-topic-row>
                 </div>
             </div>
-            <div class="topic-section">
+            <div class="topic-section" v-if="watchedTopics.length">
                 <h5>Your watched topics updated in the last 10 days</h5>
                 <div v-if="watchedTopics.length == 0">
                     <em>No watched topics updated in the last 10 days.</em>
@@ -74,11 +120,41 @@
          '$route': 'onRoute'
      },
      methods: {
+         refresh: function() {
+             this.fetchData();
+         },
          onRoute: function() {
              var self = this;
+             ClubhouseVueApp.currentChannelComponent = this;
+             self.isLoading = true;
              self.channelId = this.$route.params.channelId;
-             self.channel = null;
+             self.channel = self.$store.state.channelById[self.channelId] || null;
              this.fetchData();
+         },
+         handleIncomingNewReaction: function() {
+             this.refresh();
+         },
+         handleIncomingRemoveReaction: function() {
+             this.refresh();
+         },
+         handleIncomingMessage: function() {
+             this.refresh();
+         },
+         
+         toggleFavorite: function() {
+             var self = this;
+             var favorite = !self.channel.favorite;
+             stallion.request({
+                 url: '/clubhouse-api/messaging/mark-channel-favorite/' + self.channel.id,
+                 method: 'POST',
+                 data: {
+                     favorite: favorite
+                 },
+                 success: function() {
+                     self.channel.favorite = favorite;
+                     self.$store.commit('channelUpdated', self.channel);
+                 }
+             });
          },
          fetchData: function() {
              var self = this;

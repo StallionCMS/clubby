@@ -1,6 +1,9 @@
 {% extends "stallion:common-base.jinja" %}
 
 {% block builtin_head_bundles %}
+<!--<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">-->
+<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+{{ assets.bundle("stallion", "stallion-ui-lib.bundle.css") }}
 {{ assets.bundle(pluginName, "app.bundle.css") }}
 {% endblock %}
 
@@ -17,8 +20,10 @@
             <div class="row" style="margin-top: 0px;padding-top:0px;">
               <div id="vue-app"  style="margin-top: 0px;padding-top:0px; border-top: 1px solid #000;">
                 <channel-sidebar></channel-sidebar>
-                <div id="clubhouse-main-view">
-                  <router-view></router-view>
+                <div id="clubhouse-main-view" class="wdt-emoji-picker-parent">
+                  <transition name="slide-fade">
+                    <router-view></router-view>
+                  </transition>
                 </div>
               </div>
             </div><!--/row-->
@@ -32,6 +37,7 @@
 
 {%-- endblock --%}
 {%-- block bundle_js --%}
+{{ assets.bundle("stallion", "stallion-ui-lib.bundle.js") }}
 {{ assets.bundle(pluginName, "app.bundle.js") }}
 {%-- endblock --%}
 
@@ -39,6 +45,7 @@
 <script type="text/javascript">
 
     var theApplicationContext = {{ theApplicationContextJson }};
+
 
 </script>
 {% endblock %}

@@ -1,7 +1,33 @@
 /* App.scss */
 body, html {
-    font-family: sans-serif;
+    /*font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;*/
+    /*'Open Sans', 'sans-serif';*/
+    font-family: 'Source Sans Pro',  'sans-serif';
     background-color: #F2F2F2;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+body, html {
+    font-size: 15px;
+}
+h1 {
+
+}
+h2 {
+
+}
+h3 {
+
+}
+
+h4 {
+
+}
+
+h5 {
+
+}
+h6 {
 
 }
 #app-wrap {
@@ -18,5 +44,120 @@ body, html {
 .one-column-screen {
     max-width: 800px;
     margin-left: 20px;
-    margin-top: 2em;
+    margin-top: 1em;
+    h3:first-child {
+        margin-top: 0em;
+        margin-bottom: .6em;
+    }
 }
+
+
+.column-fixed-header {
+    background-color: #FFF;
+    border-bottom: 1px solid #ccc;
+    padding: 7px;
+    font-size: 15px;
+    font-weight: bold;
+    padding-left: 20px;
+    margin-top: 0px;
+    position: fixed;
+    width: 100%;
+    height: 50px;
+    z-index: 10;
+
+    .header-meta {
+        color: #888;
+        font-size: 12px;
+        a {
+            font-size: 13px;
+            color: #888;
+        }
+        .material-icons {
+            vertical-align: 15%;
+            font-size: 14px;
+            color: #888;
+        }
+    }
+    .breadcrumb-link {
+        .material-icons {
+            font-size: 14px;
+            color: #337ab7;
+            vertical-align: -13%;
+        }
+    }
+    .hash-icon {
+        font-size: 18px;
+    }
+    
+    .column-header-right {
+        display: inline-block;
+    }
+    .column-header-search {
+        display: inline-block;
+        position: absolute;
+        right: 230px;
+        input.form-control {
+            margin-left: 7px;
+            width: 320px;
+            height: 28px;
+        }
+    }
+    
+    .column-header-name {
+        vertical-align: 0%;
+        display: inline-block;
+        .material-icons {
+            font-size: 16px;
+            vertical-align: -20%;
+        }
+    }
+    .column-header-text  {
+        vertical-align: 23%;             
+    }
+    .column-header-text-icon, .column-header-icon {
+        color: #333;
+        vertical-align: -20%;
+        margin-right: 4px;
+    }
+    a.column-header-text-icon:hover {
+        text-decoration: none;
+    }
+    .column-header-text-icon {
+        
+    }         
+
+    .material-icons {
+        color: #666;
+        font-size: 20px;
+    }
+
+    .channel-favorite.material-icons {
+        cursor: pointer;
+    }
+    
+    .channel-favorite:hover .material-icons  {
+        color: #333;
+
+    }
+    .channel-favorite.channel-favorite-on .material-icons {
+        color: #eae080;
+    }
+}
+
+
+
+/* Enter and leave animations can use different */
+/* durations and timing functions.              */
+/*
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+*/

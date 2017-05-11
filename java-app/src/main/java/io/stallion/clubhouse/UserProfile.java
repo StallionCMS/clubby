@@ -7,6 +7,9 @@ import static io.stallion.utils.Literals.*;
 
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
+import io.stallion.dataAccess.db.Converter;
+import io.stallion.dataAccess.db.converters.JsonMapConverter;
+import io.stallion.dataAccess.db.converters.JsonTypedListConverter;
 import io.stallion.services.Log;
 
 import javax.persistence.Column;
@@ -24,6 +27,13 @@ public class UserProfile extends ModelBase {
     private boolean emailMeWhenMentioned = true;
     private boolean notifyWhenMentioned = true;
     private String avatarUrl = "";
+
+    private String googleAuthenticatorKey = "";
+    private List<String> googleAuthenticatorScratchCodes = list();
+    private Boolean twoFactorEnabled = false;
+    private String twoFactorCookieSecret = "";
+    private List<TwoFactorSession> twoFactorSessions = list();
+
 
     @Column
     @UniqueKey
@@ -124,5 +134,114 @@ public class UserProfile extends ModelBase {
     public UserProfile setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
         return this;
+    }
+
+    @Column
+    public String getGoogleAuthenticatorKey() {
+        return googleAuthenticatorKey;
+    }
+
+    public UserProfile setGoogleAuthenticatorKey(String googleAuthenticatorKey) {
+        this.googleAuthenticatorKey = googleAuthenticatorKey;
+        return this;
+    }
+
+    @Column
+    public List<String> getGoogleAuthenticatorScratchCodes() {
+        return googleAuthenticatorScratchCodes;
+    }
+
+    public UserProfile setGoogleAuthenticatorScratchCodes(List<String> googleAuthenticatorScratchCodes) {
+        this.googleAuthenticatorScratchCodes = googleAuthenticatorScratchCodes;
+        return this;
+    }
+
+    @Column
+    public Boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public UserProfile setTwoFactorEnabled(Boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
+        return this;
+    }
+
+    @Column
+    public String getTwoFactorCookieSecret() {
+        return twoFactorCookieSecret;
+    }
+
+    public UserProfile setTwoFactorCookieSecret(String twoFactorCookieSecret) {
+        this.twoFactorCookieSecret = twoFactorCookieSecret;
+        return this;
+    }
+
+    @Column
+    @Converter(cls=JsonTypedListConverter.class, elementClass = TwoFactorSession.class)
+    public List<TwoFactorSession> getTwoFactorSessions() {
+        return twoFactorSessions;
+    }
+
+    public UserProfile setTwoFactorSessions(List<TwoFactorSession> twoFactorSessions) {
+        this.twoFactorSessions = twoFactorSessions;
+        return this;
+    }
+
+    public class TwoFactorSession {
+        private String name = "";
+        private Long id = 0L;
+        private String ip = "";
+        private String userAgent = "";
+        private String key = "";
+
+
+        public String getName() {
+            return name;
+        }
+
+        public TwoFactorSession setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+
+        public Long getId() {
+            return id;
+        }
+
+        public TwoFactorSession setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+
+        public String getIp() {
+            return ip;
+        }
+
+        public TwoFactorSession setIp(String ip) {
+            this.ip = ip;
+            return this;
+        }
+
+
+        public String getUserAgent() {
+            return userAgent;
+        }
+
+        public TwoFactorSession setUserAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
+
+
+        public String getKey() {
+            return key;
+        }
+
+        public TwoFactorSession setKey(String key) {
+            this.key = key;
+            return this;
+        }
     }
 }

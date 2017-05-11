@@ -15,6 +15,8 @@ public class ForumTopicCounts {
     private Long parentId = 0L;
     private Long unreadCount = 0L;
     private Long mentions = 0L;
+    private Long minId = 0L;
+    private Long totalCount = 0L;
 
 
     public Long getParentId() {
@@ -44,4 +46,21 @@ public class ForumTopicCounts {
         return this;
     }
 
+    public Long getMinId() {
+        return minId;
+    }
+
+    public ForumTopicCounts setMinId(Long minId) {
+        this.minId = minId;
+        return this;
+    }
+
+    public Long getTotalCount() {
+        return totalCount;
+    }
+
+    public ForumTopicCounts setTotalCount(Long totalCount) {
+        this.totalCount = totalCount;
+        return this;
+    }
 }

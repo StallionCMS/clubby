@@ -5,6 +5,8 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
+import com.warrenstrange.googleauth.GoogleAuthenticator;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import io.stallion.Context;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.ClientException;
@@ -24,6 +26,31 @@ import javax.ws.rs.*;
 @Produces("application/json")
 @MinRole(Role.MEMBER)
 public class UserEndpoints implements EndpointResource {
+
+
+    @POST
+    @Path("/generate-credentials")
+    public Object generateNewCredentials() {
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
+        final GoogleAuthenticatorKey key = gAuth.createCredentials();
+
+        return map(
+                val("key", key.getKey())
+        );
+    }
+
+    @POST
+    @Path("/check-google-auth")
+    public Object checkGoogleAuth(@PathParam("secretKey") String secretKey, @PathParam("password") Integer password) {
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
+        boolean isCodeValid = gAuth.authorize(secretKey, password);
+        if (isCodeValid) {
+            return true;
+        } else {
+            throw new ClientException("Check google auth", 400);
+        }
+    }
+
     @GET
     @Path("/all-users")
     public Object allUsers() {

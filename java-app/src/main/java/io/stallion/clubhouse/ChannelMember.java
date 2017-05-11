@@ -20,6 +20,7 @@ public class ChannelMember extends ModelBase {
     private ZonedDateTime joinedAt;
     private boolean canPost = true;
     private boolean hidden = false;
+    private boolean favorite = false;
 
 
     @Column
@@ -82,6 +83,16 @@ public class ChannelMember extends ModelBase {
 
     public ChannelMember setHidden(boolean hidden) {
         this.hidden = hidden;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public ChannelMember setFavorite(boolean favorite) {
+        this.favorite = favorite;
         return this;
     }
 }

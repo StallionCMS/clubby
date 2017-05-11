@@ -31,9 +31,10 @@
                 <div class="member-name">
                     {{ member.displayName }}
                 </div>
-                
-                <a v-if="member.channelMemberId"  class="btn btn-default" @click="removeMemberFromChannel(member)">Remove from Channel</a>
-                <a v-else class="btn btn-default" @click="addMemberToChannel(member)">Add to Channel</a>                
+                <span v-if="channel.owner">
+                    <a v-if="member.channelMemberId"  class="btn btn-default" @click="removeMemberFromChannel(member)">Remove from Channel</a>
+                    <a v-else class="btn btn-default" @click="addMemberToChannel(member)">Add to Channel</a>
+                </span>
             </div>
         </div>
     </div>

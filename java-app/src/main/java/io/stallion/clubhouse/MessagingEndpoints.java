@@ -27,6 +27,7 @@ import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.Sanitize;
 import io.stallion.utils.json.JSON;
 
+import javax.persistence.Column;
 import javax.ws.rs.*;
 
 @Path("/clubhouse-api/messaging")
@@ -40,7 +41,7 @@ public class MessagingEndpoints implements EndpointResource {
         List<ChannelCombo> channels = DB.instance().queryBean(
                 ChannelCombo.class,
                 " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, " +
-                        " cm.owner, cm.canPost, cm.userId as channelMemberId " +
+                        " cm.owner, cm.canPost, cm.userId as channelMemberId, c.encrypted, cm.favorite " +
                         " FROM sch_channels AS c " +
                         " LEFT OUTER JOIN sch_channel_members AS cm ON c.id=cm.channelId AND cm.userId=?" +
                         " WHERE (cm.userId=? OR c.inviteOnly=0) AND c.deleted=0 AND c.channelType='CHANNEL' ",
@@ -56,20 +57,35 @@ public class MessagingEndpoints implements EndpointResource {
     @GET
     @Path("/get-channel-members/:channelId")
     public Object getChannelMembers(@PathParam("channelId") Long channelId) {
-        Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
+        ChannelCombo channel = ChannelController.instance().getChannelCombo(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
                 .filter("channelId", channelId)
                 .filter("userId", Context.getUser().getId())
                 .first();
-        if (channel == null || channelMember == null || !channelMember.isOwner()) {
-            throw new ClientException("You cannot edit this channel.");
+        if (channel == null || channelMember == null) {
+            throw new ClientException("You cannot view this channel's members.");
         }
         Map ctx = map();
 
 
+        List<ChannelUserWrapper> cus = list();
+        for(ChannelUserWrapper cu: ChannelController.instance().listChannelPossibleUsers(channelId)) {
+            if (channelMember.isOwner()) {
+                cus.add(cu);
+            } else if (!empty(cu.getChannelMemberId())){
+                cus.add(
+                        new ChannelUserWrapper()
+                        .setDisplayName(cu.getDisplayName())
+                        .setState(cu.getState())
+                        .setUsername(cu.getUsername())
+                        .setId(cu.getId())
+                );
+            }
+        }
+
 
         ctx.put("channel", channel);
-        ctx.put("members", ChannelController.instance().listChannelPossibleUsers(channelId));
+        ctx.put("members", cus);
         return ctx;
     }
 
@@ -209,7 +225,7 @@ public class MessagingEndpoints implements EndpointResource {
 
         List<ChannelCombo> channels = DB.instance().queryBean(
                 ChannelCombo.class,
-                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, cm.owner, cm.canPost " +
+                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, c.encrypted, cm.owner, cm.canPost, cm.favorite " +
                         " FROM sch_channels AS c " +
                         " INNER JOIN sch_channel_members AS cm ON c.id=cm.channelId" +
                         " WHERE cm.userId=? AND c.deleted=0 ",
@@ -304,6 +320,17 @@ public class MessagingEndpoints implements EndpointResource {
     public Object addReaction(@BodyParam("messageId") Long messageId, @BodyParam("emoji") String emoji) {
         // TODO: verify that can access this channel
         Message message = MessageController.instance().forIdOrNotFound(messageId);
+
+        MessageReaction existing = MessageReactionController.instance()
+                .filter("messageId", messageId)
+                .filter("userId", Context.getUser().getId())
+                .filter("emoji", emoji)
+                .first();
+        if (existing != null) {
+            return map(val("added", false));
+        }
+
+
         MessageReaction reaction = new MessageReaction()
                 .setCreatedAt(DateUtils.utcNow())
                 .setDisplayName(Context.getUser().getUsername())
@@ -313,7 +340,25 @@ public class MessagingEndpoints implements EndpointResource {
                 .setRecipientUserId(message.getFromUserId())
                 ;
         MessageReactionController.instance().save(reaction);
-        return true;
+        reaction.setUsername(Context.getUser().getUsername());
+
+        for(ChannelMember cm: ChannelMemberController.instance().filter("channelId", message.getChannelId()).all()) {
+            if (cm.getUserId().equals(Context.getUser().getId())) {
+                continue;
+            }
+
+            WebSocketEventHandler.sendMessageToUser(
+                    cm.getUserId(),
+                    JSON.stringify(
+                            map(
+                                    val("channelId", message.getChannelId()),
+                                    val("reaction", reaction),
+                                    val("type", "new-reaction")
+                            )
+                    )
+            );
+        }
+        return map(val("added", true));
     }
 
 
@@ -326,32 +371,106 @@ public class MessagingEndpoints implements EndpointResource {
                 .filter("userId", Context.getUser().getId())
                 .first()
                 ;
+        if (reaction == null) {
+            return map(val("removed", false));
+        }
         if (reaction != null) {
             MessageReactionController.instance().hardDelete(reaction);
         }
-        return true;
+        reaction.setUsername(Context.getUser().getUsername());
+        Message msg = MessageController.instance().forId(reaction.getMessageId());
+        if (msg != null) {
+            for (ChannelMember cm : ChannelMemberController.instance().filter("channelId", msg.getChannelId()).all()) {
+                if (cm.getUserId().equals(Context.getUser().getId())) {
+                    continue;
+                }
+                WebSocketEventHandler.sendMessageToUser(
+                        cm.getUserId(),
+                        JSON.stringify(
+                                map(
+                                        val("channelId", msg.getChannelId()),
+                                        val("reaction", reaction),
+                                        val("type", "removed-reaction")
+                                )
+                        )
+                );
+            }
+        }
+
+        return map(val("removed", true));
+
     }
 
 
     @GET
     @Path("/my-channel-context/:channelId")
-    public Object getChannelContext(@PathParam("channelId") Long channelId, @QueryParam("page") Integer page) {
+    public Object getChannelContext(
+            @PathParam("channelId") Long channelId,
+            @QueryParam("page") Integer page,
+            @QueryParam("parentMessageId") Long parentMessageId
+    ) {
         Map ctx = map();
 
-        ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
-        ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
-        ctx.put("messages", MessageController.instance().loadMessagesForChannel(Context.getUser().getId(), channelId, page, true));
+
+        ChannelMember channelMember = ChannelMemberController.instance()
+                .filter("userId", Context.getUser().getId())
+                .filter("channelId", channelId)
+                .first();
+        ChannelCombo channel = ChannelController.instance().getChannelCombo(channelId);
+        ctx.put("channel", channel);
+        ctx.put("channelMembership", channelMember);
         ctx.put("members", ChannelController.instance().listChannelUsers(channelId));
+
+        if (!empty(parentMessageId)) {
+            MessageController.ThreadContext tc = MessageController.instance().loadMessagesForForumThread(
+                    Context.getUser().getId(), channelId, parentMessageId, page, true);
+            ctx.put("messages", tc.getMessages());
+            ctx.put("totalPageCount", tc.getPageCount());
+            ctx.put("allIdsDates", tc.getAllIdsDates());
+            ctx.put("topic", tc.getTopic());
+            ctx.put("pageCount", tc.getPageCount());
+        } else {
+            ctx.put("messages", MessageController.instance().loadMessagesForChannel(Context.getUser().getId(), channelId, page, true));
+        }
+
+
+
         return ctx;
     }
 
+    @GET
+    @Path("/forum-post-editor-context")
+    public Object forumNewThreadContext(@QueryParam("channelId") Long channelId, @QueryParam("messageId") Long messageId) {
+        Map ctx = map();
+        Channel channel;
+        if (!empty(messageId)) {
+            MessageCombo message = MessageController.instance().getMessageCombo(
+                    Context.getUser().getId(), messageId);
+            if (!message.getFromUserId().equals(Context.getUser().getId())) {
+                throw new ClientException("You do not have rights to edit this message.");
+            }
+            ctx.put("message", message);
+            channel = ChannelController.instance().getIfViewable(message.getChannelId());
+        } else {
+            channel = ChannelController.instance().getIfViewable(channelId);
+        }
+
+
+        ctx.put("channel", channel);
+        ctx.put("channelMembership", ChannelMemberController.instance()
+                .filter("userId", Context.getUser().getId())
+                .filter("channelId", channelId).first());
+        ctx.put("members", ChannelController.instance().listChannelUsers(channelId));
+
+        return ctx;
+    }
 
     @GET
     @Path("/forum-top-level/:channelId")
     public Object forumTopLevel(@PathParam("channelId") Long channelId, @QueryParam("page") Integer page) {
         Map ctx = map();
 
-        ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
+        ctx.put("channel", ChannelController.instance().getChannelCombo(channelId));
         ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
         ctx.put("topicContext", MessageController.instance().loadMessagesForForumTopLevel(Context.getUser().getId(), channelId, page));
         return ctx;
@@ -363,7 +482,7 @@ public class MessagingEndpoints implements EndpointResource {
     public Object forumThread(@PathParam("channelId") Long channelId, @PathParam("parentMessageId") Long parentMessageId, @QueryParam("page") Integer page) {
         Map ctx = map();
 
-        ctx.put("channel", ChannelController.instance().getIfViewable(channelId));
+        ctx.put("channel", ChannelController.instance().getChannelCombo(channelId));
         ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
         ctx.put("threadContext", MessageController.instance().loadMessagesForForumThread(Context.getUser().getId(), channelId, parentMessageId, page, true));
         return ctx;
@@ -378,7 +497,7 @@ public class MessagingEndpoints implements EndpointResource {
     }
 
 
-        @POST
+    @POST
     @Path("/open-direct-message")
     public Object openDirectMessage(@BodyParam("userIds") List<Long> userIdsInts) {
         List<Long> userIds = list();
@@ -431,6 +550,7 @@ public class MessagingEndpoints implements EndpointResource {
         if (!MessageController.instance().currentUserCanEdit(message)) {
             throw new ClientException("You do not have permission to edit this message.", 403);
         }
+        message.setTitle(updated.getTitle());
         message.setMessageJson(updated.getMessageJson());
         message.setEdited(true);
         message.setEditedAt(DateUtils.utcNow());
@@ -454,6 +574,7 @@ public class MessagingEndpoints implements EndpointResource {
         message.setMessageEncryptedJsonVector(updated.getMessageEncryptedJsonVector());
         message.setEdited(true);
         message.setEditedAt(DateUtils.utcNow());
+        message.setTitle(updated.getTitle());
         MessageController.instance().save(message);
         notifyMessageUpdated(message);
         return true;
@@ -472,12 +593,14 @@ public class MessagingEndpoints implements EndpointResource {
     public Object postMessage(@ObjectParam Message rawMessage) {
         Channel channel = ChannelController.instance().forIdOrNotFound(rawMessage.getChannelId());
         Message message = new SafeMerger()
-                .optional("usersMentioned")
+                .optional("usersMentioned", "title", "parentMessageId", "threadId")
                 .nonEmpty("channelId", "messageJson", "hereMentioned", "channelMentioned")
                 .merge(rawMessage);
+
         message.setFromUserId(Context.getUser().getId());
         message.setFromUsername(Context.getUser().getUsername());
         message.setCreatedAt(DateUtils.utcNow());
+        message.setUpdatedAt(DateUtils.utcNow());
         // Verify user can post to channel
         ChannelMember member = ChannelMemberController.instance()
                 .filter("userId", Context.getUser().getId())
@@ -487,6 +610,16 @@ public class MessagingEndpoints implements EndpointResource {
             throw new ClientException("You do not have permission to post to this channel.");
         }
         MessageController.instance().save(message);
+
+
+        if (!empty(message.getThreadId())) {
+            Message thread = MessageController.instance().forId(message.getThreadId());
+            if (thread != null) {
+                thread.setThreadUpdatedAt(utcNow());
+                MessageController.instance().save(thread);
+            }
+        }
+
         for(ChannelMember cm: ChannelMemberController.instance().filter("channelId", message.getChannelId()).all()) {
             UserMessage um = new UserMessage()
                     .setChannelId(message.getChannelId())
@@ -580,6 +713,34 @@ public class MessagingEndpoints implements EndpointResource {
 
     }
 
+    @POST
+    @Path("/toggle-watched")
+    public Object toggleWatched(@BodyParam("messageId") Long messageId, @BodyParam("watched") Boolean watched) {
+        UserMessage userMessage = UserMessageController.instance()
+                .filter("messageId", messageId)
+                .filter("userId", Context.getUser().getId())
+                .first()
+                ;
+        userMessage.setWatched(watched);
+        UserMessageController.instance().save(userMessage);
+        return true;
+    }
+
+    @Path("/mark-channel-favorite/:channelId")
+    @POST
+    public Object markChannelFavorite(@PathParam("channelId") Long channelId, @BodyParam("favorite") boolean favorite) {
+        ChannelMember cm = ChannelMemberController.instance()
+                .filter("channelId", channelId)
+                .filter("userId", Context.getUser().getId())
+                .first();
+        if (cm == null) {
+            return false;
+        }
+        cm.setFavorite(favorite);
+        ChannelMemberController.instance().save(cm);
+        return true;
+
+    }
 
     @POST
     @Path("/post-encrypted-message")
@@ -587,12 +748,20 @@ public class MessagingEndpoints implements EndpointResource {
         Channel channel = ChannelController.instance().forIdOrNotFound(container.getChannelId());
         Message message = new Message();
 
+
         message.setFromUserId(Context.getUser().getId());
         message.setFromUsername(Context.getUser().getUsername());
         message.setChannelId(container.getChannelId());
         message.setMessageEncryptedJson(container.getMessageEncryptedJson());
         message.setMessageEncryptedJsonVector(container.getMessageVectorHex());
         message.setCreatedAt(utcNow());
+        message.setUpdatedAt(utcNow());
+        message.setTitle(container.getTitle());
+        message.setThreadId(container.getThreadId());
+        message.setParentMessageId(container.getParentMessageId());
+
+        //.optional("usersMentioned", "title", "parentMessageId", "threadId")
+
         // Verify user can post to channel
         ChannelMember member = ChannelMemberController.instance()
                 .filter("userId", Context.getUser().getId())
@@ -602,6 +771,14 @@ public class MessagingEndpoints implements EndpointResource {
             throw new ClientException("You do not have permission to post to this channel.");
         }
         MessageController.instance().save(message);
+
+        if (!empty(message.getThreadId())) {
+            Message thread = MessageController.instance().forId(message.getThreadId());
+            if (thread != null) {
+                thread.setThreadUpdatedAt(utcNow());
+                MessageController.instance().save(thread);
+            }
+        }
 
         for(EncryptedUserPasswordsContainer userContainer: container.getEncryptedPasswords()) {
             UserMessage um = new UserMessage()
@@ -634,7 +811,11 @@ public class MessagingEndpoints implements EndpointResource {
         }
 
 
-        return true;
+        return map(
+                val("id", message.getId()),
+                val("channelId", message.getChannelId()),
+                val("threadId", message.getThreadId())
+        );
     }
 
     public MessageCombo messageUserMessageToCombo(Message message, UserMessage um) {
@@ -645,6 +826,8 @@ public class MessagingEndpoints implements EndpointResource {
                 .setMessageEncryptedJsonVector(message.getMessageEncryptedJsonVector())
                 .setCreatedAt(message.getCreatedAt())
                 .setEdited(message.isEdited())
+                .setParentMessageId(message.getParentMessageId())
+                .setThreadId(message.getThreadId())
                 .setEncryptedPasswordHex(um.getEncryptedPasswordHex())
                 .setPasswordVectorHex(um.getPasswordVectorHex())
                 .setFromUserId(message.getFromUserId())
@@ -674,6 +857,9 @@ public class MessagingEndpoints implements EndpointResource {
         private boolean hereMentioned = false;
         private boolean channelMentioned = false;
         private List<String> usersMentioned = list();
+        private String title = "";
+        private Long threadId = 0L;
+        private Long parentMessageId = 0L;
 
         public String getMessageEncryptedJson() {
             return messageEncryptedJson;
@@ -737,6 +923,36 @@ public class MessagingEndpoints implements EndpointResource {
             this.usersMentioned = usersMentioned;
             return this;
         }
+
+
+        public String getTitle() {
+            return title;
+        }
+
+        public EncryptedMessageContainer setTitle(String title) {
+            this.title = title;
+            return this;
+        }
+
+
+        public Long getThreadId() {
+            return threadId;
+        }
+
+        public EncryptedMessageContainer setThreadId(Long threadId) {
+            this.threadId = threadId;
+            return this;
+        }
+
+
+        public Long getParentMessageId() {
+            return parentMessageId;
+        }
+
+        public EncryptedMessageContainer setParentMessageId(Long parentMessageId) {
+            this.parentMessageId = parentMessageId;
+            return this;
+        }
     }
 
     public static class EncryptedUserPasswordsContainer {
@@ -782,6 +998,8 @@ public class MessagingEndpoints implements EndpointResource {
             this.username = username;
             return this;
         }
+
+
 
     }
 

@@ -1,4 +1,5 @@
 <style lang="scss">
+ .encryption-demo-vue {
  input, textarea {
      padding: 3px;
      width: 100%;
@@ -26,11 +27,12 @@
      width: 45%;
      padding: 10px;
      margin-left: 20px;
- } 
+ }
+     }
 </style>
 
 <template>
-    <div class="app-home-vue">
+    <div class="encryption-demo-vue">
         <div class="george-column">
             <h3>George</h3>
             <div class="form-row">

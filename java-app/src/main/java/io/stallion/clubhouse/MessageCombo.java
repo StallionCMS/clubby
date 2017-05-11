@@ -23,6 +23,8 @@ public class MessageCombo {
     private String messageEncryptedJson = null;
     private String messageEncryptedJsonVector = "";
     private String messageJson = null;
+    private Long parentMessageId = 0L;
+    private Long threadId = 0L;
 
 
     private String encryptedPasswordHex = "";
@@ -37,6 +39,8 @@ public class MessageCombo {
     private Map<String, List<String>> reactions = map();
     private Long userMessageId = 0L;
     private boolean mentioned = false;
+    private String title = "";
+    private Boolean watched = false;
 
     public Long getId() {
         return id;
@@ -176,12 +180,48 @@ public class MessageCombo {
         return this;
     }
 
+    public Long getThreadId() {
+        return threadId;
+    }
+
+    public MessageCombo setThreadId(Long threadId) {
+        this.threadId = threadId;
+        return this;
+    }
+
     public boolean isMentioned() {
         return mentioned;
     }
 
     public MessageCombo setMentioned(boolean mentioned) {
         this.mentioned = mentioned;
+        return this;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public MessageCombo setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public Long getParentMessageId() {
+        return parentMessageId;
+    }
+
+    public MessageCombo setParentMessageId(Long parentMessageId) {
+        this.parentMessageId = parentMessageId;
+        return this;
+    }
+
+    public Boolean getWatched() {
+        return watched;
+    }
+
+    public MessageCombo setWatched(Boolean watched) {
+        this.watched = watched;
         return this;
     }
 }

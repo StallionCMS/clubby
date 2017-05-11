@@ -1,4 +1,5 @@
 <style lang="scss">
+ .manual-key-generation-vue {
  input, textarea {
      padding: 3px;
      width: 100%;
@@ -35,10 +36,11 @@
  .the-main-column {
      width: 600px;
  }
+ }
 </style>
 
 <template>
-    <div class="app-home-vue">
+    <div class="manual-key-generation-vue">
         <div class="the-main-column">
             <div>
                 <label>Password</label>

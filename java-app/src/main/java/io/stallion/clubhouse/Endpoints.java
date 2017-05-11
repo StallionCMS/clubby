@@ -54,6 +54,15 @@ public class Endpoints implements EndpointResource {
     }
 
 
+
+    @GET
+    @Path("/emoji-test")
+    @Produces("text/html")
+    public Object emojiTest() {
+        Map ctx = map();
+        return TemplateRenderer.instance().renderTemplate("clubhouse:emoji.jinja", ctx);
+    }
+
     @GET
     @Path("/hello-world")
     @Produces("text/html")
