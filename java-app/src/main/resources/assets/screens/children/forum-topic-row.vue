@@ -56,7 +56,7 @@
         <span>
             <span class="created-at">{{ formatDate(topic.threadUpdatedAt) }}</span>
             <span class="topic-username">by {{ topic.fromUsername }}</span>
-            <span>{{ topic.totalCount }} {{ topic.totalCount > 1 ? 'posts' : 'post' }}</span>
+            <span>{{ topic.totalCount + 1 }} {{ (topic.totalCount + 1) > 1 ? 'posts' : 'post' }}</span>
         </span>
 
         <!-- <a v-if="topic.unreadCount" class="unread icon-link"  :href="'#/forum/' +topic.channelId + '/' + topic.id + '?goTo=first-unread'"></a>-->

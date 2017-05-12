@@ -25,7 +25,7 @@ public class ChannelCombo {
     private Boolean canPost = false;
     private Long channelMemberId = 0L;
     private boolean encrypted = false;
-    private boolean favorite = false;
+    private Boolean favorite = false;
 
 
     public Long getId() {
@@ -148,11 +148,11 @@ public class ChannelCombo {
         return this;
     }
 
-    public boolean isFavorite() {
+    public Boolean isFavorite() {
         return favorite;
     }
 
-    public ChannelCombo setFavorite(boolean favorite) {
+    public ChannelCombo setFavorite(Boolean favorite) {
         this.favorite = favorite;
         return this;
     }

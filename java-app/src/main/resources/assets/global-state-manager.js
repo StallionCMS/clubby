@@ -48,13 +48,14 @@ function ClubhouseMakeVuex() {
                     } else {
                         state.standardChannels.push(channel);
                     }
-                    
+                    checkUpdateFavicon(state.channelById);
                 },
                 channelUpdated: function(state, channel) {
                     var existing = state.channelById[channel.id];
                     Object.keys(channel).forEach(function(key) {
                         existing[key] = channel[key];
                     });
+                    checkUpdateFavicon(state.channelById);
                 },                
                 generalContext: function(state, ctx) {
                     state.standardChannels = ctx.standardChannels;
@@ -72,6 +73,7 @@ function ClubhouseMakeVuex() {
                     });
                     state.allUsersById = usersById;
                     state.allUsers = ctx.users;
+                    checkUpdateFavicon(state.channelById);
                 },
                 newChannelMessage: function(state, message) {
                     if (state.channelById[message.channelId]) {
@@ -80,12 +82,14 @@ function ClubhouseMakeVuex() {
                             state.channelById[message.channelId].mentionsCount++;
                         }
                     }
+                    checkUpdateFavicon(state.channelById);
                 },
                 markChannelSeen: function(state, channelId) {
                     if (state.channelById[channelId]) {
                         state.channelById[channelId].mentionsCount = 0;
                         state.channelById[channelId].hasNew = false;
                     }
+                    checkUpdateFavicon(state.channelById);
                 },
                 updateCurrentUser: function(state, o) {
                     state.user = o.user;
@@ -112,6 +116,44 @@ function ClubhouseMakeVuex() {
                 }
             }            
         });
+
+    function checkUpdateFavicon(channelById) {
+        var hasMentions = false;
+        var hasNew = false;
+        var mentionsCount = 0;
+        console.log('checkUpdateFavicon ' , channelById);
+        if (!channelById) {
+            return;
+        }
+        Object.keys(channelById).forEach(function(channelId) {
+            var channel = channelById[channelId];
+            if (channel.mentionsCount > 0) {
+                hasMentions = true;
+                mentionsCount += channel.mentionsCount;
+            }
+            if (channel.hasNew) {
+                hasNew = true;
+            }
+        });
+        var favicon= new Favico({
+            animation: 'none',
+            //type : 'rectangle',
+            //bgColor : '#5CB85C',
+            //textColor : '#ff0',
+        });
+        var image = document.getElementById('chat-off-image');
+        if (hasMentions || hasNew) {
+            image = document.getElementById('chat-active-image');
+        }
+        favicon.image(image);
+
+        if (mentionsCount > 0) {
+            favicon.badge(mentionsCount);
+        }
+
+        console.log('updated favicon');
+        
+    }
 
     return store;
 }
