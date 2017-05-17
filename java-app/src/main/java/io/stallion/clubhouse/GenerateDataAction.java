@@ -132,12 +132,14 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
         channels.add(
                 new Channel()
                         .setName("General")
+                        .setDefaultForNewUsers(true)
                         .setChannelType(ChannelType.CHANNEL)
                         .setId(newId(500))
         );
         channels.add(
                 new Channel()
                         .setName("Humor")
+                        .setDefaultForNewUsers(true)
                         .setChannelType(ChannelType.CHANNEL)
                         .setId(newId(501))
         );
@@ -154,6 +156,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
         channels.add(
                 new Channel()
                         .setName("Long Discussions")
+                        .setDefaultForNewUsers(true)
                         .setChannelType(ChannelType.FORUM)
                         .setNewUsersSeeOldMessages(true)
                         .setId(newId(503))
@@ -203,12 +206,20 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
             for (int channelIdBase: entry.getValue()) {
                 x++;
                 Long id = newId(x);
-                ChannelMember cm = new ChannelMember()
-                        .setUserId(entry.getKey())
-                        .setJoinedAt(ZonedDateTime.of(2011, 1, 1, 12, 0, 0, 0, UTC).plusDays(channelIdBase))
-                        .setChannelId(getId(channelIdBase))
-                        .setOwner(entry.getKey().equals(GEORGE_ID))
-                        .setId(id);
+                ChannelMember cm = ChannelMemberController.instance()
+                        .filter("userId", entry.getKey())
+                        .filter("channelId", getId(channelIdBase))
+                        .includeDeleted()
+                        .first();
+                if (cm == null) {
+                    cm = new ChannelMember()
+                            .setUserId(entry.getKey())
+                            .setJoinedAt(ZonedDateTime.of(2011, 1, 1, 12, 0, 0, 0, UTC).plusDays(channelIdBase))
+                            .setChannelId(getId(channelIdBase))
+                            .setOwner(entry.getKey().equals(GEORGE_ID))
+                            .setId(id);
+                }
+                cm.setDeleted(false);
                 ChannelMemberController.instance().save(cm);
             }
         }
@@ -244,7 +255,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                 message.setCreatedAt(DateUtils.utcNow().minusDays((base-820) * 2));
                 message.setThreadUpdatedAt(DateUtils.utcNow().minusDays((base-820) * 2));
                 message.setTitle(StringUtils.capitalize(titles[(base - 820) % titles.length].toLowerCase()));
-                message.setParentMessageId(0);
+                message.setParentMessageId(0L);
                 if (message.getId().equals(getId(838))) {
                     message.setCreatedAt(ZonedDateTime.of(2016, 4, 25, 12, 0, 0, 0, UTC));
                 }

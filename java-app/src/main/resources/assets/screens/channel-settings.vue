@@ -8,12 +8,27 @@
 <template>
     <div class="channel-settings-vue">
         <div class="one-column-screen">
+            <div v-if="channelId && channel" class="breadcrumbs-row"><a class="breadcrumb-link" :href="channel.channelType === 'FORUM'? '#/forum/' + channel.id : '#/channel/' + channel.id"><i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i> {{ channel.name }}</a> &#8250;
+                    Settings
+            </div>            
             <h3 v-if="channelId">Channel Settings</h3>
             <h3 v-else>New Channel</h3>
             <form v-if="channel" @submit.prevent="saveChanges" class="form">
                 <div class="form-group">
                     <label>Channel Name</label>
                     <input type="text" class="form-control" v-model="channel.name" autofocus="autofocus" required="true">
+                </div>
+                <div class="p">
+                    <div><b>Type</b></div>
+                    <div class="radio">
+                        <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="FORUM"> Forum</label>
+                    </div>
+                    <div class="radio">
+                        <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="CHANNEl"> Group Chat</label>
+                    </div>
+                </div>
+                <div>
+                    <b>Options</b>
                 </div>
                 <div class="checkbox">
                     <label><input type="checkbox" v-model="channel.inviteOnly"> Invite only?</label>
@@ -63,7 +78,8 @@
                  this.channel = {
                      inviteOnly: false,
                      encrypted: false,
-                     purgeAfterDays: 0
+                     purgeAfterDays: 0,
+                     channelType: ''
                  }
              } else {
                  this.fetchData();
@@ -72,7 +88,7 @@
          fetchData: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/channel-details/' + self.channelId,
+                 url: '/clubhouse-api/channels/channel-details/' + self.channelId,
                  success: function(o) {
                      self.channel = o.channel;
                  }
@@ -81,7 +97,7 @@
          archiveThisChannel: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/archive-channel/' + self.channelId,
+                 url: '/clubhouse-api/channels/archive-channel/' + self.channelId,
                  method: 'POST',
                  data: self.channel,
                  success: function() {
@@ -94,7 +110,7 @@
          unarchiveThisChannel: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/unarchive-channel/' + self.channelId,
+                 url: '/clubhouse-api/channels/unarchive-channel/' + self.channelId,
                  method: 'POST',
                  data: self.channel,
                  success: function() {
@@ -114,7 +130,7 @@
          createChannel: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/create-channel',
+                 url: '/clubhouse-api/channels/create-channel',
                  method: 'POST',
                  data: self.channel,
                  success: function(o) {
@@ -127,7 +143,7 @@
          updateChannel: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/update-channel/' + self.channelId,
+                 url: '/clubhouse-api/channels/update-channel/' + self.channelId,
                  method: 'POST',
                  data: self.channel,
                  success: function(o) {

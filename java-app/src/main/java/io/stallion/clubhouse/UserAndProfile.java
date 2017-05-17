@@ -7,18 +7,19 @@ import static io.stallion.utils.Literals.*;
 
 import io.stallion.services.Log;
 import io.stallion.users.IUser;
+import io.stallion.users.User;
 
 
 public class UserAndProfile {
-    private IUser user;
+    private User user;
     private UserProfile userProfile;
 
 
-    public IUser getUser() {
+    public User getUser() {
         return user;
     }
 
-    public UserAndProfile setUser(IUser user) {
+    public UserAndProfile setUser(User user) {
         this.user = user;
         return this;
     }

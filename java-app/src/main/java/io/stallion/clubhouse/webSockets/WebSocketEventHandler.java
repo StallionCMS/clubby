@@ -1,5 +1,6 @@
 package io.stallion.clubhouse.webSockets;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,18 +26,20 @@ public class WebSocketEventHandler {
 
 
     @OnOpen
-    public void onWebSocketConnect(Session sess)
+    public void onWebSocketConnect(Session sess) throws IOException
     {
         sess.getOpenSessions();
         //encodeURIComponent(stallion.getCookie("stUserSession"))
         List<String> values = sess.getRequestParameterMap().get("stUserSession");
         if (values.size() == 0) {
-            throw new ClientException("stUserSession query param required.");
+            sess.close(new CloseReason(CloseReason.CloseCodes.NOT_CONSISTENT, "stUserSession query param required."));
+            return;
         }
         String token = values.get(0);
         UserController.UserValetResult result = UserController.instance().cookieStringToUser(token);
         if (result == null || result.getUser() == null || result.getUser().isAnon()) {
-            throw new ClientException("You do not have authorization to connect.", 403);
+            sess.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "Not authorized. You must log in again."));
+            return;
         }
         sess.getUserProperties().put("user", result.getUser());
         if (!sessionsByUserId.containsKey(result.getUser().getId())) {

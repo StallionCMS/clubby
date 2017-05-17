@@ -32,8 +32,8 @@
                     <input class="form-control" type="url" v-model="userProfile.avatarUrl">
                 </div>
                 <div class="form-group">
-                    <label>Web site</label>
-                    <input class="form-control" type="url" v-model="userProfile.webSite">
+                    <label>Contact Info</label>
+                    <input class="form-control" type="text" v-model="userProfile.contactInfo">
                 </div>
                 <div class="checkbox">
                     <label><input type="checkbox" v-model="userProfile.emailMeWhenMentioned">

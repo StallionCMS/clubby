@@ -17,6 +17,7 @@ public class ChannelUserWrapper {
     private String email;
     private String aboutMe = "";
     private String webSite = "";
+    private String contactInfo = "";
     private String publicKeyHex = "";
     private Long id = 0L;
     private String displayName = "";
@@ -49,6 +50,15 @@ public class ChannelUserWrapper {
 
     public ChannelUserWrapper setAboutMe(String aboutMe) {
         this.aboutMe = aboutMe;
+        return this;
+    }
+
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public ChannelUserWrapper setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
         return this;
     }
 

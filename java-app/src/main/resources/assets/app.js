@@ -9,6 +9,15 @@ console.log("executing app.js");
     app.init = function() {
         var Bar = { template: '<div>bar</div>' }
 
+        // Patch stallion.request
+        var originalStallionRequest = stallion.request;
+        stallion.request = function(data) {
+            if (data.url && data.url.indexOf('//') === -1) {
+                data.url = theApplicationContext.site.siteUrl + data.url;
+            }
+            originalStallionRequest(data);
+        };
+        
         app.setupEmojiConverter();
         
         // Load global directives
@@ -39,6 +48,13 @@ console.log("executing app.js");
             {
                 path: '/my-settings',
                 component: vueComponents['my-settings'],
+                meta: {
+                    authRequired: true
+                }
+            },
+            {
+                path: '/profile/:userId',
+                component: vueComponents['profile-public'],
                 meta: {
                     authRequired: true
                 }
@@ -81,7 +97,7 @@ console.log("executing app.js");
                 }
             },
             {
-                path: '/forum/:channelId/:parentMessageId',
+                path: '/forum/:channelId/:threadId',
                 component: vueComponents['forum-thread'],
                 meta: {
                     keyRequired: true
@@ -138,7 +154,7 @@ console.log("executing app.js");
             },
             {
                 path: '/',
-                component: vueComponents['app-home-v3'],
+                component: vueComponents['app-home-v4'],
                 meta: {
                     authRequired: false
                 }
@@ -149,7 +165,15 @@ console.log("executing app.js");
         
         app.store = store;
 
-        if (window.theApplicationContext.user && sessionStorage.privateKeyPassphrase) {
+        store.commit('site', theApplicationContext.site);
+
+
+
+        if (theApplicationContext.defaultChannelId) {
+            store.commit('defaultChannelIdChange', theApplicationContext.defaultChannelId);
+        }
+
+        if (window.theApplicationContext.user && sessionStorage['private-key-passphrase-' + window.theApplicationContext.user.id] && stallion.getCookie("stUserSession")) {
             store.commit('login', {
                 user: window.theApplicationContext.user,
                 userProfile: window.theApplicationContext.profile
@@ -171,8 +195,8 @@ console.log("executing app.js");
             if (to.meta.keyRequired) {
                 if (store.state.privateKey) {
                     next();
-                } else if (sessionStorage.privateKeyPassphrase) {
-                    new VueKeyImporter(sessionStorage.privateKeyPassphrase, function() {
+                } else if (app.store.state.user.id && sessionStorage['private-key-passphrase-' + app.store.state.user.id]) {
+                    new VueKeyImporter(sessionStorage['private-key-passphrase-' + app.store.state.user.id], function() {
                         console.log('private key loaded from sessionStorage');
                         next();
                     }).importPublicAndPrivate();            

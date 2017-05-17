@@ -11,6 +11,7 @@
          margin-top: 0px;
          padding-top: 70px;
          padding-left: 20px;
+         padding-right: 20px;
          width: 100%;
          overflow: scroll;
          position: relative;
@@ -253,7 +254,7 @@
                                     <div class="a-message-meta">
                                         <div>
                                             <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a>
-                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + message.parentMessageId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
+                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + message.threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
                                         </div>
                                         
                                     </div>
@@ -282,6 +283,7 @@
                 <emoji-popup @input="onChooseReactionEmoji" @close="onCloseReactionEmoji" ref="emojipopup"></emoji-popup>
             </div>
         </div>
+        <delete-message-modal v-if="showDeleteModal && messageToDelete" @close="showDeleteModal=false;messageToDelete=null" @delete="onDeleteMessage" :message="messageToDelete"></delete-message-modal>
     </div>
 </template>
 
@@ -298,11 +300,13 @@
              isFirstFetch: true,
              lastScrollTop: 0,
              loadOnScroll: false,
+             messageToDelete: null,
              offsets: [],
              offsetByThreadIndex: {},
              replyWidgets: [],
              replyMarkdown: '',
              resetting: false,
+             showDeleteModal: false,
              threadIndexPosition: {index: 0, position: 0},
              viewingMessage: {},
              viewingMessageIndex: 0,
@@ -326,7 +330,7 @@
              var d = editor.getData();
              this.replyWidgets = d.widgets;
              this.replyMarkdown = d.originalContent;
-             ClubhouseMessageAutoSaver.autoSave(self.channelId, self.parentMessageId, self.replyMarkdown, self.replyWidgets);
+             ClubhouseMessageAutoSaver.autoSave(self.channelId, self.threadId, self.replyMarkdown, self.replyWidgets);
          },
          submitReply: function() {
              var self = this;
@@ -346,18 +350,18 @@
                  channelMembers: self.members,                 
                  encrypted: self.channel.encrypted,                 
                  originalContent: self.originalContent,
-                 parentMessageId: self.parentMessageId,
-                 threadId: self.parentMessageId,
+                 parentMessageId: self.threadId,
+                 threadId: self.threadId,
                  title: self.title,
                  widgets: self.widgets,
                  success: function(message) {
-                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, self.parentMessageId);
+                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, self.threadId);
                      self.originalContent = '';
                      self.widgets = [];
                      self.replyMarkdown = '';
                      self.replyWidgets = [];
-                     self.$refs.editor.reset();
-                     window.location.hash = '#/forum/' + self.channelId + '/' + self.parentMessageId + '?messageId=' + message.id;
+                     
+                     window.location.hash = '#/forum/' + self.channelId + '/' + self.threadId + '?messageId=' + message.id;
                      self.isLoaded = false;
                      
                      
@@ -384,7 +388,7 @@
                      pageMessages[m].threadIndex = index;
                  }
              }
-             if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, self.parentMessageId)) {
+             if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, self.threadId)) {
                  var recent = ClubhouseMessageAutoSaver.loadRecentAutoSaves(self.channelId, self.parentMessageId);
                  if (recent !== null) {
                      self.replyMarkdown = recent.text;

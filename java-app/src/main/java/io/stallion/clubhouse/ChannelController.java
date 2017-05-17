@@ -1,5 +1,6 @@
 package io.stallion.clubhouse;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,20 @@ public class ChannelController extends StandardModelController<Channel> {
     public void onPreSaveValidate(Channel obj) {
         if (empty(obj.getName())) {
             throw new ClientException("Channel must have a name.");
+        }
+    }
+
+    public Long getFirstUserChannel(Long userId) {
+        BigInteger big = ((BigInteger)DB.instance().queryScalar(" " +
+                " SELECT MIN(c.id) FROM sch_channels AS c " +
+                " INNER JOIN sch_channel_members AS cm ON cm.channelId=c.id" +
+                " WHERE cm.userId=? ",
+                userId
+        ));
+        if (big == null) {
+            return 0L;
+        } else {
+            return big.longValue();
         }
     }
 

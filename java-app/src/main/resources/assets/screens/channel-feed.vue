@@ -1,9 +1,4 @@
 <style lang="scss">
- @media (max-width: 920px) {
-     .channel-feed-vue .channel-messages {
-         min-width: 700px;
-     }
- }
  .channel-feed-vue {
      .column-fixed-header {
          .column-header-name {
@@ -20,13 +15,9 @@
          background-color: white;
      }
      .channel-messages {
-
-         width: 700px;
-         max-width: 700px;
          padding-left: 20px;
          padding-right: 20px;
          background-color: white;
-         height: 100vh;
          overflow: scroll;
          padding-top: 53px;
      }
@@ -181,7 +172,7 @@
          float:right;
          .insert-emoji-button {
              line-height: 1em;
-             margin-top: 1px;
+             margin-top: 3px;
              margin-right: 15px;
              float: right;
              font-size: 34px;
@@ -197,11 +188,7 @@
      .settings-link {
          color: #999;
      }
-     .channel-right-panel {
-         padding-top: 70px;
-         width: 200px;
-         float: right;
-     }
+     
  }
 </style>
 
@@ -212,11 +199,11 @@
                 <span class="hash-icon" v-if="!channel.inviteOnly && !isEncrypted">#</span>
                 <span class="" v-if="channel.inviteOnly"><i class="material-icons">lock</i></span>
                 <span class="" v-if="isEncrypted"><i class="material-icons">security</i></span>
-                {{ channel.name }}
+                {{ channelName }}
             </div>
-            <div class="column-header-search">
+            <!-- <div class="column-header-search">
                 <input type="text" placeholder="Search" class="form-control">
-            </div>                        
+            </div>-->                        
             <div class="header-meta">
                 
                 <a class="column-header-text-icon" :href="'#/channel-members/' + channelId"><span><span class="column-header-text">{{ members ? members.length : '-' }}</span> <i class="material-icons">people</i></span></a>
@@ -231,10 +218,10 @@
         </div>
         <div class="channel-right-panel">
         </div>
-        <div class="channel-messages" style="">
+        <div class="channel-messages always-show-scrollbars" style="">
             <div v-if="messagesDecrypted && isLoaded">
                 <div v-if="!hasPrevious">
-                    <h5><em>This is the begining of the #{{channelName}} channel.</em></h5>
+                    <h5><em>This is the begining of the "{{channelName}}" channel.</em></h5>
                 </div>
                 <div v-if="messages.length === 0" class="p" style="margin-top: 40px;color:#666;">
                     No messages yet in this channel.
@@ -250,7 +237,7 @@
                         <div class="a-message-right">
                             <div class="a-message-meta">
                                 <div v-if="message.showUser">
-                                    <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a>
+                                    <a :href="'#/profile/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a>
                                     <span class="a-message-created">{{ message.createdAtFormatted }}</span>
                                 </div>
                                 
@@ -272,7 +259,7 @@
                     <form @submit.prevent="postMessage">
                         <label>Post a message.</label>
                         <div class="wrap-insert-emoji-button">
-                            <a class="insert-emoji-button" @click="openInsertEmoji" href="javascript:;">&#x263a;</a>
+                            <a class="insert-emoji-button" @click="openInsertEmoji" href="javascript:;"><i class="material-icons">tag_faces</i></a>
                         </div>
                         <message-textarea id="post-message-box" :disabled="messageAreaDisabled || !publicKeysAvailable" @submit="postMessage" v-model="newMessage"></message-textarea>
                         
@@ -297,40 +284,7 @@
          }
      },
      watch: {
-         'messages': function() {
-             return;
-             console.log('messages changed!!');
-             var self = this;
-             Vue.nextTick(function () {
-                 if (self.page > 2) {
-                     return;
-                 }
-                 // DOM updated
-                 var objDiv = $(self.$el).find('.channel-messages').get(0);
-                 if (objDiv) {
-                     objDiv.scrollTop = objDiv.scrollHeight + 200;
-                     console.log('scroll to ', objDiv.scrollHeight);
-                 }
-
-             });
-         },
-         'messagesDecrypted': function() {
-             return;
-             var self = this;
-             Vue.nextTick(function () {
-                 if (self.page > 2) {
-                     return;
-                 }
-                 // DOM updated
-                 var objDiv = $(self.$el).find('.channel-messages').get(0);
-                 if (objDiv) {
-
-                     objDiv.scrollTop = objDiv.scrollHeight + 200;
-                     console.log('scroll to ', objDiv.scrollTop);
-                 }
-
-             });
-         }
+        
      },     
      computed: {
         
@@ -341,16 +295,50 @@
              var el = this;
              if (el.scrollTop === 0 && self.hasPrevious) {
                  console.log('load new page!');
-                 self.fetchPage();
+                 self.fetchPage(self.page + 1);
              }
          });
      },
+         
      methods: {
+         afterFetchingFinished: function() {
+             var self = this;
+             var $div = $(self.$el).find('.channel-messages');
+             var div = $div.get(0);
+             if (!div) {
+                 return;
+             }
+             if (self.page <=1) {
+                 div.scrollTop = div.scrollHeight + 200;
+             } else if (self.scrollToMessageId) {
+                 var $msg = $('#channel-message-' + self.scrollToMessageId);
+                 var animateTo = $msg.offset().top - 300;
+                 var newScrollTop = $msg.offset().top;
+                 div.scrollTop = newScrollTop;
+                 console.log('scrollTop ', newScrollTop, animateTo);
+                 $div.animate({ scrollTop: animateTo}, 1200);
+             } 
+         },
+         afterIncomingMessage: function() {
+             var self = this;
+             if (self.pages && self.pages.length) {
+                 
+             } else {
+                 var div = $(self.$el).find('.channel-messages').get(0);
+                 var $div = $(div);
+                 var $message = $div.find('#channel-message-' + self.messages[self.messages.length-1].id);
+                 var distance = div.scrollHeight - div.scrollTop - $div.height() - $message.height();
+                 console.log('distance ', distance);
+                 if (distance < 150) {
+                     div.scrollTop = div.scrollHeight + 200;
+                 }
+             }
+         },         
          toggleFavorite: function() {
              var self = this;
              var favorite = !self.channel.favorite;
              stallion.request({
-                 url: '/clubhouse-api/messaging/mark-channel-favorite/' + self.channel.id,
+                 url: '/clubhouse-api/channels/mark-channel-favorite/' + self.channel.id,
                  method: 'POST',
                  data: {
                      favorite: favorite

@@ -3,20 +3,36 @@
 
 <template>
     <div class="clubhouse-login-vue one-column-screen">
-        <loading-div v-if="isLoading"></loading-div> 
-        <form v-if="!isLoading" @submit.prevent="doLogin">
+        <loading-div v-if="isLoading"></loading-div>
+        <form v-if="!isLoading && $store.state.user && $store.state.user.id" @submit.prevent="encryptionLoginOnly">
+            <h1>Unlock {{ $store.state.site.name }}</h1>
+            <div class="p">
+                You are logged in as <b>{{ $store.state.user.displayName }} (@{{$store.state.user.username}})</b>
+            </div>
+            <div class="p">
+                <a href="#/logoff">Logoff and log in as different user.</a>
+            </div>
+            <div class="form-group">
+                <label for="encryption-passphrase-field">Enter Your Encryption Passphrase</label>
+                <input id="encryption-passphrase-field" type="password" class="form-group" required="true" v-model="encryptionPassword">
+            </div>
+            <div class="form-group">
+                <button :disabled="processing" class="btn btn-primary">Unlock and Enter</button>
+            </div>
+        </form>
+        <form v-if="!isLoading && (!$store.state.user || !$store.state.user.id)" @submit.prevent="doLogin">
             <h1>Login</h1>
             <div class="form-group">
-                <label>Username or Email</label>
-                <input type="text" class="form-group" v-model="username">
+                <label for="username-field">Username or Email</label>
+                <input id="username-field" type="text" class="form-group" v-model="username" required="true" >
             </div>
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" class="form-group" v-model="password">
+                <label for="password-field">Password</label>
+                <input id="password-field" type="password" class="form-group" v-model="password" required="true" >
             </div>
             <div class="form-group">
-                <label>Encryption Passphrase</label>
-                <input type="password" class="form-group" v-model="encryptionPassword">
+                <label for="encryption-passphrase-field">Encryption Passphrase</label>
+                <input id="encryption-passphrase-field" type="password" class="form-group" required="true" v-model="encryptionPassword">
             </div>
             <div class="form-group">
                 <button :disabled="processing" class="btn btn-primary">Log in</button>
@@ -54,6 +70,25 @@
                  this.isLoading = false;
              }
          },
+         encryptionLoginOnly: function() {
+             var self = this;
+             ClubhouseImportPublicAndPrivateKey(
+                 self.encryptionPassword
+             ).then(function() {
+                 sessionStorage['private-key-passphrase-' + self.$store.state.user.id] = self.encryptionPassword;
+                 ClubhouseVueApp.stateManager.start();
+                 ClubhouseVueApp.stateManager.loadContext(function(ctx) {
+                     Vue.nextTick(function() {
+                         window.location.hash = '/';
+                     });
+                 });                 
+             }).catch(function(err) {
+                 self.processing = false;
+                 self.isLoading = false;
+                 console.log(err);
+                 stallion.showError('Error importing private key. Please check your passphrase');
+              });
+         },
          doLogin: function() {
              var self = this;
              this.processing = true;
@@ -66,23 +101,31 @@
                  },
                  success: function(o) {
                      console.log(o);
-                     o.encryptedPrivateKeyInitializationVectorHex;
-                     o.publicKeyHex;
-                     o.encryptedPrivateKeyHex;
-                     stallionClubhouseApp.store.commit('login', {
-                         user: o.user,
-                         userProfile: o.userProfile
-                     });
-                     new VueKeyImporter(self.encryptionPassword, function() {
+                     //o.encryptedPrivateKeyInitializationVectorHex;
+                     //o.publicKeyHex;
+                     //o.encryptedPrivateKeyHex;
+                     ClubhouseImportPublicAndPrivateKey(
+                         self.encryptionPassword,
+                         o.userProfile
+                     ).then(function() {
+                         self.$store.commit('defaultChannelIdChange', o.defaultChannelId);
+                         stallionClubhouseApp.store.commit('login', {
+                             user: o.user,
+                             userProfile: o.userProfile
+                         });
                          console.log('private key loaded, login complete');
-                         sessionStorage.privateKeyPassphrase = self.encryptionPassword;
+                         sessionStorage['private-key-passphrase-' + o.user.id] = self.encryptionPassword;
                          
                          ClubhouseVueApp.stateManager.start();
-                         ClubhouseVueApp.stateManager.loadContext();
-                         Vue.nextTick(function() {
-                             window.location.hash = '/channel/' + o.defaultChannelId;
+                         ClubhouseVueApp.stateManager.loadContext(function(ctx) {
+                             Vue.nextTick(function() {
+                                 window.location.hash = '/';
+                             });
                          });
-                     }).importPublicAndPrivate();
+                     }).catch(function(err) {
+                         self.processing = false;
+                         stallion.showError('Error importing private key. Please check your passphrase');
+                     });
                  },
                  error: function(o) {
                      self.processing = false;

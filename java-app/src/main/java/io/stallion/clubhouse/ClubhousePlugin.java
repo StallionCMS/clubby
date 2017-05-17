@@ -32,7 +32,8 @@ public class ClubhousePlugin extends StallionJavaPlugin {
                 new Endpoints(),
                 new MessagingEndpoints(),
                 new UserEndpoints(),
-                new AdminEndpoints()
+                new AdminEndpoints(),
+                new ChannelEndpoints()
         );
         for (EndpointResource ep: endpoints) {
             EndpointsRegistry.instance().addResource("", ep);

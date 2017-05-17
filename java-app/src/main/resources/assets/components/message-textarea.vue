@@ -1,5 +1,11 @@
+<style>
+ .message-textarea-vue {
+     resize: none;
+ }
+</style>
+
 <template>
-    <textarea data-emojiable="true" @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short" @input="onInput" v-user-autocomplete></textarea>
+    <textarea data-emojiable="true" @keydown.enter="onEnter" class="autogrow-textarea form-control autogrow-single-line autogrow-short message-textarea-vue" @input="onInput" v-user-autocomplete></textarea>
 </template>
 
 <script>
@@ -39,6 +45,7 @@
      watch: {
          value: function(newVal) {
              this.$el.value = newVal;
+             $(this.$el).change();
          }
      }
  };

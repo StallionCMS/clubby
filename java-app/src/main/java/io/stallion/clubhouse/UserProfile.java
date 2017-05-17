@@ -8,6 +8,7 @@ import static io.stallion.utils.Literals.*;
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 import io.stallion.dataAccess.db.Converter;
+import io.stallion.dataAccess.db.converters.JsonListConverter;
 import io.stallion.dataAccess.db.converters.JsonMapConverter;
 import io.stallion.dataAccess.db.converters.JsonTypedListConverter;
 import io.stallion.services.Log;
@@ -23,6 +24,7 @@ public class UserProfile extends ModelBase {
     private String encryptedPrivateKeyInitializationVectorHex = "";
     private String aboutMe = "";
     private String webSite = "";
+    private String contactInfo = "";
     private String email = "";
     private boolean emailMeWhenMentioned = true;
     private boolean notifyWhenMentioned = true;
@@ -87,6 +89,16 @@ public class UserProfile extends ModelBase {
     }
 
     @Column
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public UserProfile setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+        return this;
+    }
+
+    @Column
     public String getWebSite() {
         return webSite;
     }
@@ -147,6 +159,7 @@ public class UserProfile extends ModelBase {
     }
 
     @Column
+    @Converter(cls= JsonListConverter.class)
     public List<String> getGoogleAuthenticatorScratchCodes() {
         return googleAuthenticatorScratchCodes;
     }

@@ -3,6 +3,7 @@ package io.stallion.clubhouse;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +46,7 @@ public class MessageController extends StandardModelController<Message> {
             obj.setThreadUpdatedAt(obj.getCreatedAt());
         }
         if (empty(obj.getThreadId())) {
-            if (empty(obj.getParentMessageId())) {
-                obj.setThreadId(obj.getId());
-            } else {
+            if (!empty(obj.getParentMessageId())) {
                 obj.setThreadId(obj.getParentMessageId());
             }
         }
@@ -149,15 +148,16 @@ public class MessageController extends StandardModelController<Message> {
         return combos;
     }
 
-    public ThreadContext loadMessagesForForumThread(Long userId, Long channelId, Long parentMessageId, Integer page, boolean markRead) {
+    public ThreadContext loadMessagesForForumThread(Long userId, Long channelId, Long threadId, Integer page, boolean markRead) {
         page = or(page, 1);
         page = page - 1;
         int limit = 50;
         int offset = page * limit;
+        ThreadContext ctx = new ThreadContext();
 
         Channel channel = ChannelController.instance().forId(channelId);
 
-        Message parent = MessageController.instance().forId(parentMessageId);
+        Message parent = MessageController.instance().forId(threadId);
 
 
         ForumTopic topic = new ForumTopic()
@@ -170,7 +170,7 @@ public class MessageController extends StandardModelController<Message> {
                 ;
 
         UserMessage userMessage = UserMessageController.instance()
-                .filter("messageId", parentMessageId)
+                .filter("messageId", threadId)
                 .filter("userId", userId)
                 .first();
         if (userMessage != null && userMessage.isWatched()) {
@@ -210,7 +210,7 @@ public class MessageController extends StandardModelController<Message> {
                 " LIMIT " + offset + ", " + limit;
 
         List<MessageCombo> messages = DB.instance().queryBean(
-                MessageCombo.class, sql, userId, channelId, parentMessageId, userId);
+                MessageCombo.class, sql, userId, channelId, threadId, userId);
 
         // Find reactions
         if (messages.size() > 0) {
@@ -270,6 +270,25 @@ public class MessageController extends StandardModelController<Message> {
             }
         }
 
+        Map countsRecord = DB.instance().findRecord(
+                "SELECT COUNT(`read`) AS unreadCount, COUNT(IF(mentioned = '0', NULL, 1)) as mentionedCount" +
+                        " FROM sch_user_messages AS um" +
+                        "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +
+                        " WHERE " +
+                        "  um.channelId=? AND" +
+                        "  userId=? AND" +
+                        "  `read`=0 AND" +
+                        "  um.deleted=0 AND" +
+                        "  m.deleted=0  " +
+                        "" +
+                        "",
+                channelId, userId
+        );
+        ctx.setUnreadCount(((Long)countsRecord.get("unreadCount")).intValue());
+        ctx.setUnreadMentionsCount(((Long)countsRecord.get("unreadCount")).intValue());
+
+
+
 
 
         // Load all ID's and dates for righthand slider
@@ -291,14 +310,14 @@ public class MessageController extends StandardModelController<Message> {
 
         List<Map<String, Object>> records = DB.instance().findRecords(
                 allMessagesSql,
-                userId, channelId, parentMessageId, userId
+                userId, channelId, threadId, userId
         );
 
         int pageCount = records.size() / limit;
         if (records.size() % limit > 0) {
             pageCount++;
         }
-        ThreadContext ctx = new ThreadContext()
+        ctx
                 .setMessages(messages)
                 .setTopic(topic)
                 .setPage(page)
@@ -311,59 +330,6 @@ public class MessageController extends StandardModelController<Message> {
             });
         }
         return ctx;
-    }
-
-    public static class ThreadContext {
-        private ForumTopic topic;
-        private List<MessageCombo> messages;
-        private int page;
-        private int pageCount;
-        private List<Long[]> allIdsDates = list();
-
-        public ForumTopic getTopic() {
-            return topic;
-        }
-
-        public ThreadContext setTopic(ForumTopic topic) {
-            this.topic = topic;
-            return this;
-        }
-
-        public List<MessageCombo> getMessages() {
-            return messages;
-        }
-
-        public ThreadContext setMessages(List<MessageCombo> messages) {
-            this.messages = messages;
-            return this;
-        }
-
-        public int getPage() {
-            return page;
-        }
-
-        public ThreadContext setPage(int page) {
-            this.page = page;
-            return this;
-        }
-
-        public int getPageCount() {
-            return pageCount;
-        }
-
-        public ThreadContext setPageCount(int pageCount) {
-            this.pageCount = pageCount;
-            return this;
-        }
-
-        public List<Long[]> getAllIdsDates() {
-            return allIdsDates;
-        }
-
-        public ThreadContext setAllIdsDates(List<Long[]> allIdsDates) {
-            this.allIdsDates = allIdsDates;
-            return this;
-        }
     }
 
 
@@ -415,7 +381,7 @@ public class MessageController extends StandardModelController<Message> {
                     "  AND  m.deleted=0 " +
                     "  AND (um.deleted=0 OR um.deleted IS NULL) " +
                     "  AND (m.pinned=1 OR um.watched=1 OR m.createdAt>=?) " +
-                    " ORDER BY m.pinned DESC, um.watched DESC ";
+                    " ORDER BY m.pinned DESC, um.watched DESC, m.createdAt DESC ";
             topics1 = DB.instance().queryBean(ForumTopic.class, sqlFirst, userId, channelId, userId,
                     DateUtils.SQL_FORMAT.format(DateUtils.utcNow().minusDays(10)));
         }
@@ -443,18 +409,19 @@ public class MessageController extends StandardModelController<Message> {
         // Get unread and mentioned counts
         if (allTopicIds.size() > 0) {
             DB.SqlAndParams inSql = DB.instance().toInQueryParams(allTopicIds);
+            List idParams = new ArrayList<>(inSql.getParamsList());
             inSql.getParamsList().add(userId);
 
             {
                 String umSql = " " +
-                        " SELECT parentMessageId as parentId, MIN(m.id) as minId, COUNT(`read`) AS unreadCount, COUNT(IF(mentioned = '0', NULL, 1)) as mentions FROM sch_user_messages AS um " +
+                        " SELECT threadId as parentId, MIN(m.id) as minId, COUNT(`read`) AS unreadCount, COUNT(IF(mentioned = '0', NULL, 1)) as mentions FROM sch_user_messages AS um " +
                         "  INNER JOIN sch_messages AS m ON m.id=um.messageID " +
                         " WHERE " +
-                        "    `parentMessageId` IN  " + inSql.getSql() + " " +
+                        "    `threadId` IN  " + inSql.getSql() + " " +
                         "    AND `read`=0 " +
                         "    AND userId=? " +
                         "    AND m.deleted=0 " +
-                        " GROUP BY parentMessageId ";
+                        " GROUP BY threadId ";
 
                 List<ForumTopicCounts> counts = DB.instance().queryBean(
                         ForumTopicCounts.class,
@@ -472,17 +439,27 @@ public class MessageController extends StandardModelController<Message> {
             }
             {
                 String umSql2 = " " +
-                        " SELECT parentMessageId as parentId, count(*) as totalCount FROM sch_user_messages AS um " +
-                        "  INNER JOIN sch_messages AS m ON m.id=um.messageID " +
+                        " SELECT parentMessageId as parentId, count(*) as totalCount FROM sch_messages AS m ";
+                if (!channel.isNewUsersSeeOldMessages()) {
+                    umSql2 += "  INNER JOIN sch_user_messages AS um ON m.id=um.messageID ";
+                }
+                umSql2 +=
                         " WHERE " +
-                        "    `parentMessageId` IN  " + inSql.getSql() + " " +
-                        "    AND userId=?" +
+                        "    `parentMessageId` IN  " + inSql.getSql() + " ";
+                if (!channel.isNewUsersSeeOldMessages()) {
+                    umSql2 += "    AND userId=?";
+                }
+                umSql2 +=
                         "    AND m.deleted=0 " +
                         " GROUP BY parentMessageId ";
+                List params = idParams;
+                if (!channel.isNewUsersSeeOldMessages()) {
+                    params = inSql.getParamsList();
+                }
                 List<ForumTopicCounts> totalCounts = DB.instance().queryBean(
                         ForumTopicCounts.class,
                         umSql2,
-                        inSql.getParams()
+                        asArray(params, Object.class)
                 );
                 for (ForumTopicCounts count : totalCounts) {
                     ForumTopic topic = topicMap.get(count.getParentId());
@@ -508,50 +485,8 @@ public class MessageController extends StandardModelController<Message> {
         return ctx;
     }
 
-    public static class ForumTopicContext {
-        private List<ForumTopic> pinnedTopics = list();
-        private List<ForumTopic> watchedTopics = list();
-        private List<ForumTopic> newTopics = list();
-        private List<ForumTopic> updatedTopics = list();
-
-        public List<ForumTopic> getPinnedTopics() {
-            return pinnedTopics;
-        }
-
-        public ForumTopicContext setPinnedTopics(List<ForumTopic> pinnedTopics) {
-            this.pinnedTopics = pinnedTopics;
-            return this;
-        }
-
-        public List<ForumTopic> getWatchedTopics() {
-            return watchedTopics;
-        }
-
-        public ForumTopicContext setWatchedTopics(List<ForumTopic> watchedTopics) {
-            this.watchedTopics = watchedTopics;
-            return this;
-        }
-
-        public List<ForumTopic> getNewTopics() {
-            return newTopics;
-        }
-
-        public ForumTopicContext setNewTopics(List<ForumTopic> newTopics) {
-            this.newTopics = newTopics;
-            return this;
-        }
-
-        public List<ForumTopic> getUpdatedTopics() {
-            return updatedTopics;
-        }
-
-        public ForumTopicContext setUpdatedTopics(List<ForumTopic> updatedTopics) {
-            this.updatedTopics = updatedTopics;
-            return this;
-        }
-    }
-
-    public List<MessageCombo> loadMessagesForChannel(Long userId, Long channelId, Integer page, boolean markRead) {
+    public MessageContext loadMessagesForChannel(Long userId, Long channelId, Integer page, boolean markRead) {
+        MessageContext ctx = new MessageContext();
         // load recent messages
         page = or(page, 1);
         page = page - 1;
@@ -648,7 +583,175 @@ public class MessageController extends StandardModelController<Message> {
             }
         }
 
+        ctx.setMessages(messages);
 
-        return messages;
+        return ctx;
     }
+
+
+    public static class ForumTopicContext {
+        private List<ForumTopic> pinnedTopics = list();
+        private List<ForumTopic> watchedTopics = list();
+        private List<ForumTopic> newTopics = list();
+        private List<ForumTopic> updatedTopics = list();
+
+        public List<ForumTopic> getPinnedTopics() {
+            return pinnedTopics;
+        }
+
+        public ForumTopicContext setPinnedTopics(List<ForumTopic> pinnedTopics) {
+            this.pinnedTopics = pinnedTopics;
+            return this;
+        }
+
+        public List<ForumTopic> getWatchedTopics() {
+            return watchedTopics;
+        }
+
+        public ForumTopicContext setWatchedTopics(List<ForumTopic> watchedTopics) {
+            this.watchedTopics = watchedTopics;
+            return this;
+        }
+
+        public List<ForumTopic> getNewTopics() {
+            return newTopics;
+        }
+
+        public ForumTopicContext setNewTopics(List<ForumTopic> newTopics) {
+            this.newTopics = newTopics;
+            return this;
+        }
+
+        public List<ForumTopic> getUpdatedTopics() {
+            return updatedTopics;
+        }
+
+        public ForumTopicContext setUpdatedTopics(List<ForumTopic> updatedTopics) {
+            this.updatedTopics = updatedTopics;
+            return this;
+        }
+    }
+
+    public static class MessageContext {
+        private List<MessageCombo> messages;
+        private int page;
+        private int unreadCount = 0;
+        private int unreadMentionsCount = 0;
+
+
+        public List<MessageCombo> getMessages() {
+            return messages;
+        }
+
+        public MessageContext setMessages(List<MessageCombo> messages) {
+            this.messages = messages;
+            return this;
+        }
+
+
+        public int getPage() {
+            return page;
+        }
+
+        public MessageContext setPage(int page) {
+            this.page = page;
+            return this;
+        }
+
+
+        public int getUnreadCount() {
+            return unreadCount;
+        }
+
+        public MessageContext setUnreadCount(int unreadCount) {
+            this.unreadCount = unreadCount;
+            return this;
+        }
+
+
+        public int getUnreadMentionsCount() {
+            return unreadMentionsCount;
+        }
+
+        public MessageContext setUnreadMentionsCount(int unreadMentionsCount) {
+            this.unreadMentionsCount = unreadMentionsCount;
+            return this;
+        }
+    }
+
+
+    public static class ThreadContext {
+        private ForumTopic topic;
+        private List<MessageCombo> messages;
+        private int page;
+        private int pageCount;
+        private List<Long[]> allIdsDates = list();
+        private int unreadCount = 0;
+        private int unreadMentionsCount = 0;
+
+        public ForumTopic getTopic() {
+            return topic;
+        }
+
+        public ThreadContext setTopic(ForumTopic topic) {
+            this.topic = topic;
+            return this;
+        }
+
+        public List<MessageCombo> getMessages() {
+            return messages;
+        }
+
+        public ThreadContext setMessages(List<MessageCombo> messages) {
+            this.messages = messages;
+            return this;
+        }
+
+        public int getPage() {
+            return page;
+        }
+
+        public ThreadContext setPage(int page) {
+            this.page = page;
+            return this;
+        }
+
+        public int getPageCount() {
+            return pageCount;
+        }
+
+        public ThreadContext setPageCount(int pageCount) {
+            this.pageCount = pageCount;
+            return this;
+        }
+
+        public List<Long[]> getAllIdsDates() {
+            return allIdsDates;
+        }
+
+        public ThreadContext setAllIdsDates(List<Long[]> allIdsDates) {
+            this.allIdsDates = allIdsDates;
+            return this;
+        }
+
+
+        public int getUnreadCount() {
+            return unreadCount;
+        }
+
+        public ThreadContext setUnreadCount(int unreadCount) {
+            this.unreadCount = unreadCount;
+            return this;
+        }
+
+        public int getUnreadMentionsCount() {
+            return unreadMentionsCount;
+        }
+
+        public ThreadContext setUnreadMentionsCount(int unreadMentionsCount) {
+            this.unreadMentionsCount = unreadMentionsCount;
+            return this;
+        }
+    }
+
 }

@@ -3,7 +3,6 @@
  
  .channel-sidebar-vue {
      background-color: #4b4c58;
-     width: 220px;
      padding: 0px;
      color: #DDD;
      height: 101vh;
@@ -13,9 +12,8 @@
      position: fixed;
      .sidebar-items {
          padding-top: 1em;
-         max-height: 70vh;
-         overflow: auto;
-
+         height: calc(100vh - 100px);
+         overflow-y: auto;
      }
      h3 {
          font-size: 14px;
@@ -134,29 +132,32 @@
 
          }
      }
+     .always-show-scrollbars::-webkit-scrollbar-track {
+         background-color: rgba(255, 255, 255, .3);
+     }
  }
 </style>
 
 <template>
-    <div  class="channel-sidebar-vue">
+    <div @click="clickAnywhere" :class="['channel-sidebar-vue', $store.state.sidebarPoppedUp ? 'popped-up' : '']">
         <div v-if="$store.state.user && $store.state.user.id">
-            <h2 class="sidebar-title">My Clubhouse <a class="sidebar-settings-link" style="display: inline-block;" href="#/clubhouse-settings" v-if="$store.state.user.role === 'ADMIN'"><i class="material-icons">settings</i></a></h2>
-            <div class="sidebar-items">
+            <h2 class="sidebar-title">{{ $store.state.site.name }} <a class="sidebar-settings-link" style="display: inline-block;" href="#/clubhouse-settings" v-if="$store.state.user.role === 'ADMIN'"><i class="material-icons">settings</i></a></h2>
+            <div class="sidebar-items always-show-scrollbars">
                 <h3 v-if="favorites.length">Favorites</h3>
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in favorites"></sidebar-link-item>
-                <h3>Forums</h3>
+                <h3><a style="display: inline-block" href="#/my-channels">Forums</a> <a class="add-channel-link" href="#/channel-settings"><i class="material-icons">add_circle_outline</i></a></h3>
                 <div v-if="forumChannels.length === 0" class="explain">No forums</div>
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in forumChannels"></sidebar-link-item>
                 <h3><a style="display: inline-block" href="#/my-channels">Group Chat</a> <a class="add-channel-link" href="#/channel-settings"><i class="material-icons">add_circle_outline</i></a></h3>
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in standardChannels"></sidebar-link-item>
-                <h3><a href="#/open-direct-message">Direct Chat</a></h3>
+                <h3><a style="display: inline-block" href="#/open-direct-message">Direct Chat</a> <a class="add-channel-link" href="#/open-direct-message"><i class="material-icons">add_circle_outline</i></a></h3>
                 <div v-if="directMessageChannels.length === 0">
                     <div class="explain">No message history</div>    
                 </div>
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in directMessageChannels"></sidebar-link-item>
             </div>
-            <div v-if="user && user.id" class="loggedin-name">
-                <div>{{ user.displayName || user.username }}</div>
+            <div v-if="$store.state.user && $store.state.user.id" class="loggedin-name">
+                <div>{{ $store.state.user.displayName || $store.state.user.username }}</div>
                 <div><a href="#/my-settings">Settings</a> <span style="color: rgba(230, 230, 230, .6);">&#8226;</span> <a href="/st-users/logoff">Log off</a></div>
             </div>
         </div>
@@ -227,6 +228,9 @@
 
      },     
      methods: {
+         clickAnywhere: function() {
+             this.$store.commit('sidebarPoppedUp', false);
+         },
          fetchData: function() {
              
          }

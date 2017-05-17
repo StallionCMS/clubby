@@ -59,7 +59,7 @@
          addMemberToChannel: function(member) {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/add-channel-member',
+                 url: '/clubhouse-api/channels/add-channel-member',
                  method: 'POST',
                  data: {
                      userId: member.id,
@@ -74,7 +74,7 @@
          removeMemberFromChannel: function(member) {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/remove-channel-member',
+                 url: '/clubhouse-api/channels/remove-channel-member',
                  method: 'POST',
                  data: {
                      userId: member.id,
@@ -92,7 +92,7 @@
          fetchData: function() {
              var self = this;
              stallion.request({
-                 url: '/clubhouse-api/messaging/get-channel-members/' + self.channelId,
+                 url: '/clubhouse-api/channels/get-channel-members/' + self.channelId,
                  success: function(o) {
                      self.members = o.members;
                      self.channel = o.channel;

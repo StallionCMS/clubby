@@ -33,7 +33,7 @@
      .topic-section {
          margin-bottom: 2em;
      }
-     .channel-favorite {
+     .channel-favorite, .channel-settings-icon-link  {
          float: right;
          margin-right: 20px;
      }
@@ -59,6 +59,7 @@
                 <i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i>
                 {{ channel.name }}
                 <a class="btn btn-primary btn-md" :href="'#/forum/' + channelId  + '/new-thread'">New Thread</a>
+                <a v-if="channel.owner" class="channel-settings-icon-link" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
                 <i @click="toggleFavorite" :class="['material-icons', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']">star</i> 
             </h3>
         </div>
@@ -125,6 +126,7 @@
          },
          onRoute: function() {
              var self = this;
+             localStorage.lastChannelPath = window.location.hash;
              ClubhouseVueApp.currentChannelComponent = this;
              self.isLoading = true;
              self.channelId = this.$route.params.channelId;
@@ -137,7 +139,8 @@
          handleIncomingRemoveReaction: function() {
              this.refresh();
          },
-         handleIncomingMessage: function() {
+         handleIncomingMessage: function(message) {
+             this.$store.commit('newChannelMessage', message);
              this.refresh();
          },
          
@@ -145,7 +148,7 @@
              var self = this;
              var favorite = !self.channel.favorite;
              stallion.request({
-                 url: '/clubhouse-api/messaging/mark-channel-favorite/' + self.channel.id,
+                 url: '/clubhouse-api/channels/mark-channel-favorite/' + self.channel.id,
                  method: 'POST',
                  data: {
                      favorite: favorite

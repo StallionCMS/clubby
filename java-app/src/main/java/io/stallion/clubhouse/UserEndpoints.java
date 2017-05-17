@@ -9,7 +9,7 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import io.stallion.Context;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.exceptions.ClientException;
+import io.stallion.exceptions.*;
 import io.stallion.requests.validators.SafeMerger;
 import io.stallion.restfulEndpoints.*;
 import io.stallion.settings.Settings;
@@ -58,12 +58,37 @@ public class UserEndpoints implements EndpointResource {
         List<ChannelUserWrapper> users = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyHex " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarurl`, up.aboutMe, up.webSite, up.publicKeyHex  " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id "
         );
         Map<String, Object> ctx = map();
         ctx.put("users", users);
+        return ctx;
+    }
+
+    @GET
+    @Path("/public-profile/:userId")
+    public Object publicProfile(@PathParam("userId") Long userId) {
+
+        List<ChannelUserWrapper> users = DB.instance().queryBean(
+                ChannelUserWrapper.class,
+                "" +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarUrl`, up.aboutMe, up.webSite, up.publicKeyHex, " +
+                        "   up.contactInfo " +
+                        " FROM stallion_users AS su " +
+                        " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
+                        " WHERE su.id=?",
+                userId
+        );
+        ChannelUserWrapper user;
+        if (users.size() == 0) {
+            throw new io.stallion.exceptions.NotFoundException("User not found.");
+        } else {
+            user = users.get(0);
+        }
+        Map<String, Object> ctx = map();
+        ctx.put("user", user);
         return ctx;
     }
 
@@ -149,7 +174,11 @@ public class UserEndpoints implements EndpointResource {
 
         UserController.instance().addSessionCookieForUser(user, true);
 
-        return map(val("user", user), val("userProfile", profile));
+        return map(
+                val("user", user),
+                val("userProfile", profile),
+                val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId()))
+        );
 
     }
 
@@ -167,7 +196,7 @@ public class UserEndpoints implements EndpointResource {
                 .merge(userAndProfile.getUser(), user);
         user.setDisplayName(StringUtils.strip(user.getGivenName() + " " + user.getFamilyName(), " "));
         new SafeMerger()
-                .optional("aboutMe", "avatarUrl", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
+                .optional("aboutMe", "contactInfo", "avatarUrl", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
                 .merge(userAndProfile.getUserProfile(), profile);
 
         UserController.instance().save(user);

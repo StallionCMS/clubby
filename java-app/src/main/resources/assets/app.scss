@@ -6,6 +6,8 @@ body, html {
     background-color: #F2F2F2;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    padding: 0px;
+    margin: 0px;
 }
 body, html {
     font-size: 15px;
@@ -30,12 +32,18 @@ h5 {
 h6 {
 
 }
+.st-message-fixed {
+    z-index: 200;
+}
+.form-explanation {
+    margin-top: -5px;
+    margin-bottom: 6px;
+    color: #888;
+}
 #app-wrap {
     
 }
-#clubhouse-main-view {
-    margin-left: 220px;
-}
+
 .embed-iframe {
     border: 1px solid transparent;
     border-left: 4px solid #CCC;
@@ -144,6 +152,78 @@ h6 {
     }
 }
 
+/* Layout */
+
+.channel-sidebar-vue {
+    left: -220px;
+    width: 220px;
+}
+
+#clubhouse-main-view {
+    margin-right: 0px;
+}
+.mobile-view-topbar-vue {
+    height: 50px;
+}
+
+.channel-sidebar-vue.popped-up {
+    display: block;
+    z-index: 250;
+    -webkit-animation: slide 0.5s forwards;
+    -webkit-animation-delay: 2s;
+    animation: slide 0.5s forwards;
+    animation-delay: 0s;
+}
+
+@-webkit-keyframes slide {
+    100% { left: 0; }
+}
+
+@keyframes slide {
+    100% { left: 0; }
+}
+
+@media (min-width: 700px) {
+    .mobile-view-topbar-vue {
+        display: none;
+    }
+    
+    #clubhouse-main-view {
+        margin-left: 220px;
+    }
+    .channel-sidebar-vue {
+        left: 0px;
+        width: 220px;
+    }
+}
+
+
+@media (min-width: 905px) {
+    .channel-feed-vue .channel-messages {
+        max-width: 500px;
+        width: calc(100hw-400px);
+    }
+    .channel-right-panel {
+        padding-top: 70px;
+        width: 200px;
+        float: right;
+    }
+}
+
+
+@media (min-width: 1100px) {
+
+    .channel-feed-vue .channel-messages {
+        width: 700px;
+        max-width: 700px;
+    }
+    .channel-right-panel {
+        padding-top: 70px;
+        width: calc(100vw - 930px);
+        float: right;
+    }
+}
+
 
 
 /* Enter and leave animations can use different */
@@ -161,3 +241,28 @@ h6 {
   opacity: 0;
 }
 */
+
+
+
+.always-show-scrollbars::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.always-show-scrollbars::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+.always-show-scrollbars::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+.always-show-scrollbars::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    /*border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.always-show-scrollbars::-webkit-scrollbar-track { 
+    background-color: #fff; 
+    border-radius: 8px; 
+} 

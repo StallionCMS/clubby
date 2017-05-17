@@ -27,7 +27,7 @@ public class AuthEndpoints implements EndpointResource {
                 val(
                         "user", user
                 ),
-                val("defaultChannelId", 10500L),
+                val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId())),
                 val("userProfile", up)
         );
     }

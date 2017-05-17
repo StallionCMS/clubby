@@ -23,3 +23,4 @@
 00230-alter-sch_messages-add-1
 00240-alter-sch_channel_members-add-1
 00250-alter-sch_user_profiles-add-5
+00260-alter-sch_user_profiles-add-1

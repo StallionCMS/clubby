@@ -1,11 +1,18 @@
 var _spki = null;
 
-var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
+function ClubhouseImportPublicAndPrivateKey(encryptionPassword, userProfile) {
+    return new Promise(function(resolve, reject) {
+        new VueKeyImporter(encryptionPassword, resolve, reject, userProfile).importPublicAndPrivate();
+    });
+}
+
+
+var VueKeyImporter = function(encryptionPassword, resolve, reject, userProfile) {
 
     var vueStore = stallionClubhouseApp.store;
     var self = this;
     self.encryptionPassword = encryptionPassword;
-    self.callback = callback;
+    self.resolve = resolve;
     self.userProfile = userProfile || vueStore.state.userProfile;
     
     
@@ -36,18 +43,24 @@ var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
             step2DecryptPrivate();
         }).catch(function(err) {
             console.error(err);
+            reject(err);
         });  
     };
 
     function step2DecryptPrivate() {
-        new PrivateKeyFetcher().fetch(
+        FetchPrivateKey(
             self.userProfile.encryptedPrivateKeyHex,
             self.userProfile.encryptedPrivateKeyInitializationVectorHex,
-            self.encryptionPassword,
+            self.encryptionPassword
+        ).then(
             function(result) {
                 console.log('decrypted private key!!! ', result);
                 vueStore.commit('privateKey', result);
                 step3TestEncrypt();
+            },
+            function(e) {
+                console.error(e);
+                reject(e)
             }
         );
     }
@@ -70,6 +83,7 @@ var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
             }, 
             function(e){
                 console.error(e);
+                reject(err);
             }
         );              
         
@@ -88,14 +102,14 @@ var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
                 var decryptedMessage = convertArrayBufferViewtoString(result);
                 if (message === decryptedMessage) {
                     console.log('encrypt/decrypt test passed!');
-                    self.callback();
+                    self.resolve();
                 } else {
                     throw new Error('The message was ' + message + ' but after decryption was ' + decryptedMessage);
                 }
             },
             function(e){
                 console.error(e);
-                
+                reject(err);
             }
         );     
     }
@@ -154,21 +168,28 @@ var VueKeyImporter = function(encryptionPassword, callback, userProfile) {
 
 })();
 
+var FetchPrivateKey = function(privateKeyHex, privateKeyVectorHex, password) {
+    return new Promise(function(resolve, reject) {
+        new PrivateKeyFetcher().fetch(privateKeyHex, privateKeyVectorHex, password, resolve, reject);
+    });
+};
+
 var PrivateKeyFetcher = function() {
     var kf = this;
     var self = this;
 
-    self.fetchFromLocalStorage = function(user, password, callback) {
+    self.fetchFromLocalStorage = function(user, password, resolve, reject) {
         var privateKeyEncryptedHex = localStorage['st_clubhouse_private_key_' + user];
         console.log('vector json ' + localStorage['st_clubhouse_private_key_vector_' + user]);
         var privateKeyEncryptedVector = localStorage['st_clubhouse_private_key_vector_' + user];
-        self.fetch(privateKeyEncryptedHex, privateKeyEncryptedVector, password, callback);
+        self.fetch(privateKeyEncryptedHex, privateKeyEncryptedVector, password, resolve, reject);
     };
 
-    self.fetch = function(privateKeyHex, privateKeyVectorHex, password, callback) {
+    self.fetch = function(privateKeyHex, privateKeyVectorHex, password, resolve, reject) {
         console.log('PrivateKeyFetcher.fetch ');
         self.password = password;
-        self.callback = callback;
+        self.resolve = resolve;
+        self.reject = reject;
         self.privateKeyEncryptedHex = privateKeyHex;
         self.privateKeyEncryptedVector = hexToArray(privateKeyVectorHex);
         self.passwordDerivedKey = null;
@@ -203,6 +224,7 @@ var PrivateKeyFetcher = function() {
                 step3DecryptPrivateKey();
             }, function(e){
                 console.error(e);
+                self.reject(e);
             });
         });
         
@@ -229,6 +251,7 @@ var PrivateKeyFetcher = function() {
             }, 
             function(e){
                 console.error(e);
+                self.reject(e);
             }
         );        
     }
@@ -248,7 +271,10 @@ var PrivateKeyFetcher = function() {
             ["decrypt"]
         ).then(function(privateKey) {
             console.log('f4. private key imported ', privateKey);
-            self.callback(privateKey);
+            self.resolve(privateKey);
+        }, function(e) {
+            console.error(e);
+            self.reject(e);
         });
     }
 };

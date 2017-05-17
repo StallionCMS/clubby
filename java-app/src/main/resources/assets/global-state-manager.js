@@ -1,24 +1,36 @@
 function ClubhouseMakeVuex() {
         var store = new Vuex.Store({
             state: {
+                defaultChannelId: 0,
                 user: null,
                 userProfile: null,
                 publicKey: null,
                 privateKey: null,
                 activeChannelId: null,
                 forumChannels: [],
+                sidebarPoppedUp: false,
                 directMessageChannels: [],
                 standardChannels: [],
                 allUsers: [],
                 allUsersById: {},
-                channelById: {}
+                channelById: {},
+                site: {}
             },
             mutations: {
+                site: function(state, site) {
+                    state.site = site;
+                },
                 publicKey: function(state, publicKey) {
                     state.publicKey = publicKey;
                 },
                 privateKey: function(state, privateKey) {
                     state.privateKey = privateKey;
+                },
+                defaultChannelIdChange: function(state, defaultChannelId) {
+                    state.defaultChannelId = defaultChannelId;
+                },
+                sidebarPoppedUp: function(state, isActive) {
+                    state.sidebarPoppedUp = isActive;
                 },
                 userStateChange: function(state, data) {
                     console.log('commit state change ', data.userId, data.newState);
@@ -41,9 +53,9 @@ function ClubhouseMakeVuex() {
                 },
                 channelAdded: function(state, channel) {
                     state.channelById[channel.id] = channel;
-                    if (channel.type === 'DIRECT_MESSAGE') {
+                    if (channel.channelType === 'DIRECT_MESSAGE') {
                         state.directMessageChannels.push(channel);
-                    } else if (channel.type === 'FORUM') {
+                    } else if (channel.channelType === 'FORUM') {
                         state.forumChannels.push(channel);
                     } else {
                         state.standardChannels.push(channel);
@@ -81,6 +93,13 @@ function ClubhouseMakeVuex() {
                         if (message.mentioned || message.hereMentioned) {
                             state.channelById[message.channelId].mentionsCount++;
                         }
+                    }
+                    checkUpdateFavicon(state.channelById);
+                },
+                updateChannelSeen: function(state, data) {
+                    if (state.channelById[data.channelId]) {
+                        state.channelById[data.channelId].hasNew = data.hasNew;
+                        state.channelById[data.channelId].mentionsCount = data.mentionsCount;
                     }
                     checkUpdateFavicon(state.channelById);
                 },
@@ -170,8 +189,10 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             console.log('manager already started');
         }
         if (vueApp.$store.state.user && vueApp.$store.state.user.id) {
-            manager.started = true;            
-            manager.setupWebSocket();
+            manager.started = true;
+            if (stallion.getCookie("stUserSession")) {
+                manager.setupWebSocket();
+            }
             manager.setupIframeResizeListener();
         }
     };
@@ -179,20 +200,24 @@ var ClubhouseGlobalStateManager = function(vueApp) {
 
     
 
-    manager.loadContext = function() {
+    manager.loadContext = function(callback) {
         stallion.request({
-            url: '/clubhouse-api/messaging/general-context',
+            url: '/clubhouse-api/general-context',
             success: function(o) {
                 vueApp.$store.commit('generalContext', o);
+                manager.reconnectFailCount = 0;
+                if (callback) {
+                    callback(o);
+                }
             }
         });
     };
 
     manager.setupWebSocket = function() {
+        
         manager.clubhouseSocket = new WebSocket("wss://clubhouse.local/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
         console.log('setup web socket.');
         manager.clubhouseSocket.onopen = function(event) {
-            manager.reconnectFailCount = 0;
             manager.loadContext();
             if (vueApp.currentChannelComponent && vueApp.currentChannelComponent.isLoaded) {
                 vueApp.currentChannelComponent.refresh();
@@ -215,7 +240,6 @@ var ClubhouseGlobalStateManager = function(vueApp) {
 
         manager.clubhouseSocket.onerror = function(event) {
             console.log('websocket onerror ', event);
-            debugger;
         }
         
         manager.clubhouseSocket.onmessage = function (event) {
@@ -286,9 +310,14 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             }
         }
         manager.clubhouseSocket.onclose = function(event) {
+            if (event.code === 1008) {
+                stallion.showError('You are not logged in.');
+                window.location.hash = '/login';
+                return;
+            }
             manager.reconnectFailCount++;
             var wait = parseInt(manager.reconnectWait * Math.pow(manager.reconnectFailCount, 1.8), 10);
-            console.log('web socket closed, reconnect in ', wait);
+            console.log('web socket closed, reconnect in ', wait, event);
             setTimeout(manager.setupWebSocket, wait);
             if (manager.reconnectFailCount > 5) {
                 var retrySeconds = parseInt(wait / 1000, 10);

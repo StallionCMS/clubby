@@ -27,14 +27,14 @@
 
 <template>
     <div class="forum-new-thread-vue">
-        <div class="fixed-header">
+        <div class="fixed-header" v-if="!inModal">
             <div v-if="channel" class="breadcrumbs">
                 <a :href="'#/forum/' + channel.id">{{ channel.name }}</a> &#8250;
                 <span v-if="isNew">New Thread</span>
                 <span v-if="!isNew">Edit Post</span>
             </div>
         </div>        
-        <div class="one-column-screen">
+        <div :class="[inModal ? 'modal-inner': 'one-column-screen']">
             <div v-if="isLoading"><loading-div></loading-div></div>
             <div v-if="!isLoading">
                 <div v-if="hasTitle" class="form-group">
@@ -76,6 +76,7 @@
          var d = {
              isLoading: true,
              isNew: true,
+             inModal: false,
              canSubmit: false,
              channelId: 0,
              members: [],
@@ -90,6 +91,7 @@
              config: {}
          };
          if (this.message) {
+             d.inModal = true;
              d.widgets = JSON.parse(JSON.stringify(this.message.widgets || []));
              d.channelId = this.theChannel.id;
              d.messageId = this.message.id;

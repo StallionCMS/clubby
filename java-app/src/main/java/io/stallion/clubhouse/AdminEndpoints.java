@@ -54,7 +54,7 @@ public class AdminEndpoints implements EndpointResource {
             }
             combos.add(
                     new UserAndProfile()
-                            .setUser(user)
+                            .setUser((User)user)
                             .setUserProfile(profile)
             );
         }

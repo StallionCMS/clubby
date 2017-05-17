@@ -58,6 +58,7 @@ var ClubhouseMessageSendingMixin = {
                 
         },
         postMessage: function(args) {
+            debugger;
             new ClubhouseMessageSender(this, this.$store, args).send();     
         }
     }
