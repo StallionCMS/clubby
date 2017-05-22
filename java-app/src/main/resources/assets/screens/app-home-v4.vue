@@ -12,7 +12,7 @@
 
 <template>
     <div class="app-home-vue">
-        <div class="the-main-column">
+        <div class="the-main-column" v-if="isLoaded">
             <div class="p">
                 <a href="#/login" class="btn btn-danger btn-lg">Login</button>
             </div>
@@ -38,7 +38,8 @@
              password: 'winfox',
              privateKeyEncryptedHex: '',
              privateKeyEncryptionVectorHex: '',
-             publicKeyHex: ''
+             publicKeyHex: '',
+             isLoaded: false
          }
      },
      created: function() {

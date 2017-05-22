@@ -11,6 +11,7 @@ import io.stallion.plugins.StallionJavaPlugin;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.services.Log;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
+import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
@@ -27,6 +28,12 @@ public class ClubhousePlugin extends StallionJavaPlugin {
 
     @Override
     public void boot() throws Exception {
+
+        if ("/st-users/login".equals(Settings.instance().getUsers().getLoginPage())) {
+            Settings.instance().getUsers().setLoginPage("/#/login");
+        }
+
+
         List<EndpointResource> endpoints = list(
                 new AuthEndpoints(),
                 new Endpoints(),
