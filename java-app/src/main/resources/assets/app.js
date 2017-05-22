@@ -46,6 +46,13 @@ console.log("executing app.js");
                 }                
             },
             {
+                path: '/first-user',
+                component: vueComponents['first-user'],
+                meta: {
+                    authRequired: false
+                }                
+            },
+            {
                 path: '/my-settings',
                 component: vueComponents['my-settings'],
                 meta: {

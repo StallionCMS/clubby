@@ -81,8 +81,11 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <archive>
+                        <manifest>
+                            <mainClass>io.stallion.clubhouse.MainRunner</mainClass>
+                        </manifest>
                         <manifestEntries>
-                            <pluginBooterClass>.Plugin</pluginBooterClass>
+                            <pluginBooterClass>io.stallion.clubhouse.ClubhousePlugin</pluginBooterClass>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                         </manifestEntries>
                     </archive>

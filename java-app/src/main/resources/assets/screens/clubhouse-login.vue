@@ -60,6 +60,10 @@
      },     
      methods: {
          loadFromQuery: function() {
+             if (theApplicationContext.isFirstUser) {
+                 window.location.hash = '/first-user';
+                 return
+             }
              this.password = this.$route.query.password;
              this.username = this.$route.query.username;
              this.encryptionPassword = this.$route.query.passphrase;
@@ -73,7 +77,8 @@
          encryptionLoginOnly: function() {
              var self = this;
              ClubhouseImportPublicAndPrivateKey(
-                 self.encryptionPassword
+                 self.encryptionPassword,
+                 self.$store.state.userProfile
              ).then(function() {
                  sessionStorage['private-key-passphrase-' + self.$store.state.user.id] = self.encryptionPassword;
                  ClubhouseVueApp.stateManager.start();
@@ -130,7 +135,7 @@
                  error: function(o) {
                      self.processing = false;
                      self.isLoading = false;
-                     stallion.showError(o);
+                     stallion.showError(o.message || o + '');
                  }
              });
          }

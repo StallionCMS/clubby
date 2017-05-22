@@ -33,6 +33,7 @@ public class Endpoints implements EndpointResource {
     public Object app() {
         UserProfile profile = new UserProfile();
         Long defaultChannelId = 0L;
+        boolean isFirstUser = false;
 
         if (!Context.getUser().isAnon()) {
             profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
@@ -40,10 +41,17 @@ public class Endpoints implements EndpointResource {
         }
         Context.getResponse().getMeta().setTitle("Clubhouse");
 
+        if (Context.getUser().isAnon()) {
+            if (ChannelController.instance().getStash().getItems().size() == 0) {
+                isFirstUser = true;
+            }
+        }
+
         Map ctx = map(
             val("pluginName", "clubhouse"),
             val("theApplicationContextJson", Sanitize.htmlSafeJson(
                     map(
+                            val("isFirstUser", isFirstUser),
                             val("site", map(
                                     val("siteUrl", Settings.instance().getSiteUrl()),
                                     val("cdnUrl", Settings.instance().getCdnUrl()),

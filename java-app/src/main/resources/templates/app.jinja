@@ -41,15 +41,16 @@
 
 {%-- endblock --%}
 {%-- block bundle_js --%}
-{{ assets.bundle("stallion", "stallion-ui-lib.bundle.js") }}
-{{ assets.bundle(pluginName, "app.bundle.js") }}
-{%-- endblock --%}
-
-{% block pre_end_body %}
 <script type="text/javascript">
 
     var theApplicationContext = {{ theApplicationContextJson }};
 
 
 </script>
+
+{{ assets.bundle("stallion", "stallion-ui-lib.bundle.js") }}
+{{ assets.bundle(pluginName, "app.bundle.js") }}
+{%-- endblock --%}
+
+{% block pre_end_body %}
 {% endblock %}

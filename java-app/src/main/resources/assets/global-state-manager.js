@@ -23,6 +23,10 @@ function ClubhouseMakeVuex() {
                 publicKey: function(state, publicKey) {
                     state.publicKey = publicKey;
                 },
+                privateKeyAndPassword(state, data) {
+                    state.privateKey = data.privateKey;
+                    sessionStorage['private-key-passphrase-' + state.user.id] = data.encryptionPassword;
+                },
                 privateKey: function(state, privateKey) {
                     state.privateKey = privateKey;
                 },
@@ -215,7 +219,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
 
     manager.setupWebSocket = function() {
         
-        manager.clubhouseSocket = new WebSocket("wss://clubhouse.local/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
+        manager.clubhouseSocket = new WebSocket("wss://" + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
         console.log('setup web socket.');
         manager.clubhouseSocket.onopen = function(event) {
             manager.loadContext();

@@ -7,6 +7,10 @@
      }
      border-top: 1px solid #4b4c58;
      margin-top: -2px;
+
+     .channel-start-message {
+         color: #888;
+     }
      .channel-loading-div {
          height: 100vh;
          padding-left: 20px;
@@ -20,7 +24,25 @@
          background-color: white;
          overflow: scroll;
          padding-top: 53px;
+         padding-bottom: 30px;
      }
+     .post-message-box {
+         position: fixed;
+         bottom: 0px;
+         z-index: 100;
+         background-color: white;
+         padding: 0px;
+         padding-top: 0px;
+         form {
+             padding-right: 20px;
+             padding-left: 20px;
+             padding-bottom: 20px;
+             .form-control {
+                 width: 100%;
+             }
+         }
+     }
+     
      .a-message-outer {
          position: relative;
          margin-bottom: 0px;
@@ -162,10 +184,6 @@
              height: 33px;
          }
      }
-     .post-message-box {
-         margin-top: 1em;
-     }
- 
      .wrap-insert-emoji-button {
          height: 2px;
          display: inline-block;
@@ -206,9 +224,9 @@
             </div>-->                        
             <div class="header-meta">
                 
-                <a class="column-header-text-icon" :href="'#/channel-members/' + channelId"><span><span class="column-header-text">{{ members ? members.length : '-' }}</span> <i class="material-icons">people</i></span></a>
+                <a v-if="channel.channelType==='CHANNEL'" class="column-header-text-icon" :href="'#/channel-members/' + channelId"><span><span class="column-header-text">{{ members ? members.length : '-' }}</span> <i class="material-icons">people</i></span></a>
                 <a href="javascript:;" @click="toggleFavorite" :class="['column-header-icon', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']"><i class="material-icons">star</i></a>
-                <a v-if="isChannelOwner" class="column-header-icon" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
+                <a v-if="isChannelOwner && channel.channelType==='CHANNEL'" class="column-header-icon" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
                 
             </div>
             
@@ -220,8 +238,8 @@
         </div>
         <div class="channel-messages always-show-scrollbars" style="">
             <div v-if="messagesDecrypted && isLoaded">
-                <div v-if="!hasPrevious">
-                    <h5><em>This is the begining of the "{{channelName}}" channel.</em></h5>
+                <div v-if="!hasPrevious" class="channel-start-message">
+                    <h5>This is the begining of the "{{channelName}}" channel.</h5>
                 </div>
                 <div v-if="messages.length === 0" class="p" style="margin-top: 40px;color:#666;">
                     No messages yet in this channel.
@@ -255,24 +273,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="post-message-box">
-                    <form @submit.prevent="postMessage">
-                        <label>Post a message.</label>
-                        <div class="wrap-insert-emoji-button">
-                            <a class="insert-emoji-button" @click="openInsertEmoji" href="javascript:;"><i class="material-icons">tag_faces</i></a>
-                        </div>
-                        <message-textarea id="post-message-box" :disabled="messageAreaDisabled || !publicKeysAvailable" @submit="postMessage" v-model="newMessage"></message-textarea>
-                        
-                        <!--<input type="text" class="form-control" v-model="newMessage">-->
-                    </form>
-                </div>
-                <div class="p">&nbsp;</div>
-                <emoji-popup @input="insertEmoji" ref="messageemojipopup"></emoji-popup>
-                <emoji-popup @input="onChooseReactionEmoji" @close="onCloseReactionEmoji" ref="emojipopup"></emoji-popup>
             </div>
-            <delete-message-modal v-if="showDeleteModal && messageToDelete" @close="showDeleteModal=false;messageToDelete=null" @delete="onDeleteMessage" :message="messageToDelete"></delete-message-modal>
-            
         </div>
+        <div v-if="channel" class="post-message-box">
+            <form @submit.prevent="postMessage">
+                <div class="wrap-insert-emoji-button">
+                    <a class="insert-emoji-button" @click="openInsertEmoji" href="javascript:;"><i class="material-icons">tag_faces</i></a>
+                </div>
+                <message-textarea :placeholder="'Message ' + channel.name" id="post-message-box" :disabled="messageAreaDisabled || !publicKeysAvailable" @submit="postMessage" v-model="newMessage"></message-textarea>
+                
+                <!--<input type="text" class="form-control" v-model="newMessage">-->
+            </form>
+        </div>
+        <div class="p">&nbsp;</div>
+        <emoji-popup @input="insertEmoji" ref="messageemojipopup"></emoji-popup>
+        <emoji-popup @input="onChooseReactionEmoji" @close="onCloseReactionEmoji" ref="emojipopup"></emoji-popup>
+        <delete-message-modal v-if="showDeleteModal && messageToDelete" @close="showDeleteModal=false;messageToDelete=null" @delete="onDeleteMessage" :message="messageToDelete"></delete-message-modal>
     </div>
 </template>
 
@@ -309,7 +325,12 @@
                  return;
              }
              if (self.page <=1) {
-                 div.scrollTop = div.scrollHeight + 200;
+                 //div.scrollTop = div.scrollHeight + 200;
+                 //div.scrollTop = div.scrollHeight + 200;
+                 window.scrollTo(0,document.body.scrollHeight);
+                 Vue.nextTick(function() {
+                     $('#post-message-box').focus();
+                 });
              } else if (self.scrollToMessageId) {
                  var $msg = $('#channel-message-' + self.scrollToMessageId);
                  var animateTo = $msg.offset().top - 300;

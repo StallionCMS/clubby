@@ -49,6 +49,10 @@
      },
      methods: {
          onRoute: function() {
+             if (theApplicationContext.isFirstUser) {
+                 window.location.hash = '/first-user';
+                 return;
+             }
              if (this.$store.state.user && this.$store.state.user.id) {
                  if (localStorage.lastChannelPath) {
                      window.location.hash = localStorage.lastChannelPath;

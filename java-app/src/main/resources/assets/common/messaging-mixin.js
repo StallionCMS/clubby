@@ -583,6 +583,7 @@ var ClubhouseMessagingMixin = {
                             //self.messages.push(message);
                             self.messageAreaDisabled = false;
                             Vue.nextTick(function() {
+                                window.scrollTo(0,document.body.scrollHeight);
                                 $('#post-message-box').focus();
                             });
                             
@@ -629,6 +630,10 @@ var ClubhouseMessagingMixin = {
                         self.newMessage = '';
                         //self.messages.push(message);
                         self.messageAreaDisabled = false;
+                        Vue.nextTick(function() {
+                            window.scrollTo(0,document.body.scrollHeight);
+                            $('#post-message-box').focus();
+                        });
                     }
                 });
             }

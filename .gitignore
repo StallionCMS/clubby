@@ -27,3 +27,4 @@ src/test/resources/example_site/app-data
 site/bin
 site/.stallion-scripts
 site/app-data
+build.py

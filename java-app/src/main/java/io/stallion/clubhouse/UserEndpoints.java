@@ -19,6 +19,7 @@ import io.stallion.users.User;
 import io.stallion.users.UserController;
 import io.stallion.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
 import javax.ws.rs.*;
 
@@ -173,6 +174,123 @@ public class UserEndpoints implements EndpointResource {
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);
+
+        return map(
+                val("user", user),
+                val("userProfile", profile),
+                val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId()))
+        );
+
+    }
+
+
+    @POST
+    @Path("/create-first-user")
+    @MinRole(Role.ANON)
+    public Object createFirstUser(
+            @BodyParam("secretKey") String secretKey,
+            @BodyParam("username") String username,
+            @BodyParam("email") String email,
+            @BodyParam("password") String password,
+            @BodyParam("givenName") String givenName,
+            @BodyParam("familyName") String familyName,
+            @BodyParam("publicKeyHex") String publicKeyHex,
+            @BodyParam("encryptedPrivateKeyHex") String encryptedPrivateKeyHex,
+            @BodyParam("encryptedPrivateKeyInitializationVectorHex") String encryptedPrivateKeyInitializationVectorHex,
+            @BodyParam(value = "webSite", allowEmpty = true) String webSite,
+            @BodyParam(value = "contactInfo", allowEmpty = true) String contactInfo,
+            @BodyParam(value = "aboutMe", allowEmpty = true) String aboutMe
+    ) {
+        int userCount = UserController.instance().filterChain().count();
+        if (userCount > 0) {
+            throw new ClientException("This site has already been initialized. You must log in with the admin account.");
+        }
+        if (!Settings.instance().getHealthCheckSecret().equals(secretKey)) {
+            throw new ClientException("The secret key you entered is not correct.");
+        }
+
+        if (!UserProfileController.USERNAME_PATTERN.matcher(username).matches()) {
+            throw new ClientException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.");
+        }
+
+
+        User user = new User();
+        user.setEmail(email);
+        user.setApproved(true);
+        user.setEmailVerified(true);
+        user.setResetToken(GeneralUtils.randomTokenBase32(24));
+        user.setUsername(username);
+        user.setGivenName(givenName);
+        user.setRole(Role.ADMIN);
+        user.setFamilyName(familyName);
+        user.setDisplayName(givenName + " " + familyName);
+
+        UserController.instance().hydratePassword(user, password, password);
+
+        UserController.instance().save(user);
+
+        UserProfile profile = new UserProfile()
+                    .setUserId(user.getId())
+            ;
+        profile.setContactInfo(contactInfo);
+        profile.setAboutMe(aboutMe);
+        profile.setEncryptedPrivateKeyHex(encryptedPrivateKeyHex);
+        profile.setPublicKeyHex(publicKeyHex);
+        profile.setEncryptedPrivateKeyInitializationVectorHex(encryptedPrivateKeyInitializationVectorHex);
+        UserProfileController.instance().save(profile);
+
+        UserController.instance().addSessionCookieForUser(user, true);
+
+
+
+        Channel channel1 = new Channel()
+                .setName("General")
+                .setChannelType(ChannelType.CHANNEL)
+                .setDefaultForNewUsers(true)
+                .setEncrypted(false)
+                .setHidden(false)
+                .setInviteOnly(false)
+                ;
+        ChannelController.instance().save(channel1);
+
+
+        Channel channel2 = new Channel()
+                .setName("Random")
+                .setChannelType(ChannelType.CHANNEL)
+                .setDefaultForNewUsers(true)
+                .setEncrypted(false)
+                .setHidden(false)
+                .setInviteOnly(false)
+                ;
+        ChannelController.instance().save(channel2);
+
+
+
+        Channel channel3 = new Channel()
+                .setName("Discussions")
+                .setChannelType(ChannelType.FORUM)
+                .setDefaultForNewUsers(true)
+                .setEncrypted(false)
+                .setHidden(false)
+                .setInviteOnly(false)
+                ;
+        ChannelController.instance().save(channel3);
+
+        for(Channel c: list(channel1, channel2, channel3)) {
+            ChannelMember cm = new ChannelMember()
+                    .setCanPost(true)
+                    .setChannelId(c.getId())
+                    .setFavorite(false)
+                    .setHidden(false)
+                    .setJoinedAt(utcNow())
+                    .setOwner(true)
+                    .setUserId(user.getId())
+                    ;
+            ChannelMemberController.instance().save(cm);
+        }
+
+
+
 
         return map(
                 val("user", user),

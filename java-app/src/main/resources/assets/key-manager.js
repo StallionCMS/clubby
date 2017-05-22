@@ -7,6 +7,7 @@ function ClubhouseImportPublicAndPrivateKey(encryptionPassword, userProfile) {
 }
 
 
+
 var VueKeyImporter = function(encryptionPassword, resolve, reject, userProfile) {
 
     var vueStore = stallionClubhouseApp.store;

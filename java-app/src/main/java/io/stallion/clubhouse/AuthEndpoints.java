@@ -21,6 +21,12 @@ public class AuthEndpoints implements EndpointResource {
     @POST
     @Path("/login")
     public Object login(@BodyParam("username") String username, @BodyParam("password") String password) {
+        if (username.contains("@")) {
+            IUser fromEmail = UserController.instance().forEmail(username);
+            if (fromEmail != null) {
+                username = fromEmail.getUsername();
+            }
+        }
         IUser user = UserController.instance().loginUser(username, password, false);
         UserProfile up = UserProfileController.instance().forStallionUserOrNotFound(user.getId());
         return map(
