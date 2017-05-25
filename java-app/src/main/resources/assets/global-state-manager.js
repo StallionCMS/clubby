@@ -218,8 +218,13 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     };
 
     manager.setupWebSocket = function() {
-        
-        manager.clubhouseSocket = new WebSocket("wss://" + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
+
+        var scheme = 'wss://';
+        if (window.location.protocol === 'http:') {
+            scheme = 'ws://';
+        }
+    
+        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
         console.log('setup web socket.');
         manager.clubhouseSocket.onopen = function(event) {
             manager.loadContext();

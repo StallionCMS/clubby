@@ -39,6 +39,7 @@
              padding-bottom: 20px;
              .form-control {
                  width: 100%;
+                 border: 3px solid #BBB;
              }
          }
      }
@@ -89,7 +90,7 @@
          max-height: 50px;
      }
      .a-message-right {
-         width: 650px;
+         width: calc(100% - 50px);
      }
      .a-message-outer.a-message-with-meta .a-message-meta {
          margin-top: 4px;
@@ -250,7 +251,7 @@
                     </div>
                     <div class="a-message" :id="'channel-message-' + message.id">
                         <div class="a-message-left">
-                            <div class="a-message-avatar-wrap"><img v-if="message.showUser" class="a-message-avatar" :src="$store.state.allUsersById[message.fromUserId].avatarUrl"></div>
+                            <div class="a-message-avatar-wrap"><img v-if="message.showUser" class="a-message-avatar" :src="getAvatarUrl(message.fromUserId)"></div>
                         </div>
                         <div class="a-message-right">
                             <div class="a-message-meta">
@@ -317,6 +318,13 @@
      },
          
      methods: {
+         getAvatarUrl: function(userId) {
+             var self = this;
+             if (self.$store.state.allUsersById && self.$store.state.allUsersById[userId]) {
+                 return self.$store.state.allUsersById[userId].avatarUrl
+             }
+             return 'https://www.gravatar.com/avatar/' + md5(userId + '') + '?f=y&d=identicon';
+         },
          afterFetchingFinished: function() {
              var self = this;
              var $div = $(self.$el).find('.channel-messages');
@@ -329,7 +337,9 @@
                  //div.scrollTop = div.scrollHeight + 200;
                  window.scrollTo(0,document.body.scrollHeight);
                  Vue.nextTick(function() {
-                     $('#post-message-box').focus();
+                     if (!ClubhouseMobileInterop.isMobile) {
+                         $('#post-message-box').focus();
+                     }
                  });
              } else if (self.scrollToMessageId) {
                  var $msg = $('#channel-message-' + self.scrollToMessageId);

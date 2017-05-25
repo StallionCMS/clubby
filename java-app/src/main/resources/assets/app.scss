@@ -12,6 +12,7 @@ body, html {
 body, html {
     font-size: 15px;
 }
+
 h1 {
 
 }
@@ -169,9 +170,9 @@ h6 {
 .channel-sidebar-vue.popped-up {
     display: block;
     z-index: 250;
-    -webkit-animation: slide 0.5s forwards;
-    -webkit-animation-delay: 2s;
-    animation: slide 0.5s forwards;
+    -webkit-animation: slide 0.15s forwards;
+    -webkit-animation-delay: 0s;
+    animation: slide 0.15s forwards;
     animation-delay: 0s;
 }
 
@@ -184,7 +185,7 @@ h6 {
 }
 
 .channel-feed-vue .channel-messages, .post-message-box {
-    width: 100hw;
+    width: 100vw;
 }
 
 @media (min-width: 700px) {
@@ -208,7 +209,7 @@ h6 {
 @media (min-width: 905px) {
     .channel-feed-vue .channel-messages, .post-message-box {
         max-width: 500px;
-        width: calc(100hw-400px);
+        width: calc(100vw-400px);
     }
     .channel-right-panel {
         padding-top: 70px;
@@ -228,6 +229,16 @@ h6 {
         padding-top: 70px;
         width: calc(100vw - 930px);
         float: right;
+    }
+}
+
+
+#st-clubhouse-body.clubhouse-mobile-app {
+    .mobile-view-topbar-vue {
+        height: 0px;
+        a {
+            display: none;
+        }
     }
 }
 

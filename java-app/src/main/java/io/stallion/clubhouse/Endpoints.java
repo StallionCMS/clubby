@@ -35,6 +35,21 @@ public class Endpoints implements EndpointResource {
         Long defaultChannelId = 0L;
         boolean isFirstUser = false;
 
+
+        Context.getResponse().getMeta().setBodyCssId("clubhouse-body");
+
+        // Check for auth passed in via query string, used by mobile and desktop apps
+        String newAuthToken = Context.getRequest().getQueryParams().getOrDefault("setAuthCookie", "");
+        if (!empty(newAuthToken)) {
+            boolean succeeded = UserController.instance().checkCookieAndAuthorizeForCookieValue(newAuthToken);
+            if (succeeded) {
+                Context.getResponse().addCookie("stUserSession", newAuthToken);
+            }
+        }
+
+
+
+
         if (!Context.getUser().isAnon()) {
             profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
             defaultChannelId = ChannelController.instance().getFirstUserChannel(Context.getUser().getId());

@@ -46,6 +46,13 @@ console.log("executing app.js");
                 }                
             },
             {
+                path: '/mobile-login',
+                component: vueComponents['mobile-login'],
+                meta: {
+                    authRequired: true
+                }                
+            },            
+            {
                 path: '/first-user',
                 component: vueComponents['first-user'],
                 meta: {
@@ -77,7 +84,6 @@ console.log("executing app.js");
                 path: '/channel/:channelId',
                 component: vueComponents['channel-feed'],
                 meta: {
-                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -85,7 +91,6 @@ console.log("executing app.js");
                 path: '/forum/:channelId',
                 component: vueComponents['forum-top-level'],
                 meta: {
-                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -93,21 +98,21 @@ console.log("executing app.js");
                 path: '/forum/:channelId/new-thread',
                 component: vueComponents['forum-create-or-edit-post'],
                 meta: {
-                    keyRequired: true
+                    authRequired: true
                 }
             },
             {
                 path: '/forum/:messageId/edit',
                 component: vueComponents['forum-create-or-edit-post'],
                 meta: {
-                    keyRequired: true
+                    authRequired: true
                 }
             },
             {
                 path: '/forum/:channelId/:threadId',
                 component: vueComponents['forum-thread'],
                 meta: {
-                    keyRequired: true
+                    authRequired: true
                 }
             },
             {
@@ -180,7 +185,8 @@ console.log("executing app.js");
             store.commit('defaultChannelIdChange', theApplicationContext.defaultChannelId);
         }
 
-        if (window.theApplicationContext.user && sessionStorage['private-key-passphrase-' + window.theApplicationContext.user.id] && stallion.getCookie("stUserSession")) {
+        // sessionStorage['private-key-passphrase-' + window.theApplicationContext.user.id] && 
+        if (window.theApplicationContext.user && window.theApplicationContext.user.id) {
             store.commit('login', {
                 user: window.theApplicationContext.user,
                 userProfile: window.theApplicationContext.profile

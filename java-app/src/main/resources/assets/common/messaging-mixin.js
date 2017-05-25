@@ -584,7 +584,9 @@ var ClubhouseMessagingMixin = {
                             self.messageAreaDisabled = false;
                             Vue.nextTick(function() {
                                 window.scrollTo(0,document.body.scrollHeight);
-                                $('#post-message-box').focus();
+                                if (!ClubhouseMobileInterop.isMobile) {
+                                    $('#post-message-box').focus();
+                                }
                             });
                             
                         }
@@ -632,7 +634,9 @@ var ClubhouseMessagingMixin = {
                         self.messageAreaDisabled = false;
                         Vue.nextTick(function() {
                             window.scrollTo(0,document.body.scrollHeight);
-                            $('#post-message-box').focus();
+                            if (!ClubhouseMobileInterop.isMobile) {
+                                $('#post-message-box').focus();
+                            }
                         });
                     }
                 });

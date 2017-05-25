@@ -15,6 +15,7 @@
 /encryption.js
 /key-manager.js
 /global-state-manager.js
+/mobile-interop.js
 /components/*.vue
 /screens/*.vue
 /app.js

@@ -124,9 +124,13 @@
                          ClubhouseVueApp.stateManager.start();
                          ClubhouseVueApp.stateManager.loadContext(function(ctx) {
                              Vue.nextTick(function() {
+                                 console.log('login.vue navigate home after tick');
                                  window.location.hash = '/';
                              });
                          });
+                         console.log('login.vue nagivate home');
+                         window.location.hash = '/';
+                         
                      }).catch(function(err) {
                          self.processing = false;
                          stallion.showError('Error importing private key. Please check your passphrase');
