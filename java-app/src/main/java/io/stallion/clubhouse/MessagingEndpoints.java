@@ -291,7 +291,8 @@ public class MessagingEndpoints implements EndpointResource {
             }
             UserMessageController.instance().save(um);
 
-            notifyOfNewMessage(message, um);
+            notifyOfNewMessage(message, um, channel);
+
         }
 
         return message;
@@ -362,7 +363,8 @@ public class MessagingEndpoints implements EndpointResource {
                 um.setMentioned(true);
             }
             UserMessageController.instance().save(um);
-            notifyOfNewMessage(message, um);
+            notifyOfNewMessage(message, um, channel);
+
         }
 
 
@@ -506,10 +508,14 @@ public class MessagingEndpoints implements EndpointResource {
         return combo;
     }
 
-    public void notifyOfNewMessage(Message message, UserMessage um) {
+    public void notifyOfNewMessage(Message message, UserMessage um, Channel channel) {
         MessageCombo combo = messageUserMessageToCombo(message, um);
 
         WebSocketEventHandler.sendMessageToUser(um.getUserId(), JSON.stringify(map(val("message", combo), val("type", "new-message"))));
+
+        if (um.isMentioned() || channel.getChannelType().equals(ChannelType.DIRECT_MESSAGE)) {
+            Notifier.sendNotification(um.getUserId(), "New message from " + message.getFromUsername(), "");
+        }
     }
 
     public static class EncryptedMessageContainer {

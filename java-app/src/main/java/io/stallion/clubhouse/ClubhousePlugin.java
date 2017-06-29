@@ -1,5 +1,6 @@
 package io.stallion.clubhouse;
 
+import com.google.firebase.FirebaseApp;
 import io.stallion.Context;
 import io.stallion.boot.ServeCommandOptions;
 import io.stallion.clubhouse.webSockets.WebSocketBooter;
@@ -50,10 +51,13 @@ public class ClubhousePlugin extends StallionJavaPlugin {
         ChannelMemberController.register();
         MessageController.register();
         MessageReactionController.register();
+        MobileSessionController.register();
         UserMessageController.register();
         UserProfileController.register();
         UserStateController.register();
 
+
+        Notifier.init();
 
 
         JobCoordinator.instance().registerJob(

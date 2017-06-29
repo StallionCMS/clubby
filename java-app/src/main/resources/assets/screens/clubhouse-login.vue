@@ -106,6 +106,7 @@
                  },
                  success: function(o) {
                      console.log(o);
+                     debugger;
                      //o.encryptedPrivateKeyInitializationVectorHex;
                      //o.publicKeyHex;
                      //o.encryptedPrivateKeyHex;
@@ -133,6 +134,7 @@
                          
                      }).catch(function(err) {
                          self.processing = false;
+                         console.error('Private key import error: ', err);
                          stallion.showError('Error importing private key. Please check your passphrase');
                      });
                  },

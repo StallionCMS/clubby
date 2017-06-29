@@ -1,11 +1,39 @@
 
 
 
+var clubhouseEncryptMessage = function(message, tos) {
+    return new Promise(function(resolve, reject) {
+        new Encrypter()
+            .encryptMessage(message, tos, resolve, reject);
+    });
+}
+
+var clubhouseReEncryptMessage = function(message, privateKey, encryptedPasswordHex, passwordVectorHex) {
+    return new Promise(function(resolve, reject) {
+        new ReEncrypter()
+            .rencryptMessage(
+                message, privateKey, encryptedPasswordHex, passwordVectorHex, resolve, reject
+            );
+    });
+}
+
+var clubhouseDecryptMessage = function(privateKey, encryptedMessageBytes, messageVector, encryptedPasswordBytes, passwordVector) {
+    return new Promise(function(resolve, reject) {
+        new Decrypter()
+            .decryptMessage(
+                privateKey, encryptedMessageBytes, messageVector, encryptedPasswordBytes, passwordVector, resolve, reject
+             );
+    });
+}
+
+
+
+
 var Encrypter = function() {
     var self = this;
     var enc = this;
 
-    enc.encryptMessage = function(message, tos, callback) {
+    enc.encryptMessage = function(message, tos, callback, reject) {
         console.log('encrypt message ', message, tos);
         enc.message = message;
         enc.tos = tos;
@@ -18,6 +46,7 @@ var Encrypter = function() {
         enc.messageVector = null;
         enc.messageVectorHex = null;
         enc.callback = callback;
+        enc.reject = reject;
         step1GenerateSymettricKey();
     };
 
@@ -40,7 +69,7 @@ var Encrypter = function() {
                 "raw",
                 result,
                 {
-                    name: "AES-CBC"
+                    name: "AES-GCM"
                 },
                 false,
                 ["encrypt", "decrypt"]
@@ -50,7 +79,11 @@ var Encrypter = function() {
                 step2EncryptMessage();
             }, function(e){
                 console.log(e);
+                enc.reject(e);
             });
+        }).catch(function(e) {
+            console.log(e);
+            enc.reject(e);
         });
     }
 
@@ -61,7 +94,7 @@ var Encrypter = function() {
         console.log('e2. message ', enc.message);
         encrypt_promise = crypto.subtle.encrypt(
             {
-                name: "AES-CBC",
+                name: "AES-GCM",
                 iv: vector
             },
             enc.symettricKey,
@@ -78,6 +111,7 @@ var Encrypter = function() {
             }, 
             function(e){
                 console.error(e);
+                enc.reject(e);
             }
         );
 
@@ -95,7 +129,8 @@ var Encrypter = function() {
             var encrypt_promise = crypto.subtle.encrypt(
                 {
                     name: "RSA-OAEP",
-                    iv: vector
+                    iv: vector,
+                    hash: {name: "SHA-1"}
                 },
                 to.publicKey,
                 enc.passwordBytes
@@ -119,6 +154,7 @@ var Encrypter = function() {
                 }, 
                 function(e){
                     console.error(e);
+                    enc.reject(e);
                 }
             );                
         });
@@ -178,7 +214,8 @@ var ReEncrypter = function() {
         var decryptPromise = crypto.subtle.decrypt(
             {
                 name: "RSA-OAEP",
-                iv: self.passwordVector
+                iv: self.passwordVector,
+                hash: {name: "SHA-1"}
             },
             self.privateKey,
             self.encryptedPasswordBytes
@@ -209,7 +246,7 @@ var ReEncrypter = function() {
                 "raw",
                 result,
                 {
-                    name: "AES-CBC"
+                    name: "AES-GCM"
                 },
                 false,
                 ["encrypt", "decrypt"]
@@ -232,7 +269,7 @@ var ReEncrypter = function() {
         console.log('e2. message ', enc.message);
         encrypt_promise = crypto.subtle.encrypt(
             {
-                name: "AES-CBC",
+                name: "AES-GCM",
                 iv: vector
             },
             enc.symettricKey,
@@ -264,7 +301,7 @@ var Decrypter = function() {
     var dec = this;
     var self = this;
 
-    dec.decryptMessage = function(privateKey, encryptedMessageBytes, messageVector, encryptedPasswordBytes, passwordVector, callback) {
+    dec.decryptMessage = function(privateKey, encryptedMessageBytes, messageVector, encryptedPasswordBytes, passwordVector, callback, reject) {
         dec.privateKey = privateKey;
         dec.encryptedMessageBytes = encryptedMessageBytes;
         dec.messageVector = messageVector;
@@ -273,21 +310,21 @@ var Decrypter = function() {
         dec.callback = callback;
         dec.password = null;
         dec.symettricKey = null;
-        
+        dec.reject = reject;
         step1DecryptPassword();
     };
 
     function step1DecryptPassword() {
         console.log('d1. encryptedPassword ', self.encryptedPasswordBytes);
-        var decryptPromise = crypto.subtle.decrypt(
+        crypto.subtle.decrypt(
             {
                 name: "RSA-OAEP",
-                iv: self.passwordVector
+                iv: self.passwordVector,
+                hash: {name: "SHA-1"}
             },
             self.privateKey,
             self.encryptedPasswordBytes
-        );
-        decryptPromise.then(
+        ).then(
             function(result){
                 var decrypted = new Uint8Array(result);
                 console.log('d1. Decrypted passphrase ', result, decrypted, convertArrayBufferViewtoString(decrypted));
@@ -296,9 +333,9 @@ var Decrypter = function() {
             },
             function(e){
                 console.error(e);
-                
+                dec.reject(e);
             }
-        );              
+        )
     }
 
     function step2PasswordToSymettricKey() {
@@ -313,7 +350,7 @@ var Decrypter = function() {
                 "raw",
                 result,
                 {
-                    name: "AES-CBC"
+                    name: "AES-GCM"
                 },
                 false,
                 ["encrypt", "decrypt"]
@@ -323,15 +360,19 @@ var Decrypter = function() {
                 step3DecryptMessage();
             }, function(e){
                 console.error(e);
+                dec.reject(e);
             });
-        });      
+        }).catch(function(e) {
+            console.error(e);
+            dec.reject(e);
+        });
     }
 
     function step3DecryptMessage() {
         console.log('d3. decrypt message', self.messageVector, self.symettricKey, self.encryptedMessageBytes);
         decrypt_promise = crypto.subtle.decrypt(
             {
-                name: "AES-CBC",
+                name: "AES-GCM",
                 iv: self.messageVector
             },
             self.symettricKey,
@@ -346,6 +387,7 @@ var Decrypter = function() {
             }, 
             function(e){
                 console.error(e);
+                dec.reject(e);
             }
         );            
     }

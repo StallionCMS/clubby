@@ -32,6 +32,13 @@ console.log("executing app.js");
                 }
             },
             {
+                path: '/encryption-sandbox',
+                component: vueComponents['encryption-sandbox'],
+                meta: {
+                    authRequired: false
+                }
+            },            
+            {
                 path: '/manual-key-generation',
                 component: vueComponents['manual-key-generation'],
                 meta: {
@@ -392,3 +399,6 @@ function convertArrayBufferViewtoString(buffer)
 
     return str;
 }
+
+
+

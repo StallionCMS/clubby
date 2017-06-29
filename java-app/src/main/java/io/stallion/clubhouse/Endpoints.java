@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.stallion.dataAccess.db.DB;
+import io.stallion.exceptions.ClientException;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.settings.Settings;
@@ -39,12 +40,19 @@ public class Endpoints implements EndpointResource {
         Context.getResponse().getMeta().setBodyCssId("clubhouse-body");
 
         // Check for auth passed in via query string, used by mobile and desktop apps
-        String newAuthToken = Context.getRequest().getQueryParams().getOrDefault("setAuthCookie", "");
+        String newAuthToken = Context.getRequest().getQueryParams().getOrDefault("mobileAuthCookie", "");
         if (!empty(newAuthToken)) {
-            boolean succeeded = UserController.instance().checkCookieAndAuthorizeForCookieValue(newAuthToken);
-            if (succeeded) {
-                Context.getResponse().addCookie("stUserSession", newAuthToken);
+            UserController.UserValetResult result = UserController.instance().cookieStringToUser(newAuthToken);
+            if (result != null && result.getUser() != null && !empty(result.getSessionKey())) {
+                MobileSession mb = MobileSessionController
+                        .instance()
+                        .forUniqueKey("sessionKey", result.getSessionKey());
+                if (mb != null && mb.getUserId().equals(result.getUser().getId())) {
+                    Context.getResponse().addCookie("stUserSession", newAuthToken);
+                    Context.setUser(result.getUser());
+                }
             }
+
         }
 
 
