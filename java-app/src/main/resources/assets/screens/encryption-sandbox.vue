@@ -50,7 +50,7 @@
             <hr>
             <div class="p">
                 <label>Profile JSON</label>
-                <textarea readonly="true" v-model="profileJson"></textarea>
+                <textarea readonly="true" v-model="profile"></textarea>
             </div>
             <div class="p">
                 <label>Encrypted Message</label>
@@ -98,14 +98,12 @@
          run: function() {
              var self = this;
              clubhouseGeneratePrivateAndPublicKey(self.georgePassword).then(function(result) {
-                 self.encryptedPrivateKeyJwkString = result.privateKeyEncryptedHex;
+                 self.encryptedPrivateKeyJwkJson = result.privateKeyEncryptedHex;
                  self.publicKeyJwkString = result.publicKeyHex;
                  self.profile = {
-                     publicKeyHex: result.publicKeyHex,
-                     publicKeyJwkString: result.publicKeyHex,
-                     encryptedPrivateKeyJwkString: result.privateKeyEncryptedHex,
-                     encryptedPrivateKeyHex: result.privateKeyEncryptedHex,
-                     encryptedPrivateKeyInitializationVectorHex: result.privateKeyEncryptionVectorHex
+                     publicKeyJwkJson: result.publicKeyHex,
+                     privateKeyJwkEncryptedHex: result.privateKeyEncryptedHex,
+                     privateKeyVectorHex: result.privateKeyEncryptionVectorHex
                  }
                  console.log('es1. Generated private & public key, now encrypting message');
                  self.encryptMessage();

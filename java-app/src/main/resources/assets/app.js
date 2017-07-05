@@ -91,6 +91,7 @@ console.log("executing app.js");
                 path: '/channel/:channelId',
                 component: vueComponents['channel-feed'],
                 meta: {
+                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -98,6 +99,7 @@ console.log("executing app.js");
                 path: '/forum/:channelId',
                 component: vueComponents['forum-top-level'],
                 meta: {
+                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -105,6 +107,7 @@ console.log("executing app.js");
                 path: '/forum/:channelId/new-thread',
                 component: vueComponents['forum-create-or-edit-post'],
                 meta: {
+                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -119,6 +122,7 @@ console.log("executing app.js");
                 path: '/forum/:channelId/:threadId',
                 component: vueComponents['forum-thread'],
                 meta: {
+                    keyRequired: true,
                     authRequired: true
                 }
             },
@@ -216,10 +220,14 @@ console.log("executing app.js");
                 if (store.state.privateKey) {
                     next();
                 } else if (app.store.state.user.id && sessionStorage['private-key-passphrase-' + app.store.state.user.id]) {
-                    new VueKeyImporter(sessionStorage['private-key-passphrase-' + app.store.state.user.id], function() {
-                        console.log('private key loaded from sessionStorage');
+                    clubhouseImportPublicAndPrivateKey(
+                        sessionStorage['private-key-passphrase-' + app.store.state.user.id],
+                        app.store.state.userProfile
+                    ).then(function() {
                         next();
-                    }).importPublicAndPrivate();            
+                    }).catch(function(err) {
+                        console.error(err);
+                    });
                 } else {
                     window.location.hash = '/login';
                 }
@@ -243,8 +251,6 @@ console.log("executing app.js");
             router: router
         });
         vueApp.currentChannelComponent = null;
-
-
         
 
         vueApp.stateManager = new ClubhouseGlobalStateManager(vueApp);

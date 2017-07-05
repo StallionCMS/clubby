@@ -18,7 +18,7 @@ public class ChannelUserWrapper {
     private String aboutMe = "";
     private String webSite = "";
     private String contactInfo = "";
-    private String publicKeyHex = "";
+    private String publicKeyJwkJson = "";
     private Long id = 0L;
     private String displayName = "";
     private ZonedDateTime lastActiveAt = DateUtils.utcNow();
@@ -71,12 +71,12 @@ public class ChannelUserWrapper {
         return this;
     }
 
-    public String getPublicKeyHex() {
-        return publicKeyHex;
+    public String getPublicKeyJwkJson() {
+        return publicKeyJwkJson;
     }
 
-    public ChannelUserWrapper setPublicKeyHex(String publicKeyHex) {
-        this.publicKeyHex = publicKeyHex;
+    public ChannelUserWrapper setPublicKeyJwkJson(String publicKeyJwkJson) {
+        this.publicKeyJwkJson = publicKeyJwkJson;
         return this;
     }
 

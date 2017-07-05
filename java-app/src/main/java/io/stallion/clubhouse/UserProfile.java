@@ -19,9 +19,14 @@ import javax.persistence.Table;
 @Table(name="sch_user_profiles")
 public class UserProfile extends ModelBase {
     private Long userId = 0L;
-    private String publicKeyHex = "";
-    private String encryptedPrivateKeyHex = "";
-    private String encryptedPrivateKeyInitializationVectorHex = "";
+
+
+    private String publicKeyJwkJson = "";
+    private String privateKeyJwkEncryptedHex = "";
+    private String privateKeyVectorHex = "";
+
+
+
     private String aboutMe = "";
     private String webSite = "";
     private String contactInfo = "";
@@ -49,34 +54,35 @@ public class UserProfile extends ModelBase {
     }
 
     @Column(columnDefinition = "longtext")
-    public String getPublicKeyHex() {
-        return publicKeyHex;
+    public String getPublicKeyJwkJson() {
+        return publicKeyJwkJson;
     }
 
-    public UserProfile setPublicKeyHex(String publicKeyHex) {
-        this.publicKeyHex = publicKeyHex;
+    public UserProfile setPublicKeyJwkJson(String publicKeyJwkJson) {
+        this.publicKeyJwkJson = publicKeyJwkJson;
         return this;
     }
 
     @Column(columnDefinition = "longtext")
-    public String getEncryptedPrivateKeyHex() {
-        return encryptedPrivateKeyHex;
+    public String getPrivateKeyJwkEncryptedHex() {
+        return privateKeyJwkEncryptedHex;
     }
 
-    public UserProfile setEncryptedPrivateKeyHex(String encryptedPrivateKeyHex) {
-        this.encryptedPrivateKeyHex = encryptedPrivateKeyHex;
+    public UserProfile setPrivateKeyJwkEncryptedHex(String privateKeyJwkEncryptedHex) {
+        this.privateKeyJwkEncryptedHex = privateKeyJwkEncryptedHex;
         return this;
     }
 
-    @Column(columnDefinition = "longtext")
-    public String getEncryptedPrivateKeyInitializationVectorHex() {
-        return encryptedPrivateKeyInitializationVectorHex;
+    @Column
+    public String getPrivateKeyVectorHex() {
+        return privateKeyVectorHex;
     }
 
-    public UserProfile setEncryptedPrivateKeyInitializationVectorHex(String encryptedPrivateKeyInitializationVectorHex) {
-        this.encryptedPrivateKeyInitializationVectorHex = encryptedPrivateKeyInitializationVectorHex;
+    public UserProfile setPrivateKeyVectorHex(String privateKeyVectorHex) {
+        this.privateKeyVectorHex = privateKeyVectorHex;
         return this;
     }
+
 
     @Column
     public String getAboutMe() {

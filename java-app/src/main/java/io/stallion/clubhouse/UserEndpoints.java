@@ -59,7 +59,7 @@ public class UserEndpoints implements EndpointResource {
         List<ChannelUserWrapper> users = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarurl`, up.aboutMe, up.webSite, up.publicKeyHex  " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarurl`, up.aboutMe, up.webSite, up.publicKeyJwkJson  " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id "
         );
@@ -75,7 +75,7 @@ public class UserEndpoints implements EndpointResource {
         List<ChannelUserWrapper> users = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarUrl`, up.aboutMe, up.webSite, up.publicKeyHex, " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.`avatarUrl`, up.aboutMe, up.webSite, up.publicKeyJwkJson, " +
                         "   up.contactInfo " +
                         " FROM stallion_users AS su " +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
@@ -134,7 +134,7 @@ public class UserEndpoints implements EndpointResource {
             @BodyParam("password") String password,
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
-            @BodyParam("publicKeyHex") String publicKeyHex,
+            @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
             @BodyParam("encryptedPrivateKeyHex") String encryptedPrivateKeyHex,
             @BodyParam("encryptedPrivateKeyInitializationVectorHex") String encryptedPrivateKeyInitializationVectorHex,
             @BodyParam(value = "webSite", allowEmpty = true) String webSite,
@@ -168,9 +168,9 @@ public class UserEndpoints implements EndpointResource {
                     .setUserId(user.getId())
                     ;
         }
-        profile.setEncryptedPrivateKeyHex(encryptedPrivateKeyHex);
-        profile.setPublicKeyHex(publicKeyHex);
-        profile.setEncryptedPrivateKeyInitializationVectorHex(encryptedPrivateKeyInitializationVectorHex);
+        profile.setPrivateKeyJwkEncryptedHex(encryptedPrivateKeyHex);
+        profile.setPublicKeyJwkJson(publicKeyJwkJson);
+        profile.setPrivateKeyVectorHex(encryptedPrivateKeyInitializationVectorHex);
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);
@@ -194,7 +194,7 @@ public class UserEndpoints implements EndpointResource {
             @BodyParam("password") String password,
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
-            @BodyParam("publicKeyHex") String publicKeyHex,
+            @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
             @BodyParam("encryptedPrivateKeyHex") String encryptedPrivateKeyHex,
             @BodyParam("encryptedPrivateKeyInitializationVectorHex") String encryptedPrivateKeyInitializationVectorHex,
             @BodyParam(value = "webSite", allowEmpty = true) String webSite,
@@ -234,9 +234,9 @@ public class UserEndpoints implements EndpointResource {
             ;
         profile.setContactInfo(contactInfo);
         profile.setAboutMe(aboutMe);
-        profile.setEncryptedPrivateKeyHex(encryptedPrivateKeyHex);
-        profile.setPublicKeyHex(publicKeyHex);
-        profile.setEncryptedPrivateKeyInitializationVectorHex(encryptedPrivateKeyInitializationVectorHex);
+        profile.setPrivateKeyJwkEncryptedHex(encryptedPrivateKeyHex);
+        profile.setPublicKeyJwkJson(publicKeyJwkJson);
+        profile.setPrivateKeyVectorHex(encryptedPrivateKeyInitializationVectorHex);
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);

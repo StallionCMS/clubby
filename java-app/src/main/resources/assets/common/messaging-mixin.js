@@ -196,13 +196,13 @@ var ClubhouseMessagingMixin = {
                     if (self.isEncrypted) {
                         self.members.forEach(function(member) {
                             crypto.subtle.importKey(
-                                'spki',
-                                hexToArray(member.publicKeyHex),
+                                'jwk',
+                                JSON.parse(member.publicKeyJwkJson),
                                 {
                                     name: "RSA-OAEP",
                                     modulusLength: 2048,
                                     publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-                                    hash: {name: "SHA-256"}
+                                    hash: {name: "SHA-1"}
                                 },
                                 true,
                                 ["encrypt"]
@@ -224,13 +224,13 @@ var ClubhouseMessagingMixin = {
                     }
                     if (self.isEncrypted) {
                         messages.forEach(function(message) {
-                            new Decrypter().decryptMessage(
+                            clubhouseDecryptMessage(
                                 self.$store.state.privateKey,
                                 hexToArray(message.messageEncryptedJson),//info.encryptedMessageBytes,
                                 hexToArray(message.messageEncryptedJsonVector),//info.messageVector,
                                 hexToArray(message.encryptedPasswordHex),//ep.encryptedPasswordBytes,
                                 hexToArray(message.passwordVectorHex),//ep.passwordVector,
-                                function(bodyJson) {
+                            ).then(function(bodyJson) {
                                     console.log('decrypted message ', bodyJson);
                                     var data = JSON.parse(bodyJson);
                                     message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
@@ -248,8 +248,9 @@ var ClubhouseMessagingMixin = {
                                         }
                                     }
                                     self.$store.commit('updateChannelSeen', {channelId: self.channelId, mentionsCount: o.unreadMentionsCount, hasNew: o.unreadCount>0});
-                                }
-                            );  
+                            }).catch(function(err) {
+                                console.error(err);
+                            });
                         });
                     } else {
                         self.messagesDecrypted = true;
@@ -434,13 +435,13 @@ var ClubhouseMessagingMixin = {
                 message.$index = existing.$index;
             }
             if (self.isEncrypted) {
-                new Decrypter().decryptMessage(
+                clubhouseDecryptMessage(
                     self.$store.state.privateKey,
                     hexToArray(incoming.messageEncryptedJson),//info.encryptedMessageBytes,
                     hexToArray(incoming.messageEncryptedJsonVector),//info.messageVector,
                     hexToArray(incoming.encryptedPasswordHex),//ep.encryptedPasswordBytes,
                     hexToArray(incoming.passwordVectorHex),//ep.passwordVector,
-                    function(bodyJson) {
+                ).then(function(bodyJson) {
                         console.log('decrypted message ', bodyJson);
                         var data = JSON.parse(bodyJson);
                         message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
@@ -470,8 +471,9 @@ var ClubhouseMessagingMixin = {
                                 }
                             }
                         }
-                    }
-                );                   
+                }).catch(function(err) {
+                    console.error(err);
+                });
             } else {
                 var messageData = JSON.parse(incoming.messageJson);
                 message.html = self.markdownToHtml(messageData.bodyMarkdown, messageData, message);

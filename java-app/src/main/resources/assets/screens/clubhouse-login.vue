@@ -76,7 +76,7 @@
          },
          encryptionLoginOnly: function() {
              var self = this;
-             ClubhouseImportPublicAndPrivateKey(
+             clubhouseImportPublicAndPrivateKey(
                  self.encryptionPassword,
                  self.$store.state.userProfile
              ).then(function() {
@@ -110,7 +110,7 @@
                      //o.encryptedPrivateKeyInitializationVectorHex;
                      //o.publicKeyHex;
                      //o.encryptedPrivateKeyHex;
-                     ClubhouseImportPublicAndPrivateKey(
+                     clubhouseImportPublicAndPrivateKey(
                          self.encryptionPassword,
                          o.userProfile
                      ).then(function() {

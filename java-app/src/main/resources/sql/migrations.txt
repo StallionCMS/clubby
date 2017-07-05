@@ -25,3 +25,4 @@
 00250-alter-sch_user_profiles-add-5
 00260-alter-sch_user_profiles-add-1
 00270-create-table-sch_mobile_sessions
+00280-alter-sch_user_profiles-add-3

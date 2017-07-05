@@ -48,7 +48,7 @@ public class ChannelController extends StandardModelController<Channel> {
         List<ChannelUserWrapper> channelUsers = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyHex, cm.id AS channelMemberId " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyJwkJson, cm.id AS channelMemberId " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
                         " LEFT OUTER JOIN sch_channel_members as cm ON cm.userId=su.id AND cm.channelId=? " +
@@ -62,7 +62,7 @@ public class ChannelController extends StandardModelController<Channel> {
         List<ChannelUserWrapper> channelUsers = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyHex " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, up.publicKeyJwkJson " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
                         " INNER JOIN sch_channel_members as cm ON cm.userId=su.id " +

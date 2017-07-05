@@ -41,7 +41,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
     
     function step1ImportPublic() {
 
-        var jwk = JSON.parse(self.userProfile.publicKeyHex);
+        var jwk = JSON.parse(self.userProfile.publicKeyJwkJson);
         crypto.subtle.importKey(
             'jwk',
             jwk,
@@ -66,8 +66,8 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
     function step2DecryptPrivate() {
 
         FetchPrivateKey(
-            self.userProfile.encryptedPrivateKeyHex,
-            self.userProfile.encryptedPrivateKeyInitializationVectorHex,
+            self.userProfile.privateKeyJwkEncryptedHex,
+            self.userProfile.privateKeyVectorHex,
             self.encpassphrase
         ).then(
             function(result) {
@@ -189,9 +189,9 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
 })();
 */
 
-var FetchPrivateKey = function(privateKeyHex, privateKeyVectorHex, password) {
+var FetchPrivateKey = function(privateKeyJwkEncryptedHex, privateKeyVectorHex, password) {
     return new Promise(function(resolve, reject) {
-        new PrivateKeyFetcher().fetch(privateKeyHex, privateKeyVectorHex, password, resolve, reject);
+        new PrivateKeyFetcher().fetch(privateKeyJwkEncryptedHex, privateKeyVectorHex, password, resolve, reject);
     });
 };
 
@@ -206,13 +206,13 @@ var PrivateKeyFetcher = function() {
         self.fetch(privateKeyEncryptedHex, privateKeyEncryptedVector, password, resolve, reject);
     };
 
-    self.fetch = function(privateKeyHex, privateKeyVectorHex, password, resolve, reject) {
+    self.fetch = function(privateKeyJwkEncryptedHex, privateKeyVectorHex, password, resolve, reject) {
         debug('PrivateKeyFetcher.fetch ');
         self.password = password;
         self.resolve = resolve;
         self.reject = reject;
-        self.privateKeyEncryptedHex = privateKeyHex;
-        self.privateKeyEncryptedVector = hexToArray(privateKeyVectorHex);
+        self.privateKeyJwkEncryptedHex = privateKeyJwkEncryptedHex;
+        self.privateKeyVector = hexToArray(privateKeyVectorHex);
         self.passwordDerivedKey = null;
         self.privateKeyPkcs8 = null;
         step1LoadEncryptedPrivateKey();
@@ -254,14 +254,14 @@ var PrivateKeyFetcher = function() {
     function step3DecryptPrivateKey() {
         debug('f3. decrypt private key hex ' + self.privateKeyEncryptedHex);
 
-        var keyBytes = hexToArray(self.privateKeyEncryptedHex);
+        var keyBytes = hexToArray(self.privateKeyJwkEncryptedHex);
         debug('f3. decrypt private key bytes ', keyBytes);
-        debug('f3. decrypt private key vector ', self.privateKeyEncryptedVector);
+        debug('f3. decrypt private key vector ', self.privateKeyVector);
         debug('f3. password derived key ', self.passwordDerivedKey);
         crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
-                iv: self.privateKeyEncryptedVector
+                iv: self.privateKeyVector
             },
             self.passwordDerivedKey,
             keyBytes.buffer

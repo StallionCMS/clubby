@@ -132,13 +132,21 @@ public class Endpoints implements EndpointResource {
                             continue;
                         }
                         IUser user = UserController.instance().forId(userId);
-                        String personName = or(user.getDisplayName(), user.getUsername());
-                        if (!empty(name)) {
-                            name += ", ";
+                        if (user == null) {
+                            name = "";
+                            break;
+                        } else {
+                            String personName = or(user.getDisplayName(), user.getUsername());
+                            if (!empty(name)) {
+                                name += ", ";
+                            }
+                            name += personName;
                         }
-                        name += personName;
                     }
                     cc.setName(name);
+                }
+                if (empty(cc.getName())) {
+                    continue;
                 }
                 directMessageChannels.add(cc);
 
@@ -189,7 +197,7 @@ public class Endpoints implements EndpointResource {
                 ChannelUserWrapper.class,
                 "" +
                         " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, " +
-                        "        up.publicKeyHex, us.state, up.avatarUrl " +
+                        "        up.publicKeyJwkJson, us.state, up.avatarUrl " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
                         " LEFT OUTER JOIN sch_user_states AS us ON us.userId=su.id WHERE su.deleted=0 " +

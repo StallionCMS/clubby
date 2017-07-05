@@ -36,13 +36,13 @@ var ClubhouseMessageSendingMixin = {
             var keysProcessed = 0;
             members.forEach(function(member) {
                 crypto.subtle.importKey(
-                    'spki',
-                    hexToArray(member.publicKeyHex),
+                    'jwk',
+                    JSON.parse(member.publicKeyJwkJson),
                     {
                         name: "RSA-OAEP",
                         modulusLength: 2048,
                         publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-                        hash: {name: "SHA-256"}
+                        hash: {name: "SHA-1"}
                     },
                     true,
                     ["encrypt"]
@@ -58,7 +58,6 @@ var ClubhouseMessageSendingMixin = {
                 
         },
         postMessage: function(args) {
-            debugger;
             new ClubhouseMessageSender(this, this.$store, args).send();     
         }
     }
@@ -105,10 +104,10 @@ var ClubhouseMessageSender = function(component, $store, data) {
             console.log('prepping to encrypt for ', member.username);
         });
 
-        new Encrypter().encryptMessage(
+        clubhouseEncryptMessage(
             messageJson,
-            tos,
-            function(result) {
+            tos
+        ).then(function(result) {
                 console.log('encryption complete ', result);
                 stallion.request({
                     url: '/clubhouse-api/messaging/post-encrypted-message',
@@ -127,8 +126,9 @@ var ClubhouseMessageSender = function(component, $store, data) {
                     },
                     success: success
                 });
-            }
-        );
+        }).catch(function(err) {
+            console.error(err);
+        });
     }
     
     function postNewMessage() {
