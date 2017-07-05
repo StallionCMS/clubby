@@ -229,7 +229,7 @@ var ClubhouseMessagingMixin = {
                                 hexToArray(message.messageEncryptedJson),//info.encryptedMessageBytes,
                                 hexToArray(message.messageEncryptedJsonVector),//info.messageVector,
                                 hexToArray(message.encryptedPasswordHex),//ep.encryptedPasswordBytes,
-                                hexToArray(message.passwordVectorHex),//ep.passwordVector,
+                                hexToArray(message.passwordVectorHex)//ep.passwordVector,
                             ).then(function(bodyJson) {
                                     console.log('decrypted message ', bodyJson);
                                     var data = JSON.parse(bodyJson);
@@ -440,7 +440,7 @@ var ClubhouseMessagingMixin = {
                     hexToArray(incoming.messageEncryptedJson),//info.encryptedMessageBytes,
                     hexToArray(incoming.messageEncryptedJsonVector),//info.messageVector,
                     hexToArray(incoming.encryptedPasswordHex),//ep.encryptedPasswordBytes,
-                    hexToArray(incoming.passwordVectorHex),//ep.passwordVector,
+                    hexToArray(incoming.passwordVectorHex)//ep.passwordVector,
                 ).then(function(bodyJson) {
                         console.log('decrypted message ', bodyJson);
                         var data = JSON.parse(bodyJson);
