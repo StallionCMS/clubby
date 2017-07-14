@@ -314,9 +314,9 @@ var KeyGenerator = function() {
         self.privateKey = null;
         self.callback = callback;
         self.reject = reject;
-        self.privateKeySpki = null;
-        self.privateKeyEncryptionVector = null;
-        self.publicKeyHex = null;
+
+
+
         step1GenerateMyPublicPrivate(encpassphrase);
     };
 
@@ -352,8 +352,7 @@ var KeyGenerator = function() {
             //    spki:       arrayBufferToHexString(jwk)
             //};
             //localStorage['st_clubhouse_public_key_' + self.user] = JSON.stringify(savedObject);
-            self.publicKeyHex = JSON.stringify(jwk);
-            self.publicKeyJson = JSON.stringify(jwk);
+            self.publicKeyJwkJson = JSON.stringify(jwk);
             step3ExportPrivateKey();
         }).catch(function(e) {
             debug(e);
@@ -367,7 +366,7 @@ var KeyGenerator = function() {
             //var hexPkcs8 = arrayBufferToHexString(pkcs8);
             //debug('g3. privateKey after pkcs8 ', hexToArray(arrayBufferToHexString(pkcs8)));
             //debug('g3. privateKey hex pkcs8 ', hexPkcs8);
-            self.privateKeyPkcs8 = jwk;
+            self.privateKeyJwk = jwk;
             step4DerivePrivateKeyEncryptionKey();
         }).catch(function(e) {
             debug(e);
@@ -405,23 +404,23 @@ var KeyGenerator = function() {
 
     function step5EncryptPrivateKey() {
         var vector = crypto.getRandomValues(new Uint8Array(16));
-        self.privateKeyEncryptionVector = vector;
-        self.privateKeyEncryptionVectorHex = arrayToHex(vector);
-        var exportedKeyBytes = convertStringToArrayBufferView(JSON.stringify(self.privateKeyPkcs8));
+        self.privateKeyVector = vector;
+        self.privateKeyVectorHex = arrayToHex(vector);
+        var privateKeyJwkJsonBytes = convertStringToArrayBufferView(JSON.stringify(self.privateKeyJwk));
         var encryptPromise = crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
                 iv: vector
             },
             self.encpassphraseDerivedKey,
-            exportedKeyBytes
+            privateKeyJwkJsonBytes
         );
         encryptPromise.then(
             function(result) {
                 var encryptedBytes = new Uint8Array(result);
                 debug('g5. encrypt vector ', vector);
                 debug('g5. encryptedPrivateKeyBytes ', encryptedBytes);                
-                self.privateKeyEncryptedHex = arrayBufferToHexString(result);
+                self.privateKeyJwkEncryptedHex = arrayBufferToHexString(result);
                 //enc.encryptedMessageBytes = result;
                 //info.encryptedMessageHex = arrayBufferToHexString(encrypted_data);
                 //enc.encryptedMessageHex = result;

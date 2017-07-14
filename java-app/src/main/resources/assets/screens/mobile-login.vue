@@ -38,7 +38,7 @@
                  window.location.hash = '/login';
                  return;
              }
-             ClubhouseImportPublicAndPrivateKey(
+             clubhouseImportPublicAndPrivateKey(
                  passphrase,
                  self.$store.state.userProfile
              ).then(function() {

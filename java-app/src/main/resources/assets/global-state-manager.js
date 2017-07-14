@@ -141,40 +141,44 @@ function ClubhouseMakeVuex() {
         });
 
     function checkUpdateFavicon(channelById) {
-        var hasMentions = false;
-        var hasNew = false;
-        var mentionsCount = 0;
-        console.log('checkUpdateFavicon ' , channelById);
-        if (!channelById) {
-            return;
-        }
-        Object.keys(channelById).forEach(function(channelId) {
-            var channel = channelById[channelId];
-            if (channel.mentionsCount > 0) {
-                hasMentions = true;
-                mentionsCount += channel.mentionsCount;
+        try {
+            var hasMentions = false;
+            var hasNew = false;
+            var mentionsCount = 0;
+            console.log('checkUpdateFavicon ' , channelById);
+            if (!channelById) {
+                return;
             }
-            if (channel.hasNew) {
-                hasNew = true;
+            Object.keys(channelById).forEach(function(channelId) {
+                var channel = channelById[channelId];
+                if (channel.mentionsCount > 0) {
+                    hasMentions = true;
+                    mentionsCount += channel.mentionsCount;
+                }
+                if (channel.hasNew) {
+                    hasNew = true;
+                }
+            });
+            var favicon= new Favico({
+                animation: 'none',
+                //type : 'rectangle',
+                //bgColor : '#5CB85C',
+                //textColor : '#ff0',
+            });
+            var image = document.getElementById('chat-off-image');
+            if (hasMentions || hasNew) {
+                image = document.getElementById('chat-active-image');
             }
-        });
-        var favicon= new Favico({
-            animation: 'none',
-            //type : 'rectangle',
-            //bgColor : '#5CB85C',
-            //textColor : '#ff0',
-        });
-        var image = document.getElementById('chat-off-image');
-        if (hasMentions || hasNew) {
-            image = document.getElementById('chat-active-image');
-        }
-        favicon.image(image);
+            favicon.image(image);
 
-        if (mentionsCount > 0) {
-            favicon.badge(mentionsCount);
-        }
+            if (mentionsCount > 0) {
+                favicon.badge(mentionsCount);
+            }
 
-        console.log('updated favicon');
+            console.log('updated favicon');
+        } catch (err) {
+            console.error('error updating favicon ', err);
+        }
         
     }
 

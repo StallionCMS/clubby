@@ -1,11 +1,19 @@
 package io.stallion.clubhouse;
 
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.ClientException;
+import io.stallion.requests.ResponseComplete;
+import io.stallion.requests.ServletFileSender;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.settings.Settings;
@@ -19,6 +27,7 @@ import io.stallion.utils.json.JSON;
 
 import static io.stallion.utils.Literals.*;
 
+import javax.imageio.ImageIO;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -211,6 +220,40 @@ public class Endpoints implements EndpointResource {
         ctx.put("users", users);
 
         return ctx;
+    }
+
+
+    @GET
+    @Path("/icon.png")
+    @Produces("image/png")
+    public void viewIcon() throws IOException {
+
+        String key = "Sample";
+        BufferedImage bufferedImage = new BufferedImage(170, 30,
+                BufferedImage.TYPE_INT_RGB);
+        Graphics graphics = bufferedImage.getGraphics();
+        graphics.setColor(Color.LIGHT_GRAY);
+        graphics.fillRect(0, 0, 200, 50);
+        graphics.setColor(Color.BLACK);
+        graphics.setFont(new Font("Arial Black", Font.BOLD, 20));
+        graphics.drawString(key, 10, 25);
+        ImageIO.write(bufferedImage, "jpg", new File(
+                "/repos/clubhouse/site/app-data/clubhouse-image.jpg"));
+        System.out.println("Image Created");
+
+
+        File file = new File("/repos/clubhouse/site/app-data/clubhouse-image.jpg");
+        FileInputStream stream = null;
+        try {
+            stream = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        new ServletFileSender(
+                Context.getRequest(),
+                Context.getResponse()
+        ).sendAssetResponse(stream, file.lastModified(), file.length(), file.getAbsolutePath());
+        throw new ResponseComplete();
     }
 
 

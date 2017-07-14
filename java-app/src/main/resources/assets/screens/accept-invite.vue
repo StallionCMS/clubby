@@ -136,12 +136,16 @@
                  stallion.showError('Encryption passphrases  must match.');
                  return;
              }
-             new KeyGenerator().generate(self.user.username, self.profile.passphrase, function(result) {
-                 self.profile.encryptedPrivateKeyHex = result.privateKeyEncryptedHex;
-                 self.profile.encryptedPrivateKeyInitializationVectorHex = result.privateKeyEncryptionVectorHex;
-                 self.profile.publicKeyHex = result.publicKeyHex;
+             clubhouseGeneratePrivateAndPublicKey(self.profile.passphrase).then(function(result) {
+                 self.profile.privateKeyJwkEncryptedHex = result.privateKeyJwkEncryptedHex;
+                 self.profile.privateKeyVectorHex = result.privateKeyVectorHex;
+                 self.profile.publicKeyJwkJson = result.publicKeyJwkJson;
                  self.saveAcceptance(result.publicKey, result.privateKey);
-             });             
+
+             }).catch(function(err) {
+                 console.error(err);
+             });
+                        
          },
          saveAcceptance: function(publicKey, privateKey) {
              var self = this;
@@ -158,9 +162,9 @@
                      aboutMe: self.profile.aboutMe,
                      contactInfo: self.profile.contactInfo,
                      webSite: self.profile.webSite,
-                     publicKeyHex: self.profile.publicKeyHex,
-                     encryptedPrivateKeyHex: self.profile.encryptedPrivateKeyHex,
-                     encryptedPrivateKeyInitializationVectorHex: self.profile.encryptedPrivateKeyInitializationVectorHex,
+                     publicKeyJwkJson: self.profile.publicKeyJwkJson,
+                     privateKeyVectorHex: self.profile.privateKeyVectorHex,
+                     privateKeyJwkEncryptedHex: self.profile.privateKeyJwkEncryptedHex,
                      token: self.$route.query.token
                      
                  },

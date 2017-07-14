@@ -135,8 +135,8 @@ public class UserEndpoints implements EndpointResource {
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
             @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
-            @BodyParam("encryptedPrivateKeyHex") String encryptedPrivateKeyHex,
-            @BodyParam("encryptedPrivateKeyInitializationVectorHex") String encryptedPrivateKeyInitializationVectorHex,
+            @BodyParam("privateKeyJwkEncryptedHex") String privateKeyJwkEncryptedHex,
+            @BodyParam("privateKeyVectorHex") String privateKeyVectorHex,
             @BodyParam(value = "webSite", allowEmpty = true) String webSite,
             @BodyParam(value = "aboutMe", allowEmpty = true) String aboutMe,
             @BodyParam("userId") Long userId
@@ -168,9 +168,9 @@ public class UserEndpoints implements EndpointResource {
                     .setUserId(user.getId())
                     ;
         }
-        profile.setPrivateKeyJwkEncryptedHex(encryptedPrivateKeyHex);
+        profile.setPrivateKeyJwkEncryptedHex(privateKeyJwkEncryptedHex);
         profile.setPublicKeyJwkJson(publicKeyJwkJson);
-        profile.setPrivateKeyVectorHex(encryptedPrivateKeyInitializationVectorHex);
+        profile.setPrivateKeyVectorHex(privateKeyVectorHex);
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);
@@ -195,8 +195,8 @@ public class UserEndpoints implements EndpointResource {
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
             @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
-            @BodyParam("encryptedPrivateKeyHex") String encryptedPrivateKeyHex,
-            @BodyParam("encryptedPrivateKeyInitializationVectorHex") String encryptedPrivateKeyInitializationVectorHex,
+            @BodyParam("privateKeyVectorHex") String privateKeyVectorHex,
+            @BodyParam("privateKeyJwkEncryptedHex") String privateKeyJwkEncryptedHex,
             @BodyParam(value = "webSite", allowEmpty = true) String webSite,
             @BodyParam(value = "contactInfo", allowEmpty = true) String contactInfo,
             @BodyParam(value = "aboutMe", allowEmpty = true) String aboutMe
@@ -234,9 +234,9 @@ public class UserEndpoints implements EndpointResource {
             ;
         profile.setContactInfo(contactInfo);
         profile.setAboutMe(aboutMe);
-        profile.setPrivateKeyJwkEncryptedHex(encryptedPrivateKeyHex);
+        profile.setPrivateKeyJwkEncryptedHex(privateKeyJwkEncryptedHex);
         profile.setPublicKeyJwkJson(publicKeyJwkJson);
-        profile.setPrivateKeyVectorHex(encryptedPrivateKeyInitializationVectorHex);
+        profile.setPrivateKeyVectorHex(privateKeyVectorHex);
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);

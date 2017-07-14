@@ -60,6 +60,10 @@
      },     
      methods: {
          loadFromQuery: function() {
+             if (ClubhouseMobileInterop.isMobile) {
+                 ClubhouseMobileInterop.redirectToLogin();
+                 return;
+             }
              if (theApplicationContext.isFirstUser) {
                  window.location.hash = '/first-user';
                  return
