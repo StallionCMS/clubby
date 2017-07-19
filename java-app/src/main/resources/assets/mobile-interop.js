@@ -32,6 +32,33 @@ var ClubhouseMobileInterop = new function() {
             
         }
     }
+
+    self.tellAppToUpdateMentions = function() {
+        if (window.webkit && webkit.messageHandlers.pollForMentions) {
+            webkit.messageHandlers.pollForMentions.postMessage("{}");
+        } else {
+            
+        }
+    }
+
+    self.updateNameAndIcon = function() {
+        //alert('hi!');
+        //alert('' + ClubhouseVueApp);
+        var state = ClubhouseVueApp.$store.state;
+        var message = {
+            iconBase64: state.site.iconBase64,
+            siteName: state.site.name,
+            siteUrl: state.site.siteUrl,
+            username: state.user.username
+        }
+        
+        if (window.webkit && webkit.messageHandlers.updateNameAndIcon) {
+            webkit.messageHandlers.updateNameAndIcon.postMessage(JSON.stringify(message));
+        } else {
+            
+        }
+
+    }
     
     
 }();

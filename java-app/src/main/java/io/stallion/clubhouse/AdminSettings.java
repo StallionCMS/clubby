@@ -1,5 +1,7 @@
 package io.stallion.clubhouse;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -12,9 +14,12 @@ import io.stallion.contentPublishing.UploadedFile;
 import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.reflection.PropertyUtils;
+import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.json.JSON;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 
 
 public class AdminSettings {
@@ -28,6 +33,43 @@ public class AdminSettings {
     private static Map defaults = map(
             val("iconImageId", 0L)
     );
+
+    public static String getIconBase64() {
+        String iconBase64 = "";
+
+        File iconFile = null;
+        if (!empty(AdminSettings.getIconImageId())) {
+            UploadedFile uf = (UploadedFile)UploadedFileController.instance().forId(AdminSettings.getIconImageId());
+            if (uf != null) {
+                String folder = Settings.instance().getDataDirectory() + "/uploaded-files/";
+                String fullPath = folder + uf.getCloudKey();
+                File file = new File(fullPath);
+                if (file.exists()) {
+                    iconFile = file;
+                }
+            }
+        }
+
+        if (iconFile == null) {
+            try {
+                iconFile = new IconHelper().getOrCreateAutoIcon();
+            } catch (IOException e) {
+                Log.exception(e, "Error generating icon");
+            }
+        }
+
+        if (iconFile != null) {
+            try {
+
+                byte[] bytes = FileUtils.readFileToByteArray(iconFile);
+                iconBase64 = Base64.encodeBase64String(bytes);
+            } catch (IOException e) {
+                Log.exception(e, "Error reading and encoding icon file " + iconFile.getAbsolutePath());
+
+            }
+        }
+        return iconBase64;
+    }
 
     public static String getIconUrl() {
         if (iconImage == null) {

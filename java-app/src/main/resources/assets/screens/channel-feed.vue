@@ -326,6 +326,7 @@
              return 'https://www.gravatar.com/avatar/' + md5(userId + '') + '?f=y&d=identicon';
          },
          afterFetchingFinished: function() {
+             debugger;
              var self = this;
              var $div = $(self.$el).find('.channel-messages');
              var div = $div.get(0);

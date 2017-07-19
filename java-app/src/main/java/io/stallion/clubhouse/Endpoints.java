@@ -19,11 +19,13 @@ import io.stallion.requests.ResponseComplete;
 import io.stallion.requests.ServletFileSender;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.restfulEndpoints.EndpointResource;
+import io.stallion.restfulEndpoints.MinRole;
 import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.templating.TemplateRenderer;
 import io.stallion.Context;
 import io.stallion.users.IUser;
+import io.stallion.users.Role;
 import io.stallion.users.UserController;
 import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.Sanitize;
@@ -33,10 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import static io.stallion.utils.Literals.*;
 
 import javax.imageio.ImageIO;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 
 
 public class Endpoints implements EndpointResource {
@@ -93,7 +92,8 @@ public class Endpoints implements EndpointResource {
                                     val("siteUrl", Settings.instance().getSiteUrl()),
                                     val("cdnUrl", Settings.instance().getCdnUrl()),
                                     val("name", AdminSettings.getSiteName()),
-                                    val("logo", AdminSettings.getIconUrl())
+                                    val("logo", AdminSettings.getIconUrl()),
+                                    val("iconBase64", AdminSettings.getIconBase64())
                             )),
                             val("user", Context.getUser()),
                             val("profile", profile),
@@ -106,15 +106,29 @@ public class Endpoints implements EndpointResource {
 
 
 
-    @GET
+    @POST
     @Path("/clubhouse-api/general/poll-for-mentions")
+    @MinRole(Role.MEMBER)
     public Object pollForMentions() {
         Map ctx = map();
-        Long mentions = DB.instance().queryScalar("SELECT COUNT(*) as mentions FROM sch_user_messages " +
-                " WHERE `mentioned`=1 AND `read`=0 AND userId=? ", Context.getUser().getId());
-        List<Long> unread = DB.instance().queryColumn(
-                "SELECT id FROM sch_users_messages WHERE `read`=0 AND userId=? LIMIT 1 ",
-                Context.getUser().getId());
+        Long mentions = DB.instance().queryScalar("" +
+                " SELECT COUNT(*) as mentions FROM sch_user_messages as um " +
+                "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +
+                "   INNER JOIN sch_channels AS c ON c.id=m.channelId" +
+                "   INNER JOIN sch_channel_members AS cm ON cm.channelId=c.id AND cm.userId=um.userId " +
+                "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
+                " WHERE `mentioned`=1 AND `read`=0 AND um.userId=? AND cm.userId=? AND m.deleted=0 AND um.deleted=0 AND c.deleted=0 AND cm.deleted=0 AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) ",
+                Context.getUser().getId(), Context.getUser().getId());
+        List<Long> unread = DB.instance().queryColumn("" +
+                        " SELECT m.id FROM sch_user_messages as um " +
+                        "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +
+                        "   INNER JOIN sch_channels AS c ON c.id=m.channelId" +
+                        "   INNER JOIN sch_channel_members AS cm ON cm.channelId=c.id AND cm.userId=um.userId " +
+                        "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
+                        " WHERE `read`=0 AND um.userId=? AND cm.userId=? AND m.deleted=0 AND um.deleted=0 AND c.deleted=0 AND cm.deleted=0 AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0)" +
+                "  LIMIT 1 ",
+                Context.getUser().getId(), Context.getUser().getId());
+
         ctx.put("mentionCount", mentions);
         ctx.put("hasNew", unread.size() > 0);
 

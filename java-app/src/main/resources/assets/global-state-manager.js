@@ -141,6 +141,10 @@ function ClubhouseMakeVuex() {
         });
 
     function checkUpdateFavicon(channelById) {
+        if (ClubhouseMobileInterop.isMobileApp) {
+            ClubhouseMobileInterop.tellAppToUpdateMentions();
+            return;
+        }
         try {
             var hasMentions = false;
             var hasNew = false;

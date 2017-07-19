@@ -101,39 +101,6 @@ public class AuthEndpoints implements EndpointResource {
         String cookie =  UserController.instance().userToCookieString(user, true, null, mb.getSessionKey());
         UserProfile up = UserProfileController.instance().forStallionUserOrNotFound(user.getId());
 
-        String iconBase64 = "";
-
-        File iconFile = null;
-        if (!empty(AdminSettings.getIconImageId())) {
-            UploadedFile uf = (UploadedFile)UploadedFileController.instance().forId(AdminSettings.getIconImageId());
-            if (uf != null) {
-                String folder = Settings.instance().getDataDirectory() + "/uploaded-files/";
-                String fullPath = folder + uf.getCloudKey();
-                File file = new File(fullPath);
-                if (file.exists()) {
-                    iconFile = file;
-                }
-            }
-        }
-
-        if (iconFile == null) {
-            try {
-                iconFile = new IconHelper().getOrCreateAutoIcon();
-            } catch (IOException e) {
-                Log.exception(e, "Error generating icon");
-            }
-        }
-
-        if (iconFile != null) {
-            try {
-
-                byte[] bytes = FileUtils.readFileToByteArray(iconFile);
-                iconBase64 = Base64.encodeBase64String(bytes);
-            } catch (IOException e) {
-                Log.exception(e, "Error reading and encoding icon file " + iconFile.getAbsolutePath());
-
-            }
-        }
 
 
 
@@ -141,7 +108,7 @@ public class AuthEndpoints implements EndpointResource {
                 val(
                         "user", user
                 ),
-                val("iconBase64", iconBase64),
+                val("iconBase64", AdminSettings.getIconBase64()),
                 val("authcookie", cookie),
                 val("passphraseEncryptionSecret", mb.getPassphraseEncryptionSecret()),
                 val(
