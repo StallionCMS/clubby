@@ -22,6 +22,9 @@ public class ClubhouseSettings extends BasePluginSettings {
     @SettingMeta
     private String firebaseServerKey;
 
+    @SettingMeta
+    private String iconUrl = "";
+
 
     public String getFirebaseSettingsJson() {
         return firebaseSettingsJson;
@@ -48,6 +51,16 @@ public class ClubhouseSettings extends BasePluginSettings {
 
     public ClubhouseSettings setFirebaseServerKey(String firebaseServerKey) {
         this.firebaseServerKey = firebaseServerKey;
+        return this;
+    }
+
+    @Column
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public ClubhouseSettings setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
         return this;
     }
 

@@ -7,15 +7,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import com.amazonaws.util.Md5Utils;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.ClientException;
 import io.stallion.requests.ResponseComplete;
 import io.stallion.requests.ServletFileSender;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.restfulEndpoints.EndpointResource;
+import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.templating.TemplateRenderer;
 import io.stallion.Context;
@@ -24,6 +28,7 @@ import io.stallion.users.UserController;
 import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.Sanitize;
 import io.stallion.utils.json.JSON;
+import org.apache.commons.lang3.StringUtils;
 
 import static io.stallion.utils.Literals.*;
 
@@ -31,7 +36,7 @@ import javax.imageio.ImageIO;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-
+import javax.ws.rs.QueryParam;
 
 
 public class Endpoints implements EndpointResource {
@@ -87,8 +92,8 @@ public class Endpoints implements EndpointResource {
                             val("site", map(
                                     val("siteUrl", Settings.instance().getSiteUrl()),
                                     val("cdnUrl", Settings.instance().getCdnUrl()),
-                                    val("name", Settings.instance().getSiteName()),
-                                    val("logo", Settings.instance().getStyles().getLogoImageUrl())
+                                    val("name", AdminSettings.getSiteName()),
+                                    val("logo", AdminSettings.getIconUrl())
                             )),
                             val("user", Context.getUser()),
                             val("profile", profile),
@@ -100,9 +105,27 @@ public class Endpoints implements EndpointResource {
     }
 
 
+
+    @GET
+    @Path("/clubhouse-api/general/poll-for-mentions")
+    public Object pollForMentions() {
+        Map ctx = map();
+        Long mentions = DB.instance().queryScalar("SELECT COUNT(*) as mentions FROM sch_user_messages " +
+                " WHERE `mentioned`=1 AND `read`=0 AND userId=? ", Context.getUser().getId());
+        List<Long> unread = DB.instance().queryColumn(
+                "SELECT id FROM sch_users_messages WHERE `read`=0 AND userId=? LIMIT 1 ",
+                Context.getUser().getId());
+        ctx.put("mentionCount", mentions);
+        ctx.put("hasNew", unread.size() > 0);
+
+        return ctx;
+
+    }
+
     @GET
     @Path("/clubhouse-api/general-context")
     public Object getGeneralContext() {
+
         /*
             private Long id;
     private String name;
@@ -224,26 +247,17 @@ public class Endpoints implements EndpointResource {
 
 
     @GET
-    @Path("/icon.png")
+    @Path("/auto-logo-icon.png")
     @Produces("image/png")
     public void viewIcon() throws IOException {
 
-        String key = "Sample";
-        BufferedImage bufferedImage = new BufferedImage(170, 30,
-                BufferedImage.TYPE_INT_RGB);
-        Graphics graphics = bufferedImage.getGraphics();
-        graphics.setColor(Color.LIGHT_GRAY);
-        graphics.fillRect(0, 0, 200, 50);
-        graphics.setColor(Color.BLACK);
-        graphics.setFont(new Font("Arial Black", Font.BOLD, 20));
-        graphics.drawString(key, 10, 25);
-        ImageIO.write(bufferedImage, "jpg", new File(
-                "/repos/clubhouse/site/app-data/clubhouse-image.jpg"));
-        System.out.println("Image Created");
+        File file = new IconHelper().getOrCreateAutoIcon();
+        sendFile(file);
 
+    }
 
-        File file = new File("/repos/clubhouse/site/app-data/clubhouse-image.jpg");
-        FileInputStream stream = null;
+    private void sendFile(File file) {
+        FileInputStream stream;
         try {
             stream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
@@ -254,6 +268,7 @@ public class Endpoints implements EndpointResource {
                 Context.getResponse()
         ).sendAssetResponse(stream, file.lastModified(), file.length(), file.getAbsolutePath());
         throw new ResponseComplete();
+
     }
 
 

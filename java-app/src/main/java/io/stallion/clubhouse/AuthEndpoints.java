@@ -3,18 +3,31 @@ package io.stallion.clubhouse;
 import static io.stallion.utils.Literals.*;
 
 import io.stallion.Context;
+import io.stallion.contentPublishing.UploadedFile;
+import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.requests.Site;
 import io.stallion.restfulEndpoints.BodyParam;
 import io.stallion.restfulEndpoints.EndpointResource;
+import io.stallion.restfulEndpoints.MinRole;
 import io.stallion.restfulEndpoints.XSRF;
+import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
+import io.stallion.users.Role;
 import io.stallion.users.UserController;
 import io.stallion.utils.GeneralUtils;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.UUID;
 
 @Produces("application/json")
@@ -58,7 +71,19 @@ public class AuthEndpoints implements EndpointResource {
             }
         }
 
-        IUser user = UserController.instance().checkUserLoginValid(username, password);
+        IUser user = null;
+        if (password.length() > 50) {
+            String[] parts = password.split("&");
+            if (parts.length == 2 && StringUtils.isNumeric(parts[0])) {
+                if (UserController.instance().checkCookieAndAuthorizeForCookieValue(password)) {
+                    user = Context.getUser();
+                }
+            }
+        }
+
+        if (user == null) {
+            user = UserController.instance().checkUserLoginValid(username, password);
+        }
 
         MobileSession mb = new MobileSession()
                 .setDeviceName(deviceName)
@@ -75,17 +100,65 @@ public class AuthEndpoints implements EndpointResource {
 
         String cookie =  UserController.instance().userToCookieString(user, true, null, mb.getSessionKey());
         UserProfile up = UserProfileController.instance().forStallionUserOrNotFound(user.getId());
+
+        String iconBase64 = "";
+
+        File iconFile = null;
+        if (!empty(AdminSettings.getIconImageId())) {
+            UploadedFile uf = (UploadedFile)UploadedFileController.instance().forId(AdminSettings.getIconImageId());
+            if (uf != null) {
+                String folder = Settings.instance().getDataDirectory() + "/uploaded-files/";
+                String fullPath = folder + uf.getCloudKey();
+                File file = new File(fullPath);
+                if (file.exists()) {
+                    iconFile = file;
+                }
+            }
+        }
+
+        if (iconFile == null) {
+            try {
+                iconFile = new IconHelper().getOrCreateAutoIcon();
+            } catch (IOException e) {
+                Log.exception(e, "Error generating icon");
+            }
+        }
+
+        if (iconFile != null) {
+            try {
+
+                byte[] bytes = FileUtils.readFileToByteArray(iconFile);
+                iconBase64 = Base64.encodeBase64String(bytes);
+            } catch (IOException e) {
+                Log.exception(e, "Error reading and encoding icon file " + iconFile.getAbsolutePath());
+
+            }
+        }
+
+
+
         return map(
                 val(
                         "user", user
                 ),
+                val("iconBase64", iconBase64),
                 val("authcookie", cookie),
                 val("passphraseEncryptionSecret", mb.getPassphraseEncryptionSecret()),
                 val(
-                        "site", new Site().setName(Settings.instance().getSiteName())
+                        "site", new Site().setName(AdminSettings.getSiteName())
                         ),
                 val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId())),
                 val("userProfile", up)
         );
+    }
+
+
+    @POST
+    @Path("/new-mobile-qr-cookie")
+    @MinRole(Role.MEMBER)
+    public Object mobileLogin() {
+        String cookie =  UserController.instance().userToCookieString(Context.getUser(), false, null);
+        return map(val("qrCookie", cookie));
+
     }
 }

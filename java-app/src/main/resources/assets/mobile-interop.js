@@ -4,11 +4,10 @@ var ClubhouseMobileInterop = new function() {
 
     self.isMobile = window.orientation !== undefined;
 
-    self.isAndroidApp = window.location.search.indexOf('appBrowser=android');
-    self.isIOSApp = window.location.search.indexOf('appBrowser=ios');
+    self.isAndroidApp = window.location.search.indexOf('appBrowser=android') > -1;
+    self.isIOSApp = window.location.search.indexOf('appBrowser=ios') > -1;
 
     self.isMobileApp = self.isIOSApp || self.isAndroidApp;
-
 
     if (self.isMobileApp) {
         $('#st-clubhouse-body').addClass('clubhouse-mobile-app')
@@ -27,7 +26,11 @@ var ClubhouseMobileInterop = new function() {
     }
 
     self.redirectToLogin = function() {
-        webkit.messageHandlers.requiresLoginHandler.postMessage("redirect-to-login");
+        if (window.webkit) {
+            webkit.messageHandlers.requiresLoginHandler.postMessage("redirect-to-login");
+        } else {
+            
+        }
     }
     
     

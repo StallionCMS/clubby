@@ -16,8 +16,8 @@
 {% block body_content %}
 <div class="container-fluid">
     <div id="app-wrap">
-        <div id="{{ pluginName }}-app">
-            <div class="row" style="margin-top: 0px;padding-top:0px;">
+      <div id="{{ pluginName }}-app">
+          <div class="row" style="margin-top: 0px;padding-top:0px;">
               <div id="vue-app"  style="margin-top: 0px;padding-top:0px; border-top: 1px solid #000;">
                 <channel-sidebar></channel-sidebar>
                 <div id="clubhouse-main-view" class="wdt-emoji-picker-parent">
@@ -32,8 +32,8 @@
     </div>
 </div><!--/container-->
 <div style="display:none;">
-  <img id="chat-off-image" src="{{ assets.resource('chat-off.png', 'clubhouse') }}">
-  <img id="chat-active-image" src="{{ assets.resource('chat-active.png', 'clubhouse') }}">
+  <img id="chat-off-image" src="{{ assets.resource('/images/folkmot-icon-blue.png', 'clubhouse') }}">
+  <img id="chat-active-image" src="{{ assets.resource('/images/folkmot-icon-white.png', 'clubhouse') }}">
 </div>
 {% endblock %}
 

@@ -61,8 +61,32 @@ public class AdminEndpoints implements EndpointResource {
 
         Map<String, Object> ctx = map();
         ctx.put("userAndProfiles", combos);
+        ctx.put("settings",
+                map(
+                        val("siteName", AdminSettings.getSiteName()),
+                        val("iconUrl", AdminSettings.getIconUrl()),
+                        val("iconImageId", AdminSettings.getIconImageId())
+                )
+                );
         return ctx;
     }
+
+    @POST
+    @Path("/save-settings")
+    @MinRole(Role.ADMIN)
+    public Object saveSettings(
+            @BodyParam("siteName") String siteName,
+            @BodyParam(value = "iconImageId", required = false, allowEmpty = true) Long iconImageId
+    ) {
+        if (!empty(siteName)) {
+            AdminSettings.setSiteName(siteName);
+        }
+        if (!empty(iconImageId)) {
+            AdminSettings.setIconImageId(iconImageId);
+        }
+        return true;
+    }
+
 
 
 

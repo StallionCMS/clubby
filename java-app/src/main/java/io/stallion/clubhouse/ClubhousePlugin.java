@@ -1,16 +1,14 @@
 package io.stallion.clubhouse;
 
-import com.google.firebase.FirebaseApp;
-import io.stallion.Context;
 import io.stallion.boot.ServeCommandOptions;
 import io.stallion.clubhouse.webSockets.WebSocketBooter;
-import io.stallion.hooks.HookRegistry;
+import io.stallion.contentPublishing.UploadedFileController;
+import io.stallion.contentPublishing.UploadedFileEndpoints;
 import io.stallion.jobs.JobCoordinator;
 import io.stallion.jobs.JobDefinition;
 import io.stallion.jobs.Schedule;
 import io.stallion.plugins.StallionJavaPlugin;
 import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.services.Log;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
@@ -30,23 +28,13 @@ public class ClubhousePlugin extends StallionJavaPlugin {
     @Override
     public void boot() throws Exception {
 
+        AdminSettings.init();
+
         if ("/st-users/login".equals(Settings.instance().getUsers().getLoginPage())) {
             Settings.instance().getUsers().setLoginPage("/#/login");
         }
 
-
-        List<EndpointResource> endpoints = list(
-                new AuthEndpoints(),
-                new Endpoints(),
-                new MessagingEndpoints(),
-                new UserEndpoints(),
-                new AdminEndpoints(),
-                new ChannelEndpoints()
-        );
-        for (EndpointResource ep: endpoints) {
-            EndpointsRegistry.instance().addResource("", ep);
-        }
-
+        UploadedFileController.register();
         ChannelController.register();
         ChannelMemberController.register();
         MessageController.register();
@@ -55,6 +43,21 @@ public class ClubhousePlugin extends StallionJavaPlugin {
         UserMessageController.register();
         UserProfileController.register();
         UserStateController.register();
+
+
+        List<EndpointResource> endpoints = list(
+                new AuthEndpoints(),
+                new Endpoints(),
+                new MessagingEndpoints(),
+                new UserEndpoints(),
+                new AdminEndpoints(),
+                new ChannelEndpoints(),
+                new UploadedFileEndpoints<>()
+        );
+        for (EndpointResource ep: endpoints) {
+            EndpointsRegistry.instance().addResource("", ep);
+        }
+
 
 
         Notifier.init();

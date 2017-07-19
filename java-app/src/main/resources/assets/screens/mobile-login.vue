@@ -30,9 +30,11 @@
      },
      methods: {
          onRoute: function() {
+             alert('he');
              console.log('mobile login onRoute');
              var self = this;
              var passphrase = self.$route.query.passphrase;
+             debugger;
              if (!passphrase || !self.$store.state.userProfile) {
                  console.log('no passphrase or profile passphrase: ' + passphrase + 'profile: ' + self.$store.state.userProfile + ' location: ' + window.location.hash + ' full location ' + window.location.href);
                  window.location.hash = '/login';

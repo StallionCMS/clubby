@@ -1,10 +1,7 @@
 package io.stallion.clubhouse.webSockets;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.stallion.utils.Literals.*;
 
@@ -110,13 +107,15 @@ public class WebSocketEventHandler {
 
     public static void sendMessageToUser(Long userId, String message) {
         Collection<Session> sessions = sessionsByUserId.getOrDefault(userId, map()).values();
-        for(Session sess: sessions) {
+        for (Iterator<Session> sessionIterator = sessions.iterator(); sessionIterator.hasNext();) {
+            Session sess = sessionIterator.next();
             if (sess.isOpen()) {
                 sess.getAsyncRemote().sendText(message);
 
             } else {
                 try {
-                    sessionsByUserId.get(userId).remove(sess.getId());
+                    sessionIterator.remove();
+                    //sessionsByUserId.get(userId).remove(sess.getId());
                 } catch (Exception e) {
                     Log.exception(e, "Error removing session");
                 }

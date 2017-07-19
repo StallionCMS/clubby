@@ -60,7 +60,7 @@
      },     
      methods: {
          loadFromQuery: function() {
-             if (ClubhouseMobileInterop.isMobile) {
+             if (ClubhouseMobileInterop.isMobileApp) {
                  ClubhouseMobileInterop.redirectToLogin();
                  return;
              }
@@ -110,7 +110,6 @@
                  },
                  success: function(o) {
                      console.log(o);
-                     debugger;
                      //o.encryptedPrivateKeyInitializationVectorHex;
                      //o.publicKeyHex;
                      //o.encryptedPrivateKeyHex;

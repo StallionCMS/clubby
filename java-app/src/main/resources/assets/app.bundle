@@ -4,6 +4,7 @@
 /vendor/showdown.js
 /vendor/favico.js
 /vendor/md5.js
+/vendor/qrcode.js
 /vendor/asmcrypto.js
 /vendor/elliptic.js
 /vendor/webcrypto-liner.shim.js

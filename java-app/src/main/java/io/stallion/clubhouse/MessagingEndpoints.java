@@ -286,6 +286,9 @@ public class MessagingEndpoints implements EndpointResource {
                 um.setMentioned(true);
             }
             IUser user = UserController.instance().forId(cm.getUserId());
+            if (user == null) {
+                continue;
+            }
             if (rawMessage.getUsersMentioned().contains(user.getUsername())) {
                 um.setMentioned(true);
             }
