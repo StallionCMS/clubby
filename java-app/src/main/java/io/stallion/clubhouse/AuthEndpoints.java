@@ -28,6 +28,7 @@ import javax.ws.rs.Produces;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Produces("application/json")
@@ -62,6 +63,7 @@ public class AuthEndpoints implements EndpointResource {
             @BodyParam("password") String password,
             @BodyParam("registrationToken") String registrationToken,
             @BodyParam("deviceName") String deviceName,
+            @BodyParam("deviceId") String deviceId,
             @BodyParam("deviceOperatingSystem") MobileSession.OperatingSystems deviceOS
                               ) {
         if (username.contains("@")) {
@@ -85,11 +87,23 @@ public class AuthEndpoints implements EndpointResource {
             user = UserController.instance().checkUserLoginValid(username, password);
         }
 
+        // Delete previous sessions from this device
+        if (!empty(deviceId)) {
+            List<MobileSession> existings = MobileSessionController.instance()
+                    .filter("deviceId", deviceId)
+                    .filter("userId", user.getId())
+                    .all();
+            for(MobileSession ms: existings) {
+                MobileSessionController.instance().hardDelete(ms);
+            }
+        }
+
         MobileSession mb = new MobileSession()
                 .setDeviceName(deviceName)
                 .setDeviceOperatingSystem(deviceOS)
                 .setIpAddress(Context.getRequest().getActualIp())
                 .setLastSignInAt(utcNow())
+                .setDeviceId(deviceId)
                 .setPassphraseEncryptionSecret(GeneralUtils.randomTokenBase32(40))
                 .setRegistrationToken(registrationToken)
                 .setSessionKey(UUID.randomUUID() + "-" + GeneralUtils.randomTokenBase32(24))
@@ -97,6 +111,8 @@ public class AuthEndpoints implements EndpointResource {
                 ;
 
         MobileSessionController.instance().save(mb);
+
+
 
         String cookie =  UserController.instance().userToCookieString(user, true, null, mb.getSessionKey());
         UserProfile up = UserProfileController.instance().forStallionUserOrNotFound(user.getId());

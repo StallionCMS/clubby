@@ -43,20 +43,24 @@ public class Notifier {
         if (session == null) {
             return;
         }
+
+
+
         RequestBody b = new RequestBody()
                 .setNotification(
                         new Notification()
-                        .setBody(body)
+                        .setBody(or(body, title))
                         .setTitle(title)
                 )
                 .setTo(session.getRegistrationToken())
                 ;
+        String json = JSON.stringify(b);
         try {
             HttpResponse<String> response = Unirest
                     .post("https://fcm.googleapis.com/fcm/send")
                     .header("Authorization", "key=" + ClubhouseSettings.getInstance().getFirebaseServerKey())
                     .header("Content-type", "application/json")
-                    .body(JSON.stringify(b))
+                    .body(json)
                     .asString();
             if (response.getStatus() == 200) {
                 Log.info("Response from FCM was: {0}", response.getBody());
@@ -82,6 +86,8 @@ public class Notifier {
     public static class RequestBody {
         private String to;
         private Notification notification;
+        private String priority = "high";
+        private boolean content_available = true;
 
         public Notification getNotification() {
             return notification;
@@ -98,6 +104,25 @@ public class Notifier {
 
         public RequestBody setTo(String to) {
             this.to = to;
+            return this;
+        }
+
+
+        public String getPriority() {
+            return priority;
+        }
+
+        public RequestBody setPriority(String priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        public boolean isContent_available() {
+            return content_available;
+        }
+
+        public RequestBody setContent_available(boolean content_available) {
+            this.content_available = content_available;
             return this;
         }
     }

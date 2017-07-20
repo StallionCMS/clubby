@@ -28,3 +28,4 @@
 00280-alter-sch_user_profiles-add-3
 00290-create-table-admin-settings
 00300-alter-stallion_uploaded_files-add-3
+00310-alter-sch_mobile_sessions-add-1

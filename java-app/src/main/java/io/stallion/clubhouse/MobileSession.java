@@ -19,6 +19,7 @@ public class MobileSession extends ModelBase {
     private String sessionKey = "";
     private String passphraseEncryptionSecret = "";
     private Long userId = 0L;
+    private String deviceId = "";
 
 
     @Column(nullable = false)
@@ -109,6 +110,16 @@ public class MobileSession extends ModelBase {
 
     public MobileSession setUserId(Long userId) {
         this.userId = userId;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public MobileSession setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
         return this;
     }
 
