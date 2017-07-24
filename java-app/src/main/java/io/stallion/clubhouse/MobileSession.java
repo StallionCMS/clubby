@@ -124,7 +124,7 @@ public class MobileSession extends ModelBase {
     }
 
     public static enum OperatingSystems {
-        ANDROID, IOS, OTHER
+        ANDROID, IOS, ELECTRON, OTHER
     }
 
 }

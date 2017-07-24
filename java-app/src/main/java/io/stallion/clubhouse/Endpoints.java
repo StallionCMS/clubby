@@ -202,11 +202,31 @@ public class Endpoints implements EndpointResource {
         ctx.put("directMessageChannels", directMessageChannels);
         ctx.put("forumChannels", forumChannels);
 
+
+        /*
+                Long mentions = DB.instance().queryScalar("" +
+                " SELECT COUNT(*) as mentions FROM sch_user_messages as um " +
+                "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +
+                "   INNER JOIN sch_channels AS c ON c.id=m.channelId" +
+                "   INNER JOIN sch_channel_members AS cm ON cm.channelId=c.id AND cm.userId=um.userId " +
+                "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
+                " WHERE `mentioned`=1 AND `read`=0 AND um.userId=? AND cm.userId=? AND m.deleted=0
+                        AND um.deleted=0 AND c.deleted=0 AND cm.deleted=0
+                        AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) ",
+                Context.getUser().getId(), Context.getUser().getId());
+         */
+
         // Get mention count by channel
         List<Map<String, Object>> records = DB.instance().findRecords("" +
-                "SELECT channelId, COUNT(*) as mentions FROM sch_user_messages " +
-                " WHERE `mentioned`=1 AND `read`=0 AND userId=? " +
+                "SELECT um.channelId, COUNT(*) as mentions FROM sch_user_messages AS um " +
+                " INNER JOIN sch_messages AS m ON m.id=um.messageId  " +
+                " LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
+                "WHERE um.`mentioned`=1 AND um.`read`=0 AND um.userId=? " +
+                "  AND m.deleted=0 AND um.deleted=0 " +
+                "  AND m.fromUserId!=? " +
+                "  AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) " +
                 " GROUP BY channelId;",
+                Context.getUser().getId(),
                 Context.getUser().getId()
         );
         for (Map<String, Object> record: records) {
@@ -221,11 +241,13 @@ public class Endpoints implements EndpointResource {
 
         // Get unread channels
         List<Long> channelIds = DB.instance().queryColumn("" +
-                        " SELECT DISTINCT(sch_user_messages.channelId) FROM sch_user_messages " +
-                        " INNER JOIN sch_messages ON sch_user_messages.messageId=sch_messages.id " +
+                        " SELECT DISTINCT(um.channelId) FROM sch_user_messages AS um " +
+                        " INNER JOIN sch_messages AS m ON um.messageId=m.id " +
+                         "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
                         " WHERE " +
-                        "     `read`=0 AND userId=? AND sch_messages.deleted=0 " +
-                        "  AND sch_user_messages.deleted=0 AND sch_messages.fromUserId!=? " +
+                        "     `read`=0 AND um.userId=? AND m.deleted=0 " +
+                        "  AND m.fromUserId!=? " +
+                        " AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) " +
                         " GROUP BY channelId; ",
                 Context.getUser().getId(),
                 Context.getUser().getId()

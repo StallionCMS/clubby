@@ -240,6 +240,7 @@ var ClubhouseMessagingMixin = {
                                     leftToDecrypt--;
                                     if (leftToDecrypt <= 0) {
                                         self.messagesDecrypted = true;
+                                        self.alwaysAfterFetchingFinished();
                                         if (self.onAfterFetchingFinished) {
                                             self.onAfterFetchingFinished();
                                         }
@@ -254,6 +255,7 @@ var ClubhouseMessagingMixin = {
                         });
                     } else {
                         self.messagesDecrypted = true;
+                        self.alwaysAfterFetchingFinished();                        
                         if (self.onAfterFetchingFinished) {
                             self.onAfterFetchingFinished();
                         }
@@ -310,6 +312,11 @@ var ClubhouseMessagingMixin = {
                 });
             }
             return message;
+        },
+        alwaysAfterFetchingFinished: function() {
+            setTimeout(function() {
+                ClubhouseMobileInterop.markRouteLoaded();
+            }, 20);
         },
         markdownToHtml: function(markdown, data, message) {
             markdown = markdown.replace(/</g, '&lt;');

@@ -39,13 +39,13 @@
             <div v-if="!isLoading">
                 <div v-if="hasTitle" class="form-group">
                     <label>Thread Title</label>
-                    <input type="input" class="form-control" v-model="title">
+                    <input tabindex="1" type="input" class="form-control" v-model="title">
                 </div>
                 <div class="p">
                     <forum-text-editor :config="config" ref="editor" @input-debounced="onInput"  :original-content="originalContent" :widgets="widgets"></forum-text-editor>
                 </div>
                 <div class="p">
-                    <a v-if="isNew && hasTitle" :disabled="!canSubmit" class="btn btn-primary" href="javascript:;" @click="saveChanges">Create Thread</a>
+                    <a tabindex="3" v-if="isNew && hasTitle" :disabled="!canSubmit" class="btn btn-primary" href="javascript:;" @click="saveChanges">Create Thread</a>
                     <a v-if="isNew && !hasTitle" :disabled="!canSubmit" class="btn btn-primary" href="javascript:;" @click="saveChanges">Create Thread</a>
                     <a v-if="!isNew" :disabled="!canSubmit" class="btn btn-primary" href="javascript:;" @click="saveChanges">Save Changes</a>
                 </div>
@@ -160,6 +160,10 @@
                  console.log('editor content was null');
                  return;
              }
+             if (!self.title && self.hasTitle) {
+                 stallion.showError('Thread title is required');
+                 return;
+             }
              self.widgets = d.widgets;
              self.originalContent = d.originalContent;
              this.postMessage({
@@ -178,6 +182,9 @@
                          self.$emit('close');                     
                          message = self.message;
                          return;
+                     }
+                     if (!message.threadId) {
+                         message.threadId = message.id;
                      }
                      var path = '#/forum/' + message.channelId + '/' + message.threadId;
                      if (message.id !== message.threadId) {

@@ -32,7 +32,7 @@
 
 <template>
     <div class="forum-text-editor-vue">
-        <textarea v-user-autocomplete name="content" @input="onInput" @change="onChange" v-model="markdown" data-provide="markdown" rows="10" ></textarea>
+        <textarea v-user-autocomplete tabindex="2" name="content" @input="onInput" @change="onChange" v-model="markdown" data-provide="markdown" rows="10" ></textarea>
         <text-editor-widget-modal  v-if="widgetModalShown" :widget-type="newWidgetType" :widget="editingWidget" @confirmed="onConfirmedWidget" @close="widgetModalShown=false" :config="config"></text-editor-widget-modal>
         <!-- username-auto-complete v-if="showUserAutoComplete" :term="userAutocompleteTerm"></username-auto-complete-->
     </div>

@@ -140,29 +140,40 @@ function ClubhouseMakeVuex() {
             }            
         });
 
+    var previousMentionCount = 0;
+    var previousHasNew = false;
+    
     function checkUpdateFavicon(channelById) {
-        if (ClubhouseMobileInterop.isMobileApp) {
+        var hasMentions = false;
+        var hasNew = false;
+        var mentionsCount = 0;
+        console.log('checkUpdateFavicon ' , channelById);
+        if (!channelById) {
+            return;
+        }
+        Object.keys(channelById).forEach(function(channelId) {
+            var channel = channelById[channelId];
+            if (channel.mentionsCount > 0) {
+                hasMentions = true;
+                mentionsCount += channel.mentionsCount;
+            }
+            if (channel.hasNew) {
+                hasNew = true;
+            }
+        });
+        if (hasNew === previousHasNew && mentionsCount === previousMentionCount) {
+            console.log('no updates to mentions or hasNew');
+            return
+        }
+        previousHasNew = hasNew;
+        previousMentionCount = mentionsCount;
+        
+        
+        if (ClubhouseMobileInterop.isAppMode) {
             ClubhouseMobileInterop.tellAppToUpdateMentions();
             return;
         }
         try {
-            var hasMentions = false;
-            var hasNew = false;
-            var mentionsCount = 0;
-            console.log('checkUpdateFavicon ' , channelById);
-            if (!channelById) {
-                return;
-            }
-            Object.keys(channelById).forEach(function(channelId) {
-                var channel = channelById[channelId];
-                if (channel.mentionsCount > 0) {
-                    hasMentions = true;
-                    mentionsCount += channel.mentionsCount;
-                }
-                if (channel.hasNew) {
-                    hasNew = true;
-                }
-            });
             var favicon= new Favico({
                 animation: 'none',
                 //type : 'rectangle',

@@ -170,6 +170,9 @@
                      self.watchedTopics = o.topicContext.watchedTopics;
                      self.newTopics = o.topicContext.newTopics;
                      self.updatedTopics = o.topicContext.updatedTopics;
+                     setTimeout(function() {
+                         ClubhouseMobileInterop.markRouteLoaded();
+                     }, 20);                     
                                       /*        private List<ForumTopic> pinnedTopics = list();
         private List<ForumTopic> watchedTopics = list();
         private List<ForumTopic> newTopics = list();

@@ -2,7 +2,15 @@
 var ClubhouseMobileInterop = new function() {
     var self = this;
 
+    self.isElectron = window.isInElectron !== undefined;
+
+//    self.isElectron = electronInterop !== undefined;
+    //alert(self.isElectron);
+
+    
     self.isMobile = window.orientation !== undefined;
+
+    self.isAppMode = self.isElectron || self.isMobile;
 
     self.isAndroidApp = window.location.search.indexOf('appBrowser=android') > -1;
     self.isIOSApp = window.location.search.indexOf('appBrowser=ios') > -1;
@@ -28,19 +36,27 @@ var ClubhouseMobileInterop = new function() {
     self.redirectToLogin = function() {
         if (window.webkit) {
             webkit.messageHandlers.requiresLoginHandler.postMessage("redirect-to-login");
-        } else {
-            
+        } else if (self.isElectron) {
+            electronInterop.redirectToLogin();
         }
     }
 
     self.tellAppToUpdateMentions = function() {
         if (window.webkit && webkit.messageHandlers.pollForMentions) {
             webkit.messageHandlers.pollForMentions.postMessage("{}");
-        } else {
-            
+        } else if (self.isElectron) {
+            electronInterop.tellAppToUpdateMentions();
         }
     }
 
+    self.markRouteLoaded = function() {
+        if (window.webkit && webkit.messageHandlers.markRouteLoaded) {
+            webkit.messageHandlers.markRouteLoaded.postMessage("{}");
+        } else if (self.isElectron) {
+            electronInterop.markRouteLoaded();
+        }
+    }
+    
     self.updateNameAndIcon = function() {
         //alert('hi!');
         //alert('' + ClubhouseVueApp);
@@ -54,8 +70,8 @@ var ClubhouseMobileInterop = new function() {
         
         if (window.webkit && webkit.messageHandlers.updateNameAndIcon) {
             webkit.messageHandlers.updateNameAndIcon.postMessage(JSON.stringify(message));
-        } else {
-            
+        } else if (self.isElectron) {
+            electronInterop.updateNameAndIcon();
         }
 
     }

@@ -243,6 +243,12 @@ console.log("executing app.js");
             } else {
                 store.commit('activeChannelId', null);
             }
+
+            // Always do this in case there is an error in the normal mark route loaded and
+            // we want to see what happened.
+            setTimeout(function() {
+                ClubhouseMobileInterop.markRouteLoaded();
+            }, 2000);
         });
 
         var vueApp;

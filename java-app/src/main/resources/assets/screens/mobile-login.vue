@@ -30,7 +30,6 @@
      },
      methods: {
          onRoute: function() {
-             alert('he');
              console.log('mobile login onRoute');
              var self = this;
              var passphrase = self.$route.query.passphrase;
@@ -54,6 +53,9 @@
                  });
                  console.log('nagivate home');
                  ClubhouseMobileInterop.updateNameAndIcon();
+
+                     
+                 
                  window.location.hash = '/';
              }).catch(function(err) {
                  console.log('error importing private key' , err);

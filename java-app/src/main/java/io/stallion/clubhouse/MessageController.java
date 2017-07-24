@@ -285,7 +285,7 @@ public class MessageController extends StandardModelController<Message> {
                 channelId, userId
         );
         ctx.setUnreadCount(((Long)countsRecord.get("unreadCount")).intValue());
-        ctx.setUnreadMentionsCount(((Long)countsRecord.get("unreadCount")).intValue());
+        ctx.setUnreadMentionsCount(((Long)countsRecord.get("mentionedCount")).intValue());
 
 
 

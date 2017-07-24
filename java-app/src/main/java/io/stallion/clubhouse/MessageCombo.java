@@ -27,6 +27,7 @@ public class MessageCombo {
     private Long threadId = 0L;
 
 
+
     private String encryptedPasswordHex = "";
     private String passwordVectorHex = "";
 

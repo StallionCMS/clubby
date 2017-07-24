@@ -254,10 +254,16 @@ public class MessagingEndpoints implements EndpointResource {
         if (member == null || !member.isCanPost()) {
             throw new ClientException("You do not have permission to post to this channel.");
         }
+        message.setId(DB.instance().getTickets().nextId());
+        if (empty(message.getThreadId())) {
+            message.setThreadId(message.getId());
+        }
+
+
         MessageController.instance().save(message);
 
 
-        if (!empty(message.getThreadId())) {
+        if (!empty(message.getThreadId()) && !message.getId().equals(message.getThreadId())) {
             Message thread = MessageController.instance().forId(message.getThreadId());
             if (thread != null) {
                 thread.setThreadUpdatedAt(utcNow());
@@ -318,6 +324,11 @@ public class MessagingEndpoints implements EndpointResource {
         message.setTitle(container.getTitle());
         message.setThreadId(container.getThreadId());
         message.setParentMessageId(container.getParentMessageId());
+        message.setId(DB.instance().getTickets().nextId());
+        if (empty(message.getThreadId())) {
+            message.setThreadId(message.getId());
+        }
+
 
         //.optional("usersMentioned", "title", "parentMessageId", "threadId")
 
@@ -331,7 +342,7 @@ public class MessagingEndpoints implements EndpointResource {
         }
         MessageController.instance().save(message);
 
-        if (!empty(message.getThreadId())) {
+        if (!empty(message.getThreadId()) && !message.getId().equals(message.getThreadId())) {
             Message thread = MessageController.instance().forId(message.getThreadId());
             if (thread != null) {
                 thread.setThreadUpdatedAt(utcNow());

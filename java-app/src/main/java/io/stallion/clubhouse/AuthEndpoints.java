@@ -61,7 +61,7 @@ public class AuthEndpoints implements EndpointResource {
     public Object mobileLogin(
             @BodyParam("username") String username,
             @BodyParam("password") String password,
-            @BodyParam("registrationToken") String registrationToken,
+            @BodyParam(value = "registrationToken", allowEmpty = true) String registrationToken,
             @BodyParam("deviceName") String deviceName,
             @BodyParam("deviceId") String deviceId,
             @BodyParam("deviceOperatingSystem") MobileSession.OperatingSystems deviceOS
