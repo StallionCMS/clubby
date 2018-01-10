@@ -25,6 +25,7 @@ public class ChannelUserWrapper {
     private String state = "";
     private String avatarUrl = "";
     private Long channelMemberId = 0L;
+    private boolean approved = false;
 
     public String getUsername() {
         return username;
@@ -134,4 +135,15 @@ public class ChannelUserWrapper {
         this.channelMemberId = channelMemberId;
         return this;
     }
+
+    public boolean isApproved() {
+        return approved;
+    }
+
+    public ChannelUserWrapper setApproved(boolean approved) {
+        this.approved = approved;
+        return this;
+    }
 }
+
+

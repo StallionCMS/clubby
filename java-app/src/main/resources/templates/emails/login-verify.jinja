@@ -1,0 +1,13 @@
+{% extends "stallion:email/email-base.jinja" %}
+{% block main %}
+<h4>Verify new device</h4>
+<div>
+  <p>Enter this code to verify your new device:</p>
+  <pre>{{ tokenInfo.code }}</pre>
+  <p></p>
+</div>
+<hr>
+{% endblock %}
+
+
+

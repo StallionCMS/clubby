@@ -58,7 +58,7 @@
                     <button @click="openDirectMessage(chosenMembers)" class="btn btn-md btn-danger">Open {{ chosenMembers.length }} person chat &#187;</button>
                 </div>
             </div>
-            <div :class="['member-row', index % 2===0 ? 'even' : 'odd']" v-for="(member, index) in otherUsers"> 
+            <div :class="['member-row', index % 2===0 ? 'even' : 'odd']" v-for="(member, index) in otherUsers" > 
                 <a class="open-channel-link"     @click="openDirectMessage(member)" href="javascript:;">
                     <img class="avatar-image" :src="member.avatarUrl">
                     <span class="member-name">{{ member.displayName }}</span>
@@ -92,6 +92,9 @@
              var search = self.userSearch.toLowerCase();
              return self.members.filter(function(user) {
                  if (user.id == self.user.id) {
+                     return false;
+                 }
+                 if (!user.approved) {
                      return false;
                  }
                  if (self.userSearch) {

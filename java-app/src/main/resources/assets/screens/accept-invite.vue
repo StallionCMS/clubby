@@ -62,19 +62,14 @@
                         <input type="password" class="form-control" v-model="user.passwordConfirm" required="true">
                     </div>
                     <div class="alert alert-info">
-                        <b>Attention!</b> You encryption passphrase cannot be recovered. Make sure that you keep a copy of it in a secure place (preferrably a password manager like 1 Password). If you lose it, you will be unable to decrypt all messages you have previously recieved and they will be irretriably lost.
+                        <b>Attention!</b> You encryption passphrase cannot be recovered. Make sure that you keep a copy of it in a secure place (use either password manager like 1Password or a piece of paper stored in safe). <b>If you lose this password, you will be unable to decrypt the messages that you you have previously received &mdash; they will be irretrievably lost.</b>
                     </div>
-                    <div class="form-group">
-                        <label>Choose an Encryption Passphrase</label>
-                        <input type="password" class="form-control" v-model="profile.passphrase" required="true">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Encryption Passphrase</label>
-                        <input type="password" class="form-control" v-model="profile.passphraseConfirm" required="true">
+                    <div class="checkbox">
+                        <label><input type="checkbox" v-model="rememberThisDevice"> Remember this device?</label>
                     </div>
                 </fieldset>
                 <div class="p">
-                    <button type="submit" class="btn btn-primary btn-lg">Accept Invite</button>
+                    <button v-disable-for-processing="processing" type="submit" class="btn btn-primary btn-lg">Accept Invite</button>
                 </div>
             </form>
             
@@ -86,6 +81,8 @@
  module.exports = {
      data: function() {
          return {
+             processing: false,
+             rememberThisDevice: true,
              user: {
                  email: '',
                  username: '',
@@ -100,9 +97,7 @@
                  contactInfo: '',
                  publicKeyHex: '',
                  encryptedPrivateKeyHex: '',
-                 encryptedPrivateKeyInitializationVectorHex: '',
-                 passphrase: '',
-                 passphraseConfirm: ''
+                 encryptedPrivateKeyInitializationVectorHex: ''
              },
              isLoading: true,
          };
@@ -128,15 +123,14 @@
                  stallion.showError('Passwords must match.');
                  return;
              }
-             if (self.profile.passphrase.length < 6) {
-                 stallion.showError('Encryption passphrase must be at least six characters');
+
+             if (self.processing) {
                  return;
              }
-             if (self.profile.passphrase != self.profile.passphraseConfirm) {
-                 stallion.showError('Encryption passphrases  must match.');
-                 return;
-             }
-             clubhouseGeneratePrivateAndPublicKey(self.profile.passphrase).then(function(result) {
+             self.processing = true;
+
+             
+             clubhouseGeneratePrivateAndPublicKey(self.user.password).then(function(result) {
                  self.profile.privateKeyJwkEncryptedHex = result.privateKeyJwkEncryptedHex;
                  self.profile.privateKeyVectorHex = result.privateKeyVectorHex;
                  self.profile.publicKeyJwkJson = result.publicKeyJwkJson;
@@ -144,11 +138,16 @@
 
              }).catch(function(err) {
                  console.error(err);
+                 self.processing = false;
              });
                         
          },
          saveAcceptance: function(publicKey, privateKey) {
              var self = this;
+
+             var salt = generateUUID().replace(/\-/g, '');
+             var password4chars = md5(self.user.password + '|' + salt).substr(0, 4);
+             
              stallion.request({
                  url: '/clubhouse-api/users/accept-invite',
                  method: 'POST',
@@ -158,10 +157,12 @@
                      username: self.user.username,
                      givenName: self.user.givenName,
                      familyName: self.user.familyName,
-                     password: self.user.password,
+                     password4chars: password4chars,
+                     passwordSalt: salt,
                      aboutMe: self.profile.aboutMe,
                      contactInfo: self.profile.contactInfo,
                      webSite: self.profile.webSite,
+                     rememberThisDevice: self.rememberThisDevice,
                      publicKeyJwkJson: self.profile.publicKeyJwkJson,
                      privateKeyVectorHex: self.profile.privateKeyVectorHex,
                      privateKeyJwkEncryptedHex: self.profile.privateKeyJwkEncryptedHex,
@@ -170,7 +171,7 @@
                  },
                  success: function(o) {
                      stallion.showSuccess("Invitation accepted!");
-                     sessionStorage['private-key-passphrase-' + o.user.id] = self.profile.passphrase;
+                     sessionStorage['private-key-passphrase-' + o.user.id] = self.user.password;
                      self.$store.commit('privateKey', privateKey);
                      self.$store.commit('defaultChannelIdChange', o.defaultChannelId);
                      stallionClubhouseApp.store.commit('login', {
@@ -184,6 +185,10 @@
                          });
                      });
 
+                 },
+                 error: function(o) {
+                     stallion.showError(o.message || 'Error processing request');
+                     self.processing = false;
                  }
              });             
          },

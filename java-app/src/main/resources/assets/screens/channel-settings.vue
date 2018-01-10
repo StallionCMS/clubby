@@ -24,7 +24,7 @@
                         <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="FORUM"> Forum</label>
                     </div>
                     <div class="radio">
-                        <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="CHANNEl"> Group Chat</label>
+                        <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="CHANNEL"> Group Chat</label>
                     </div>
                 </div>
                 <div>

@@ -261,13 +261,16 @@ h6 {
 */
 
 .fade-enter-active, .fade-leave-active {
-    transition: opacity .2s;
+    transition: opacity .4s;
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
-    transition: opacity .2s;
+    transition: opacity 0s;
     opacity: 0;
 }
 
+.fade-leave, .fade-leave-active, .fade-leave-to {
+    display: none;
+}
 
 
 .always-show-scrollbars::-webkit-scrollbar {

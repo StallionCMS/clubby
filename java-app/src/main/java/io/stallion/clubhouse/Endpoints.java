@@ -264,7 +264,7 @@ public class Endpoints implements EndpointResource {
         List<ChannelUserWrapper> users = DB.instance().queryBean(
                 ChannelUserWrapper.class,
                 "" +
-                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, " +
+                        " SELECT su.id, su.displayName, su.email, su.username, up.aboutMe, up.webSite, su.approved, " +
                         "        up.publicKeyJwkJson, us.state, up.avatarUrl " +
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
@@ -272,6 +272,7 @@ public class Endpoints implements EndpointResource {
                         " "
         );
         for(ChannelUserWrapper user: users) {
+
             if (empty(user.getAvatarUrl())) {
                 user.setAvatarUrl("https://www.gravatar.com/avatar/" + GeneralUtils.md5Hash(user.getEmail()) + "?d=retro");
             }

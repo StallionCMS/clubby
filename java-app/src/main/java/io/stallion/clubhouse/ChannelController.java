@@ -66,7 +66,7 @@ public class ChannelController extends StandardModelController<Channel> {
                         " FROM stallion_users AS su" +
                         " INNER JOIN sch_user_profiles as up ON up.userId=su.id " +
                         " INNER JOIN sch_channel_members as cm ON cm.userId=su.id " +
-                        " WHERE cm.channelId=? ",
+                        " WHERE cm.channelId=? AND su.approved=1 ",
                 channelId
         );
         return channelUsers;

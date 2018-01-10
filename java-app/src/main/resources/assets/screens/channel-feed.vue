@@ -281,7 +281,7 @@
                 <div class="wrap-insert-emoji-button">
                     <a class="insert-emoji-button" @click="openInsertEmoji" href="javascript:;"><i class="material-icons">tag_faces</i></a>
                 </div>
-                <message-textarea :placeholder="'Message ' + channel.name" id="post-message-box" :disabled="messageAreaDisabled || !publicKeysAvailable" @submit="postMessage" v-model="newMessage"></message-textarea>
+                <message-textarea :placeholder="channel && channel.channelType === 'DIRECT_MESSAGE' ? channelName : 'Message ' + '#' + channelName" id="post-message-box" :disabled="messageAreaDisabled || !publicKeysAvailable" @submit="postMessage" v-model="newMessage"></message-textarea>
                 
                 <!--<input type="text" class="form-control" v-model="newMessage">-->
             </form>

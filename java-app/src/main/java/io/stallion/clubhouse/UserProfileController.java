@@ -24,6 +24,10 @@ public class UserProfileController extends StandardModelController<UserProfile> 
         DataAccessRegistry.instance().registerDbModel(UserProfile.class, UserProfileController.class, PartialStash.class);
     }
 
+    public UserProfile forStallionUser(Long userId) {
+        return forUniqueKey("userId", userId);
+    }
+
     public UserProfile forStallionUserOrNotFound(Long userId) {
         return forUniqueKeyOrNotFound("userId", userId);
     }

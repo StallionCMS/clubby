@@ -1,5 +1,6 @@
 package io.stallion.clubhouse;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,8 @@ import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.*;
 import io.stallion.requests.validators.SafeMerger;
 import io.stallion.restfulEndpoints.*;
+import io.stallion.services.SecureTempTokens;
+import io.stallion.services.TempToken;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
@@ -131,12 +134,14 @@ public class UserEndpoints implements EndpointResource {
     public Object acceptInvitation(
             @BodyParam("token") String token,
             @BodyParam("username") String username,
-            @BodyParam("password") String password,
+            @BodyParam("password4chars") String password4chars,
+            @BodyParam("passwordSalt") String passwordSalt,
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
             @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
             @BodyParam("privateKeyJwkEncryptedHex") String privateKeyJwkEncryptedHex,
             @BodyParam("privateKeyVectorHex") String privateKeyVectorHex,
+            @BodyParam("rememberThisDevice") Boolean rememberThisDevice,
             @BodyParam(value = "webSite", allowEmpty = true) String webSite,
             @BodyParam(value = "aboutMe", allowEmpty = true) String aboutMe,
             @BodyParam("userId") Long userId
@@ -156,10 +161,10 @@ public class UserEndpoints implements EndpointResource {
         user.setUsername(username);
         user.setGivenName(givenName);
         user.setRole(Role.MEMBER);
+        user.setBcryptedPassword(GeneralUtils.randomToken(32));
         user.setFamilyName(familyName);
         user.setDisplayName(givenName + " " + familyName);
 
-        UserController.instance().hydratePassword(user, password, password);
 
         UserController.instance().save(user);
         UserProfile profile = UserProfileController.instance().filter("userId", user.getId()).first();
@@ -168,14 +173,23 @@ public class UserEndpoints implements EndpointResource {
                     .setUserId(user.getId())
                     ;
         }
+        profile.setPasswordSalt(passwordSalt);
+        profile.setPasswordFourCharactersHashed(password4chars);
         profile.setPrivateKeyJwkEncryptedHex(privateKeyJwkEncryptedHex);
         profile.setPublicKeyJwkJson(publicKeyJwkJson);
         profile.setPrivateKeyVectorHex(privateKeyVectorHex);
+
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);
 
+        String rememberToken = null;
+        if (rememberThisDevice) {
+            rememberToken = new AuthEndpoints().makeRememberDeviceCookie(user);
+        }
+
         return map(
+                val("rememberDeviceToken", rememberToken),
                 val("user", user),
                 val("userProfile", profile),
                 val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId()))
@@ -191,9 +205,11 @@ public class UserEndpoints implements EndpointResource {
             @BodyParam("secretKey") String secretKey,
             @BodyParam("username") String username,
             @BodyParam("email") String email,
-            @BodyParam("password") String password,
             @BodyParam("givenName") String givenName,
             @BodyParam("familyName") String familyName,
+            @BodyParam("password4chars") String password4chars,
+            @BodyParam("passwordSalt") String passwordSalt,
+            @BodyParam("rememberThisDevice") Boolean rememberThisDevice,
             @BodyParam("publicKeyJwkJson") String publicKeyJwkJson,
             @BodyParam("privateKeyVectorHex") String privateKeyVectorHex,
             @BodyParam("privateKeyJwkEncryptedHex") String privateKeyJwkEncryptedHex,
@@ -224,8 +240,8 @@ public class UserEndpoints implements EndpointResource {
         user.setRole(Role.ADMIN);
         user.setFamilyName(familyName);
         user.setDisplayName(givenName + " " + familyName);
+        user.setBcryptedPassword(GeneralUtils.randomTokenBase32(24));
 
-        UserController.instance().hydratePassword(user, password, password);
 
         UserController.instance().save(user);
 
@@ -237,6 +253,8 @@ public class UserEndpoints implements EndpointResource {
         profile.setPrivateKeyJwkEncryptedHex(privateKeyJwkEncryptedHex);
         profile.setPublicKeyJwkJson(publicKeyJwkJson);
         profile.setPrivateKeyVectorHex(privateKeyVectorHex);
+        profile.setPasswordSalt(passwordSalt);
+        profile.setPasswordFourCharactersHashed(password4chars);
         UserProfileController.instance().save(profile);
 
         UserController.instance().addSessionCookieForUser(user, true);
@@ -289,10 +307,13 @@ public class UserEndpoints implements EndpointResource {
             ChannelMemberController.instance().save(cm);
         }
 
-
-
+        String rememberToken = null;
+        if (rememberThisDevice) {
+            rememberToken = new AuthEndpoints().makeRememberDeviceCookie(user);
+        }
 
         return map(
+                val("rememberDeviceToken", rememberToken),
                 val("user", user),
                 val("userProfile", profile),
                 val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId()))

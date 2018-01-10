@@ -5,7 +5,15 @@ isDebug = true;
 if (isDebug) var debug = console.log.bind(window.console)
 else var debug = function(){}
 
-
+function clubhouseImportPrivateKey(passphrase, privateKeyJwkEncryptedHex, privateKeyVectorHex) {
+    var userProfile = {
+        privateKeyJwkEncryptedHex: privateKeyJwkEncryptedHex,
+        privateKeyVectorHex: privateKeyVectorHex
+    };
+    return new Promise(function(resolve, reject) {
+        new KeyImporter(passphrase, resolve, reject, userProfile).importPrivate();
+    });        
+}
 
 function clubhouseImportPublicAndPrivateKey(encpassphrase, userProfile) {
     return new Promise(function(resolve, reject) {
@@ -38,6 +46,23 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
     self.importPublicAndPrivate = function() {
         step1ImportPublic();
     };
+
+    self.importPrivate = function() {
+        FetchPrivateKey(
+            self.userProfile.privateKeyJwkEncryptedHex,
+            self.userProfile.privateKeyVectorHex,
+            self.encpassphrase
+        ).then(
+            function(result) {
+                debug('decrypted private key!!! ', result);
+                resolve(result);
+            },
+            function(e) {
+                console.error(e);
+                reject(e)
+            }
+        );
+    }
     
     function step1ImportPublic() {
 

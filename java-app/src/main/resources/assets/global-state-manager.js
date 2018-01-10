@@ -205,6 +205,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     manager.reconnectWait = 200;
     manager.reconnectFailCount = 0;
     manager.started = false;
+    console.log('new global state manager');
 
     
     manager.start = function() {
@@ -228,7 +229,6 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             url: '/clubhouse-api/general-context',
             success: function(o) {
                 vueApp.$store.commit('generalContext', o);
-                manager.reconnectFailCount = 0;
                 if (callback) {
                     callback(o);
                 }
@@ -243,9 +243,14 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             scheme = 'ws://';
         }
     
-        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
+        //manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
+        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/");
+        
         console.log('setup web socket.');
+
+        
         manager.clubhouseSocket.onopen = function(event) {
+            console.log('websocket opened ', event);
             manager.loadContext();
             if (vueApp.currentChannelComponent && vueApp.currentChannelComponent.isLoaded) {
                 vueApp.currentChannelComponent.refresh();
@@ -269,6 +274,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         manager.clubhouseSocket.onerror = function(event) {
             console.log('websocket onerror ', event);
         }
+
         
         manager.clubhouseSocket.onmessage = function (event) {
             
@@ -276,6 +282,9 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             var data = JSON.parse(event.data);
             if (data.type === 'channel-changes') {
                 manager.loadContext();
+            } else if (data.type === 'confirmed-ws-open') {
+                console.log('confirmed web socket opened');
+                manager.reconnectFailCount = 0;
             } else if (data.type === 'new-channel') {
                 vueApp.$store.commit('channelAdded', data.channel);
             } else if (data.type === 'channel-updated') {
@@ -340,10 +349,16 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         manager.clubhouseSocket.onclose = function(event) {
             if (event.code === 1008) {
                 stallion.showError('You are not logged in.');
-                window.location.hash = '/login';
+                alert('not logged in!');
+                if (ClubhouseMobileInterop.isAppMode) {
+                    ClubhouseMobileInterop.redirectToLogin();
+                } else {
+                    window.location.hash = '/login';
+                }
                 return;
             }
-            manager.reconnectFailCount++;
+            manager.reconnectFailCount = manager.reconnectFailCount + 1;
+            console.log('failCount ', manager.reconnectFailCount, manager);
             var wait = parseInt(manager.reconnectWait * Math.pow(manager.reconnectFailCount, 1.8), 10);
             console.log('web socket closed, reconnect in ', wait, event);
             setTimeout(manager.setupWebSocket, wait);

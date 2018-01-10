@@ -47,11 +47,20 @@ console.log("executing app.js");
             },
             {
                 path: '/login',
-                component: vueComponents['clubhouse-login'],
+                component: vueComponents['clubhouse-login-v3'],
                 meta: {
                     authRequired: false
                 }                
             },
+            /*
+            {
+                path: '/key-login',
+                component: vueComponents['login-with-key'],
+                meta: {
+                    authRequired: false
+                }                
+            },
+            */
             {
                 path: '/mobile-login',
                 component: vueComponents['mobile-login'],
@@ -196,6 +205,8 @@ console.log("executing app.js");
             store.commit('defaultChannelIdChange', theApplicationContext.defaultChannelId);
         }
 
+        
+
         // sessionStorage['private-key-passphrase-' + window.theApplicationContext.user.id] && 
         if (window.theApplicationContext.user && window.theApplicationContext.user.id) {
             store.commit('login', {
@@ -210,31 +221,41 @@ console.log("executing app.js");
         });
 
         router.beforeEach(function(to, from, next) {
-            if (to.meta.keyRequired || to.meta.authRequired !== false) {
-                if (!app.store.state.user || !app.store.state.user.id) {
-                    next('/login');
-                    return;
-                }
+            // No auth required for the view? Carry on.
+            console.log('go to ', to);
+            if (!to.meta.keyRequired && to.meta.authRequired === false) {
+                next();
+                return;
             }
-            if (to.meta.keyRequired) {
+            
+            if (app.store.state.user && app.store.state.user.id) {
                 if (store.state.privateKey) {
                     next();
-                } else if (app.store.state.user.id && sessionStorage['private-key-passphrase-' + app.store.state.user.id]) {
+                    return;
+                } else if (sessionStorage['private-key-passphrase-' + app.store.state.user.id]) {
                     clubhouseImportPublicAndPrivateKey(
                         sessionStorage['private-key-passphrase-' + app.store.state.user.id],
                         app.store.state.userProfile
                     ).then(function() {
                         next();
                     }).catch(function(err) {
-                        console.error(err);
+                        
+                        console.error('PRIVATE KEY LOGIN ERROR ', err);
+                        if (ClubhouseMobileInterop.isAppMode) {
+                            ClubhouseMobileInterop.redirectToLogin();
+                        } else {
+                            next('/login');
+                        }
                     });
-                } else {
-                    window.location.hash = '/login';
+                    return;
                 }
-                console.log('key required!');
-            } else {
-                next();
             }
+            if (ClubhouseMobileInterop.isAppMode) {
+                ClubhouseMobileInterop.redirectToLogin();
+            } else {
+                next('/login');
+            }
+            return;
         });
 
         router.afterEach(function(to, from) {
@@ -246,10 +267,13 @@ console.log("executing app.js");
 
             // Always do this in case there is an error in the normal mark route loaded and
             // we want to see what happened.
+            console.log('routed to ', to);
+
             setTimeout(function() {
                 ClubhouseMobileInterop.markRouteLoaded();
-            }, 2000);
+            }, 500);
         });
+
 
         var vueApp;
         window.ClubhouseVueApp =  vueApp = new Vue({
@@ -263,6 +287,7 @@ console.log("executing app.js");
         vueApp.stateManager.start();
         
         vueApp.$mount('#vue-app');
+
 
         
         
@@ -306,7 +331,7 @@ console.log("executing app.js");
             conv.img_sets.apple.sheet = '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png';
             // Configure this library to use the sheets defined in `img_sets` (see above)
             conv.use_sheet = true;
-            conv.img_set = 'apple';
+        conv.img_set = 'apple';
             conv.replace_mode = 'img';
             conv.text_mode = false;
             app.emojiConverter = conv;

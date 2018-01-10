@@ -10,6 +10,8 @@ import io.stallion.jobs.Schedule;
 import io.stallion.plugins.StallionJavaPlugin;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.restfulEndpoints.EndpointsRegistry;
+import io.stallion.services.SecureTempTokens;
+import io.stallion.services.ShortCodeTokenController;
 import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
@@ -43,6 +45,10 @@ public class ClubhousePlugin extends StallionJavaPlugin {
         UserMessageController.register();
         UserProfileController.register();
         UserStateController.register();
+        SecureTempTokens.register();
+        ShortCodeTokenController.register();
+
+        EncryptionHelper.instance();
 
 
         List<EndpointResource> endpoints = list(

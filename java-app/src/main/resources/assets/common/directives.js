@@ -53,6 +53,30 @@
                 }
             }
         );
+
+        Vue.directive(
+            'disable-for-processing',
+            {
+                inserted: function(el, binding) {
+                    if (binding.value === true) {
+                        el.classList.add("st-loading-mask");
+                        el.setAttribute('disabled', 'true');
+                    } else {
+                        el.classList.remove("st-loading-mask");
+                        el.removeAttribute('disabled');
+                    }
+                },
+                update: function(el, binding) {
+                    if (binding.value === true) {
+                        el.classList.add("st-loading-mask");
+                        el.setAttribute('disabled', 'true');
+                    } else {
+                        el.classList.remove("st-loading-mask");
+                        el.removeAttribute('disabled');
+                    }
+                }
+            }
+        );
         
         Vue.directive(
             'raw-html',

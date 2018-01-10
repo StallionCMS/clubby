@@ -1,6 +1,7 @@
 package io.stallion.clubhouse.webSockets;
 
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.util.*;
 
 import static io.stallion.utils.Literals.*;
@@ -8,9 +9,12 @@ import static io.stallion.utils.Literals.*;
 import io.stallion.clubhouse.*;
 import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
+import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.UserController;
 import io.stallion.utils.json.JSON;
+
+import org.eclipse.jetty.websocket.common.WebSocketSession;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -26,13 +30,34 @@ public class WebSocketEventHandler {
     public void onWebSocketConnect(Session sess) throws IOException
     {
         sess.getOpenSessions();
+        WebSocketSession wsSess = (WebSocketSession)sess;
         //encodeURIComponent(stallion.getCookie("stUserSession"))
+        String token = null;
         List<String> values = sess.getRequestParameterMap().get("stUserSession");
-        if (values.size() == 0) {
-            sess.close(new CloseReason(CloseReason.CloseCodes.NOT_CONSISTENT, "stUserSession query param required."));
+        if (values == null || values.size() == 0) {
+            Log.info("stUserSession is null");
+
+            for(HttpCookie cookie:wsSess.getUpgradeRequest().getCookies()) {
+                if (cookie.getName().equals("stUserSession")) {
+                    token = cookie.getValue();
+                }
+            }
+            //sess
+        } else {
+            token = values.get(0);
+        }
+        if (empty(token)) {
+            sess.close(new CloseReason(CloseReason.CloseCodes.NOT_CONSISTENT, "stUserSession query param or Cookie required."));
             return;
         }
-        String token = values.get(0);
+
+        if (!Settings.instance().getSiteUrl().equals(wsSess.getUpgradeRequest().getHeader("Origin"))) {
+            String msg = "You are accessing site with URL " + Settings.instance().getSiteUrl() + " but the Origin header was " + wsSess.getUpgradeRequest().getHeader("Origin");
+            sess.close(new CloseReason(CloseReason.CloseCodes.NOT_CONSISTENT, msg));
+            throw new ClientException(msg, 403);
+        }
+
+
         UserController.UserValetResult result = UserController.instance().cookieStringToUser(token);
         if (result == null || result.getUser() == null || result.getUser().isAnon()) {
             sess.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "Not authorized. You must log in again."));
@@ -47,6 +72,9 @@ public class WebSocketEventHandler {
         System.out.println("Socket Connected: " + sess);
         //notifyUserStateChange(
         UserStateController.instance().updateState(result.getUser().getId(), UserStateType.AWAKE);
+
+        String message = JSON.stringify(map(val("type", "confirmed-ws-open"), val("userId", result.getUser().getId())));
+        sess.getAsyncRemote().sendText(message);
     }
 
 

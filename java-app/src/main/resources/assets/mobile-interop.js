@@ -56,6 +56,12 @@ var ClubhouseMobileInterop = new function() {
             electronInterop.markRouteLoaded();
         }
     }
+
+    self.onLoggedIn = function(userId, username, authcookie) {
+        if (self.isElectron) {
+            electronInterop.onLoggedIn(userId, username, authcookie);
+        }
+    }
     
     self.updateNameAndIcon = function() {
         //alert('hi!');

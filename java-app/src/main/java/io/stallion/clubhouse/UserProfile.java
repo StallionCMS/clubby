@@ -1,7 +1,6 @@
 package io.stallion.clubhouse;
 
 import java.util.List;
-import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
@@ -9,9 +8,7 @@ import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 import io.stallion.dataAccess.db.Converter;
 import io.stallion.dataAccess.db.converters.JsonListConverter;
-import io.stallion.dataAccess.db.converters.JsonMapConverter;
 import io.stallion.dataAccess.db.converters.JsonTypedListConverter;
-import io.stallion.services.Log;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
@@ -35,11 +32,16 @@ public class UserProfile extends ModelBase {
     private boolean notifyWhenMentioned = true;
     private String avatarUrl = "";
 
+    private String passwordFourCharactersHashed = "";
+    private String passwordSalt = "";
+
     private String googleAuthenticatorKey = "";
     private List<String> googleAuthenticatorScratchCodes = list();
     private Boolean twoFactorEnabled = false;
     private String twoFactorCookieSecret = "";
     private List<TwoFactorSession> twoFactorSessions = list();
+
+
 
 
     @Column
@@ -155,6 +157,26 @@ public class UserProfile extends ModelBase {
     }
 
     @Column
+    public String getPasswordFourCharactersHashed() {
+        return passwordFourCharactersHashed;
+    }
+
+    public UserProfile setPasswordFourCharactersHashed(String passwordFourCharactersHashed) {
+        this.passwordFourCharactersHashed = passwordFourCharactersHashed;
+        return this;
+    }
+
+    @Column
+    public String getPasswordSalt() {
+        return passwordSalt;
+    }
+
+    public UserProfile setPasswordSalt(String passwordSalt) {
+        this.passwordSalt = passwordSalt;
+        return this;
+    }
+
+    @Column
     public String getGoogleAuthenticatorKey() {
         return googleAuthenticatorKey;
     }
@@ -194,6 +216,8 @@ public class UserProfile extends ModelBase {
         this.twoFactorCookieSecret = twoFactorCookieSecret;
         return this;
     }
+
+
 
     @Column
     @Converter(cls=JsonTypedListConverter.class, elementClass = TwoFactorSession.class)

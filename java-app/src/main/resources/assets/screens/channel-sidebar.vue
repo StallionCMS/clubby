@@ -140,7 +140,7 @@
 
 <template>
     <div @click="clickAnywhere" :class="['channel-sidebar-vue', $store.state.sidebarPoppedUp ? 'popped-up' : '']">
-        <div v-if="$store.state.user && $store.state.user.id">
+        <div v-if="loggedIn">
             <h2 class="sidebar-title">{{ $store.state.site.name }} <a class="sidebar-settings-link" style="display: inline-block;" href="#/clubhouse-settings" v-if="$store.state.user.role === 'ADMIN'"><i class="material-icons">settings</i></a></h2>
             <div class="sidebar-items always-show-scrollbars">
                 <h3 v-if="favorites.length">Favorites</h3>
@@ -156,7 +156,7 @@
                 </div>
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in directMessageChannels"></sidebar-link-item>
             </div>
-            <div v-if="$store.state.user && $store.state.user.id" class="loggedin-name">
+            <div v-if="loggedIn" class="loggedin-name">
                 <div>{{ $store.state.user.displayName || $store.state.user.username }}</div>
                 <div><a href="#/my-settings">Settings</a> <span style="color: rgba(230, 230, 230, .6);">&#8226;</span> <a href="/st-users/logoff">Log off</a></div>
             </div>
@@ -177,6 +177,9 @@
      computed: {
          activeChannelId: function() {
              return stallionClubhouseApp.store.state.activeChannelId;
+         },
+         loggedIn: function() {
+             return this.$store.state.user && this.$store.state.user.id && (this.$store.state.privateKey || sessionStorage['private-key-passphrase-' + this.$store.state.user.id]);
          },
          forumChannels: function() {
              return this.$store.state.forumChannels.filter(function(channel) {

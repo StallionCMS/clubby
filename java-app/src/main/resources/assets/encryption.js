@@ -26,6 +26,12 @@ var clubhouseDecryptMessage = function(privateKey, encryptedMessageBytes, messag
     });
 }
 
+var clubhouseDecryptToken = function(privateKey, token) {
+    return new Promise(function(resolve, reject) {
+        new Decrypter()
+            .decryptToken(privateKey, token, resolve, reject);
+    });
+}
 
 
 
@@ -313,6 +319,30 @@ var Decrypter = function() {
         dec.reject = reject;
         step1DecryptPassword();
     };
+
+    dec.decryptToken = function(privateKey, token, resolve, reject) {
+        var tokenBytes = hexToArray(token);
+        console.log('tokenBytes ', tokenBytes);
+        crypto.subtle.decrypt(
+            {
+                name: "RSA-OAEP",
+                //iv: self.passwordVector,
+                hash: {name: "SHA-1"}
+            },
+            privateKey,
+            tokenBytes
+        ).then(
+            function(result){
+                var decrypted = new Uint8Array(result);
+                console.log('d1. Decrypted token ', result, decrypted, convertArrayBufferViewtoString(decrypted));
+                resolve(convertArrayBufferViewtoString(decrypted));
+            },
+            function(e){
+                console.error(e);
+                reject(e);
+            }
+        )
+    }
 
     function step1DecryptPassword() {
         console.log('d1. encryptedPassword ', self.encryptedPasswordBytes);

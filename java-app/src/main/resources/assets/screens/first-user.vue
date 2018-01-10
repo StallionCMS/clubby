@@ -68,23 +68,15 @@
                         <label>Confirm Password</label>
                         <input type="password" class="form-control" v-model="user.passwordConfirm" required="true">
                     </div>
-                </fieldset>
-                <fieldset>
-                    <h4>Encryption Information</h4>
                     <div class="alert alert-info">
-                        <b>Attention!</b> You encryption passphrase cannot be recovered. Make sure that you keep a copy of it in a secure place (preferrably a password manager like 1 Password). If you lose it, you will be unable to decrypt all messages you have previously recieved and they will be irretriably lost.
+                        <b>Attention!</b> You encryption passphrase cannot be recovered. Make sure that you keep a copy of it in a secure place (use either password manager like 1Password or a piece of paper stored in safe). <b>If you lose this password, you will be unable to decrypt the messages that you you have previously received &mdash; they will be irretrievably lost.</b>
                     </div>
-                    <div class="form-group">
-                        <label>Choose an Encryption Passphrase</label>
-                        <input type="password" class="form-control" v-model="profile.passphrase" required="true">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Encryption Passphrase</label>
-                        <input type="password" class="form-control" v-model="profile.passphraseConfirm" required="true">
+                    <div class="checkbox">
+                        <label><input type="checkbox" v-model="rememberThisDevice"> Remember this device?</label>
                     </div>
                 </fieldset>
                 <div class="p">
-                    <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+                    <button v-disable-for-processing="processing" type="submit" class="btn btn-primary btn-lg">Create Account</button>
                 </div>
             </form>
             
@@ -97,6 +89,8 @@
      data: function() {
          return {
              secretKey: '',
+             processing: false,
+             rememberThisDevice: true,
              user: {
                  email: '',
                  username: '',
@@ -111,9 +105,7 @@
                  contactInfo: '',
                  publicKeyHex: '',
                  encryptedPrivateKeyHex: '',
-                 encryptedPrivateKeyInitializationVectorHex: '',
-                 passphrase: '',
-                 passphraseConfirm: ''
+                 encryptedPrivateKeyInitializationVectorHex: ''
              },
              isLoading: true,
          };
@@ -143,15 +135,12 @@
                  stallion.showError('Passwords must match.');
                  return;
              }
-             if (self.profile.passphrase.length < 6) {
-                 stallion.showError('Encryption passphrase must be at least six characters');
+             if (self.processing) {
                  return;
              }
-             if (self.profile.passphrase != self.profile.passphraseConfirm) {
-                 stallion.showError('Encryption passphrases  must match.');
-                 return;
-             }
-             clubhouseGeneratePrivateAndPublicKey(self.profile.passphrase).then(function(result) {
+             self.processing = true;
+             
+             clubhouseGeneratePrivateAndPublicKey(self.user.password).then(function(result) {
                  self.profile.privateKeyJwkEncryptedHex = result.privateKeyJwkEncryptedHex;
                  self.profile.privateKeyVectorHex = result.privateKeyVectorHex;
                  self.profile.publicKeyJwkJson = result.publicKeyJwkJson;
@@ -160,11 +149,16 @@
 
              }).catch(function(err) {
                  console.error(err);
+                 self.processing = false;
              });
                         
          },
          httpCreateAccount: function(publicKey, privateKey) {
              var self = this;
+             var salt = generateUUID().replace(/\-/g, '');
+             var password4chars = md5(self.user.password + '|' + salt).substr(0, 4);
+                          
+             
              stallion.request({
                  url: '/clubhouse-api/users/create-first-user',
                  method: 'POST',
@@ -175,18 +169,20 @@
                      givenName: self.user.givenName,
                      email: self.user.email,
                      familyName: self.user.familyName,
-                     password: self.user.password,
+                     password4chars: password4chars,
+                     passwordSalt: salt,
                      aboutMe: self.profile.aboutMe,
                      contactInfo: self.profile.contactInfo,
                      webSite: self.profile.webSite,
                      publicKeyJwkJson: self.profile.publicKeyJwkJson,
                      privateKeyVectorHex: self.profile.privateKeyVectorHex,
-                     privateKeyJwkEncryptedHex: self.profile.privateKeyJwkEncryptedHex
+                     privateKeyJwkEncryptedHex: self.profile.privateKeyJwkEncryptedHex,
+                     rememberThisDevice: self.rememberThisDevice
                  },
                  success: function(o) {
                      stallion.showSuccess("New user created!");
                      theApplicationContext.isFirstUser = false;
-                     sessionStorage['private-key-passphrase-' + o.user.id] = self.profile.passphrase;
+                     sessionStorage['private-key-passphrase-' + o.user.id] = self.user.password;
                      self.$store.commit('privateKey', privateKey);
                      self.$store.commit('defaultChannelIdChange', o.defaultChannelId);
                      o.user.role = 'ADMIN';
@@ -201,6 +197,10 @@
                          });
                      });
 
+                 },
+                 error: function(o) {
+                     stallion.showError(o.message || 'Error processing request');
+                     self.processing = false;
                  }
              });             
          },
