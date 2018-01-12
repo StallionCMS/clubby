@@ -85,6 +85,7 @@
              } else {
                  this.processing = false;
                  this.isLoading = false;
+                 ClubhouseMobileInterop.markRouteLoaded();
              }
              if (window.localStorage.rememberDeviceToken) {
                  this.rememberThisDevice = true;
@@ -103,8 +104,8 @@
                  },
                  success: function(o) {
                      var rememberToken = '';
-                     if (window.localStorage.rememberDeviceToken && window.localStorage.rememberDeviceToken.indexOf(self.username + "|") === 0) {
-                         rememberToken = window.localStorage.rememberDeviceToken;
+                     if (window.localStorage['remember-device-token-' + self.username]) {
+                         rememberToken = window.localStorage['remember-device-token-' + self.username];
                      }
                      var hashed4 = md5(self.encryptionPassword + "|" + o.salt).substr(0, 4);
                      console.log('submit pasword salt hashed');
@@ -134,6 +135,7 @@
          },
          showError: function(response) {
              var self = this;
+             ClubhouseMobileInterop.markRouteLoaded();
              console.error(response, response.message);
              if (response.message) {
                  stallion.showError(response.message);
@@ -216,6 +218,7 @@
 
                                  if (self.rememberThisDevice) {
                                      window.localStorage.rememberDeviceToken = o.rememberDeviceToken;
+                                     window.localStorage['remember-device-token-' + self.username] = o.rememberDeviceToken;
                                  }
                                  ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.electronAuthCookie);
                                  console.log('login.vue nagivate home');

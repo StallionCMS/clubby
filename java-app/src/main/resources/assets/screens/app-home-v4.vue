@@ -55,8 +55,8 @@
                  return;
              }
              if (this.$store.state.user && this.$store.state.user.id) {
-                 if (localStorage && localStorage.lastChannelPath) {
-                     window.location.hash = localStorage.lastChannelPath;
+                 if (localStorage && localStorage['last-channel-path|' + this.$store.state.user.id) {
+                     window.location.hash = localStorage['last-channel-path|' + this.$store.state.user.id;
                  } else if (this.$store.state.defaultChannelId) {
                      window.location.hash = '#/channel/' + this.$store.state.defaultChannelId;
                  } else {

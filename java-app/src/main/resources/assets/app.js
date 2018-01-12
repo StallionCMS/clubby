@@ -3,7 +3,7 @@ console.log("executing app.js");
 (function() {
     window.stallionClubhouseApp = window.stallionClubhouseApp || {};
     var app = window.stallionClubhouseApp;
-
+    var sentRouteLoadedMessage = false;
 
     
     app.init = function() {
@@ -269,9 +269,14 @@ console.log("executing app.js");
             // we want to see what happened.
             console.log('routed to ', to);
 
-            setTimeout(function() {
-                ClubhouseMobileInterop.markRouteLoaded();
-            }, 500);
+            if (!sentRouteLoadedMessage && store.state.privateKey) {
+                sentRouteLoadedMessage = true;
+                setTimeout(function() {
+                    ClubhouseMobileInterop.markRouteLoaded();
+                }, 100);                
+            }
+            
+
         });
 
 
