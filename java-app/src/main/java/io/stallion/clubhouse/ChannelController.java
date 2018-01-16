@@ -28,7 +28,13 @@ public class ChannelController extends StandardModelController<Channel> {
         if (empty(obj.getName())) {
             throw new ClientException("Channel must have a name.");
         }
+        Channel existing = ChannelController.instance().filter("name", obj.getName()).first();
+        if (existing != null && !existing.getId().equals(obj.getId())) {
+            throw new ClientException("A channel with the name " + obj.getName() + " already exists.");
+        }
     }
+
+
 
     public Long getFirstUserChannel(Long userId) {
         BigInteger big = ((BigInteger)DB.instance().queryScalar(" " +

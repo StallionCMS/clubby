@@ -57,9 +57,9 @@ var ClubhouseMobileInterop = new function() {
         }
     }
 
-    self.onLoggedIn = function(userId, username, authcookie) {
+    self.onLoggedIn = function(userId, username, authcookie, password) {
         if (self.isElectron) {
-            electronInterop.onLoggedIn(userId, username, authcookie);
+            electronInterop.onLoggedIn(userId, username, authcookie, password);
         }
     }
     

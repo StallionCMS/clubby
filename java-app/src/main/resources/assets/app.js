@@ -273,7 +273,7 @@ console.log("executing app.js");
                 sentRouteLoadedMessage = true;
                 setTimeout(function() {
                     ClubhouseMobileInterop.markRouteLoaded();
-                }, 100);                
+                }, 200);                
             }
             
 

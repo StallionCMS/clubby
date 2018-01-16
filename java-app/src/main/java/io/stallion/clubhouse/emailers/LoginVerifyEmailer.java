@@ -2,6 +2,7 @@ package io.stallion.clubhouse.emailers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static io.stallion.utils.Literals.*;
 
@@ -9,6 +10,7 @@ import io.stallion.email.ContactableEmailer;
 import io.stallion.services.Log;
 import io.stallion.services.ShortCodeToken;
 import io.stallion.users.IUser;
+import io.stallion.utils.GeneralUtils;
 
 
 public class LoginVerifyEmailer extends ContactableEmailer<IUser> {
@@ -22,6 +24,12 @@ public class LoginVerifyEmailer extends ContactableEmailer<IUser> {
     @Override
     public boolean isTransactional() {
         return true;
+    }
+
+
+    @Override
+    public String getUniqueKey() {
+        return UUID.randomUUID().toString();
     }
 
     @Override

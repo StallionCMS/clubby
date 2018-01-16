@@ -13,9 +13,9 @@
 /emoji/wdt-emoji-bundle.css
 /emoji/wdt-emoji-bundle.js
 /common/loading-div.vue
-/common/messaging-mixin.js
+/screens/messaging-mixin.js
 /common/message-auto-saver.js
-/common/message-sending-mixin.js
+/screens/message-sending-mixin.js
 /common/directives.js
 /encryption.js
 /key-manager.js

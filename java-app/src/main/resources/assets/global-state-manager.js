@@ -244,7 +244,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         }
     
         //manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
-        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/");
+        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")) || '');
         
         console.log('setup web socket.');
 

@@ -254,7 +254,7 @@
                                     <div class="a-message-meta">
                                         <div>
                                             <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a>
-                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + message.threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
+                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
                                         </div>
                                         
                                     </div>
@@ -274,7 +274,7 @@
                     <h5>Post a message</h5>
                     <forum-text-editor ref="editor" @input-debounced="onReplyTextInput" :original-content="replyMarkdown" :widgets="replyWidgets"></forum-text-editor>
                     <div class="form-group p">
-                        <button class="btn btn-primary btn-submit" @click="submitReply">Post Reply</button>
+                        <button tabindex="2" class="btn btn-primary btn-submit" @click="submitReply">Post Reply</button>
                     </div>
                 </div>
                 <div v-if="editingMessage && members.length">

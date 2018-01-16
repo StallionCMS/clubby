@@ -38,7 +38,7 @@ var ClubhouseMessagingMixin = {
         /////// LOADING CHANNEL & MESSAGES
         onRoute: function() {
             var self = this;
-            localStorage.lastChannelPath = window.location.hash;
+            localStorage['last-channel-path|' + this.$store.state.user.id] = window.location.hash;
             ClubhouseVueApp.currentChannelComponent = this;
             self.hasMore = false;
             self.messages = [];

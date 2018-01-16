@@ -43,7 +43,8 @@ public class EncryptionHelper {
     private EncryptionHelper() {
         try {
             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            cipher = Cipher.getInstance("RSA/None/OAEPWithSHA-1AndMGF1Padding");
+                                       //RSA/ECB/OAEPWithSHA-1AndMGF1Padding
+            cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

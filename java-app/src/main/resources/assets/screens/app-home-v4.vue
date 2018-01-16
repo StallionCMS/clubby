@@ -50,13 +50,15 @@
      },
      methods: {
          onRoute: function() {
+             console.log('app-home-v4-route');
+
              if (theApplicationContext.isFirstUser) {
                  window.location.hash = '/first-user';
                  return;
              }
              if (this.$store.state.user && this.$store.state.user.id) {
-                 if (localStorage && localStorage['last-channel-path|' + this.$store.state.user.id) {
-                     window.location.hash = localStorage['last-channel-path|' + this.$store.state.user.id;
+                 if (localStorage && localStorage['last-channel-path|' + this.$store.state.user.id]) {
+                     window.location.hash = localStorage['last-channel-path|' + this.$store.state.user.id];
                  } else if (this.$store.state.defaultChannelId) {
                      window.location.hash = '#/channel/' + this.$store.state.defaultChannelId;
                  } else {

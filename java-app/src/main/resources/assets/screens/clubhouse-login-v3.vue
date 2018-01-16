@@ -124,8 +124,10 @@
                                  self.doLoginWithPrivateKey(o2);
                              } else if (o2.nextStep === 'googleAuth') {
                                  self.showGoogleSecondFactorRequest(o2);
+                                 ClubhouseMobileInterop.markRouteLoaded();
                              } else {
                                  self.showEmailSecondFactorRequest(o2);
+                                 ClubhouseMobileInterop.markRouteLoaded();
                              }
                          },
                          error: self.showError
@@ -192,7 +194,7 @@
                              username: self.username,
                              tokenKey: tokenKey,
                              token: decryptedToken,
-                             generateElectronAuthCookie: isInElectron
+                             generateElectronAuthCookie: window.isInElectron || false
                          },
                          success: function(o) {
                              clubhouseImportPublicAndPrivateKey(
@@ -220,7 +222,7 @@
                                      window.localStorage.rememberDeviceToken = o.rememberDeviceToken;
                                      window.localStorage['remember-device-token-' + self.username] = o.rememberDeviceToken;
                                  }
-                                 ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.electronAuthCookie);
+                                 ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.electronAuthCookie, self.encryptionPassword);
                                  console.log('login.vue nagivate home');
                                  window.location.hash = '/';
                                  
