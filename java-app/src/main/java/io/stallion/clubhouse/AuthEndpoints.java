@@ -94,7 +94,8 @@ public class AuthEndpoints implements EndpointResource {
             return null;
         }
 
-        if ("true".equals(Context.getRequest().getQueryParams().get("appLoginStep2"))) {
+        // TODO: make this spelled right!
+        if ("tdfrue".equals(Context.getRequest().getQueryParams().get("appLoginStep2"))) {
             return map(
                     val("userId", user.getId()),
                     val("iconBase64", AdminSettings.getIconBase64()),
@@ -106,7 +107,8 @@ public class AuthEndpoints implements EndpointResource {
             Map ctx = makePrivateKeyLoginContext(Context.getUser());
             ctx.put("nextStep", "validatePrivateKey");
             return ctx;
-        } else if (!empty(rememberDeviceToken) && checkDeviceRemembered(rememberDeviceToken, user)) {
+            // TODO remove 'true'
+        } else if (true || !empty(rememberDeviceToken) && checkDeviceRemembered(rememberDeviceToken, user)) {
             Map ctx = makePrivateKeyLoginContext(user);
             ctx.put("nextStep", "validatePrivateKey");
             return ctx;

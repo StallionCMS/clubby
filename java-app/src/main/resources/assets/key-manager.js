@@ -256,6 +256,7 @@ var PrivateKeyFetcher = function() {
             },
             convertStringToArrayBufferView(self.password)
         ).then(function(result){
+            console.log('passphrase converted to sha-256, now convert to key: ' + result + " of size " + result.byteLength);
             window.crypto.subtle.importKey(
                 "raw",
                 result,
