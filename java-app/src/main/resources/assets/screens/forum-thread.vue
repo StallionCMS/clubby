@@ -1,15 +1,30 @@
 
 <style lang="scss">
- .forum-thread-vue {
 
+ .forum-thread-vue {
+     
      .column-fixed-header {
-         
+         margin-top: -1px;
      }
+     .thread-fixed-footer {
+         height: 50px;
+         position: fixed;
+         width: 100vw;
+         left: 0px;
+         bottom: 0px;
+         background-color: white;
+         border-top: 1px solid #999;
+         padding: 5px;
+         z-index: 1;
+     }
+     .thread-fixed-footer.footer-expanded {
+         height: 300px;
+     }
+     
      .topic-body {
-         height: 99vh;
          background-color: white;
          margin-top: 0px;
-         padding-top: 70px;
+         padding-top: 50px;
          padding-left: 20px;
          padding-right: 20px;
          width: 100%;
@@ -21,21 +36,32 @@
          border-bottom: 1px solid transparent;
      }
      .topic-messages, .topic-post {
-         max-width: 750px;         
+         
+         max-width: 750px;
      }
      
 
 
      .a-message {
          margin-top: 0em;
+         width: 100%;
+     }
+     .a-message-header {
          display: flex;
          flex-direction: row;
          width: 100%;
      }
+     .a-message-body-wrap {
+         display: block;
+         .message-html {
+             padding-top: 10px;
+         }
+     }
+
      .a-message-left {
          display: block;
          width: 50px;
-         margin-right: 11px;
+         margin-right: 2px;
          clear: left;
          margin-top: 5px;
      }
@@ -68,7 +94,9 @@
          float: right;
      }
      .a-message-outer.a-message-with-meta .a-message-meta {
-         margin-top: 6px;
+         display: block;
+         width: calc(100% - 61px);
+         margin-top: 2px;
          a.a-message-from {
              color: #333;
              font-weight: 600;
@@ -163,7 +191,7 @@
      .post-message-box {
          margin-top: 1em;
      }
- 
+     
      .wrap-insert-emoji-button {
          height: 2px;
          display: inline-block;
@@ -206,24 +234,115 @@
              color: #999;
          }
      }
-    .material-icons.channel-favorite {
-        float: right;
-        margin-right: 20px;
-        color: #999 !important;
-        cursor: pointer;
-    }
+     .material-icons.channel-favorite {
+         float: right;
+         margin-right: 20px;
+         color: #999 !important;
+         cursor: pointer;
+     }
+
+     .slider-outer-wrapper {
+         position:relative;
+     }
+     .slider-wrapper {
+         z-index: 10;
+         position: fixed;
+         right:90px;
+         top: 75px;         
+     }
+     .slider-numbers {
+         padding: 10px;
+         line-height: 1em;
+         text-align: center;
+         display: block;
+         width: 100vw;
+         text-decoration: none;
+         font-size: 18px;
+         .material-icons {
+             vertical-align: -25%;
+             font-size: 20px;
+             margin-left: -2px;
+         }
+     }
+     .expand-upward-link {
+         display: inline-block;
+         font-size: 24px;
+         border: 1px solid #888;
+         text-decoration: none;
+         padding: 6px;
+         border-radius: 4px;
+         float: right;
+         width: 40px;
+         height: 40px;
+         text-align: center;
+         
+     }
+
      
  }
+
+
+
+ @media (max-width: 700px) {
+
+     .topic-body {
+         height: calc(100vh - 100px);
+     }
+      .forum-thread-vue {
+          .slider-wrapper {
+              border-top: 1px solid #ccc;
+              background-color: white;
+              width: 100vw;
+              height: 50px;
+              top: auto;
+              bottom: 0px;
+              right: 0px;
+              .slider-visibility-wrapper {
+                  display: none;
+                  padding-left: 50%;
+              }
+          }
+
+          .expand-link-wrapper {
+              display: block;
+              padding-top: 5px;
+          }
+
+          
+          .slider-wrapper.footer-expanded {
+              height: 300px;
+              .slider-visibility-wrapper {
+                  display: block;
+              }
+          }
+      }
+ }
+ 
+ @media (min-width: 700px) {
+     .topic-messages, .topic-post {
+         width: calc(100% - 100px);
+     }
+     
+     .expand-link-wrapper {
+         display: none;
+     }
+     .thread-fixed-footer {
+         display: none;
+         height: calc(100vh - 100px);
+     }
+ } 
+ 
+ 
 </style>
 
 
 <template>
-    <div class="forum-thread-vue">
+    <div :class="['forum-thread-vue', isMobile ? 'mobile-view' : '']">
         <div v-if="!isLoaded"><loading-div></loading-div></div>
         <div v-if="resetting" class="resettingOverlay">
             <h1>Loading...</h1>
         </div>
-        <div v-if="isLoaded && channel">
+        <div v-if="isLoaded && channel" >
             <div class="column-fixed-header">
                 <div class="name-row"><a class="breadcrumb-link" :href="'#/forum/' + channel.id"><i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i> {{ channel.name }}</a> &#8250;
                     {{ topic.title }}
@@ -233,13 +352,18 @@
                     <a title="Toggle watching this thread" class="topic-watch-toggle" href="javascript:;" @click="toggleWatched"><i v-if="topic.watched" class="material-icons watched-on">visibility</i><i v-if="!topic.watched" class="material-icons watched-off">visibility_off</i></a>
                 </div>
             </div>
-            <div style="position:relative;">
-                <div style="z-index: 10;position: fixed;right:120px; top: 75px;">
-                    <forum-messages-slider v-if="allIdsDates && pages.length > 1" :viewing-message="viewingMessage" :viewing-message-index="viewingMessageIndex" :messages-id-dates="allIdsDates" @scrollpost="onSliderScrollToPost" ></forum-messages-slider>
+            <div class="slider-outer-wrapper" >
+                <div :class="['slider-wrapper', expanded ? 'footer-expanded' : '']" class="slider-wrapper">
+                    <div class="expand-link-wrapper">
+                        <a @click="expanded = !expanded" href="javascript:;" class="slider-numbers">{{ $refs.messageslider ? $refs.messageslider.viewingMessageIndex + 1 : 1 }} of {{ allIdsDates.length }} posts <i class="material-icons">swap_vert</i></a>
+                    </div>
+                    <div class="slider-visibility-wrapper">
+                        <forum-messages-slider ref="messageslider" v-if="allIdsDates && pages.length > 1" :viewing-message="viewingMessage" :viewing-message-index="viewingMessageIndex" :messages-id-dates="allIdsDates" @scrollpost="onSliderScrollToPost" ></forum-messages-slider>
+                    </div>
                 </div>
             </div>
             <div class="topic-body">
-                <div class="topic-messages">
+                <div class="topic-messages" @click="expanded=false">
                     <div class="wrap-loading"><loading-div v-if="beginningLoading"></loading-div></div>
                     <template v-for="pageMessages in pages" v-if="pageMessages != null">
                         <div :class="['a-message-outer', 'a-message-with-meta', message.$index===0 ? 'a-message-first':'']" v-for="message in pageMessages" :data-message-id="message.id" :data-thread-index="message.threadIndex" :key="message.id" v-if="!message.deleted">
@@ -247,17 +371,19 @@
                                 <a href="javascript:;" @click="openAddReaction($event, message)"><i class="material-icons">tag_faces</i></a><a v-if="message.fromUsername===$store.state.user.username" href="javascript:;" @click="openEditMessage(message)"><i class="material-icons">mode_edit</i></a><a v-if="isChannelOwner || message.fromUsername===$store.state.user.username" href="javascript:;" @click="openDeleteModal(message)"><i class="material-icons">delete</i></a>
                             </div>
                             <div class="a-message" :id="'channel-message-' + message.id">
-                                <div class="a-message-left">
-                                    <div class="a-message-avatar-wrap"><img class="a-message-avatar" :src="$store.state.allUsersById[message.fromUserId].avatarUrl"></div>
-                                </div>
-                                <div class="a-message-right">
+                                <div class="a-message-header">
+                                    <div class="a-message-left">
+                                        <div class="a-message-avatar-wrap"><img class="a-message-avatar" :src="$store.state.allUsersById[message.fromUserId].avatarUrl"></div>
+                                    </div>
                                     <div class="a-message-meta">
                                         <div>
-                                            <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a>
-                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
+                                            <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
+                                            <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a><br>
+                                            <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> 
                                         </div>
-                                        
                                     </div>
+                                </div><!-- a-message-header -->
+                                <div class="a-message-body-wrap">
                                     <div v-if="!message.editing && message.html">
                                         <div class="message-html" v-raw-html="message.html"></div>
                                     </div>
@@ -281,6 +407,7 @@
                     <thread-edit-modal v-if="editingMessage" @close="editingMessage=null" :message="editingMessage" :channel="channel" :members="members"></thread-edit-modal>
                 </div>
                 <emoji-popup @input="onChooseReactionEmoji" @close="onCloseReactionEmoji" ref="emojipopup"></emoji-popup>
+                
             </div>
         </div>
         <delete-message-modal v-if="showDeleteModal && messageToDelete" @close="showDeleteModal=false;messageToDelete=null" @delete="onDeleteMessage" :message="messageToDelete"></delete-message-modal>
@@ -297,7 +424,9 @@
              editingMessage: null,
              editingChannel: null,
              endLoading: false,
+             expanded: false,
              isFirstFetch: true,
+             isMobile: $("body").width() < 700,
              lastScrollTop: 0,
              loadOnScroll: false,
              messageToDelete: null,

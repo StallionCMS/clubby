@@ -83,6 +83,13 @@ console.log("executing app.js");
                 }
             },
             {
+                path: '/encryption-test',
+                component: vueComponents['encryption-test'],
+                meta: {
+                    authRequired: false
+                }
+            },
+            {
                 path: '/profile/:userId',
                 component: vueComponents['profile-public'],
                 meta: {
@@ -177,6 +184,13 @@ console.log("executing app.js");
                     authRequired: true
                 }
             },
+            {
+                path: '/draggable-test',
+                component: vueComponents['draggable-test'],
+                meta: {
+                    authRequired: false
+                }
+            },            
             {
                 path: '/accept-invite',
                 component: vueComponents['accept-invite'],

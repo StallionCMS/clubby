@@ -224,7 +224,7 @@
                                  }
                                  ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.electronAuthCookie, self.encryptionPassword);
                                  console.log('login.vue nagivate home');
-                                 window.location.hash = '/';
+                                 //window.location.hash = '/';
                                  
                              }).catch(function(err) {
                                  self.processing = false;

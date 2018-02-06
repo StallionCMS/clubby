@@ -31,6 +31,13 @@ public class ForumTopic {
     private Long unreadCount = 0L;
     private Long mentions = 0L;
     private Long totalCount = 0L;
+    private String avatarUrl = "";
+
+
+    private Long latestId = 0L;
+    private String latestUsername;
+    private String latestAvatarUrl;
+    private ZonedDateTime latestAt;
 
     public Long getId() {
         return id;
@@ -156,6 +163,54 @@ public class ForumTopic {
 
     public ForumTopic setTotalCount(Long totalCount) {
         this.totalCount = totalCount;
+        return this;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public ForumTopic setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+        return this;
+    }
+
+
+    public Long getLatestId() {
+        return latestId;
+    }
+
+    public ForumTopic setLatestId(Long latestId) {
+        this.latestId = latestId;
+        return this;
+    }
+
+
+    public String getLatestUsername() {
+        return latestUsername;
+    }
+
+    public ForumTopic setLatestUsername(String latestUsername) {
+        this.latestUsername = latestUsername;
+        return this;
+    }
+
+
+    public String getLatestAvatarUrl() {
+        return latestAvatarUrl;
+    }
+
+    public ForumTopic setLatestAvatarUrl(String latestAvatarUrl) {
+        this.latestAvatarUrl = latestAvatarUrl;
+        return this;
+    }
+
+    public ZonedDateTime getLatestAt() {
+        return latestAt;
+    }
+
+    public ForumTopic setLatestAt(ZonedDateTime latestAt) {
+        this.latestAt = latestAt;
         return this;
     }
 }

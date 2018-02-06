@@ -135,11 +135,19 @@ h6 {
         
     }         
 
+}
+
+#clubhouse-main-view {
+
     .material-icons {
         color: #666;
         font-size: 20px;
     }
 
+    .channel-settings-icon-link .material-icons {
+        color: #666;
+    }
+    
     .channel-favorite.material-icons {
         cursor: pointer;
     }
@@ -148,9 +156,13 @@ h6 {
         color: #333;
 
     }
-    .channel-favorite.channel-favorite-on .material-icons {
-        color: #eae080;
+    .channel-favorite.channel-favorite-on.material-icons {
+        color: #ddd;
     }
+    .channel-favorite.channel-favorite-on.material-icons {
+        color: #222;
+    }
+    
 }
 
 /* Layout */

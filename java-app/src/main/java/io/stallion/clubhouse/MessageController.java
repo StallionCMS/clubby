@@ -14,10 +14,13 @@ import io.stallion.Context;
 import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
 import io.stallion.dataAccess.db.DB;
+import io.stallion.dataAccess.filtering.FilterOperator;
 import io.stallion.dataAccess.filtering.Pager;
 import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
+import io.stallion.users.IUser;
 import io.stallion.users.Role;
+import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
 import org.apache.commons.collections4.Get;
 import org.apache.commons.lang3.StringUtils;
@@ -360,7 +363,8 @@ public class MessageController extends StandardModelController<Message> {
                 "    um.encryptedPasswordHex, " +
                 "    um.passwordVectorHex, " +
                 "    um.watched, " +
-                "    um.read  " +
+                "    um.read," +
+                "    up.avatarUrl  " +
                 "    " +
                 "  " +
                 " FROM sch_messages as m ";
@@ -369,6 +373,8 @@ public class MessageController extends StandardModelController<Message> {
         } else {
             sql += " INNER JOIN sch_user_messages AS um ON um.messageId=m.id AND um.userId=? ";
         }
+        sql += " LEFT OUTER JOIN sch_user_profiles AS up ON up.userId=m.fromUserId ";
+
 
         // Only get watched and pinned if we are looking at the first page
         if (offset == 0) {
@@ -406,6 +412,7 @@ public class MessageController extends StandardModelController<Message> {
             }
         }
 
+
         // Get unread and mentioned counts
         if (allTopicIds.size() > 0) {
             DB.SqlAndParams inSql = DB.instance().toInQueryParams(allTopicIds);
@@ -439,7 +446,7 @@ public class MessageController extends StandardModelController<Message> {
             }
             {
                 String umSql2 = " " +
-                        " SELECT parentMessageId as parentId, count(*) as totalCount FROM sch_messages AS m ";
+                        " SELECT parentMessageId as parentId, count(*) as totalCount, max(id) as latestId FROM sch_messages AS m ";
                 if (!channel.isNewUsersSeeOldMessages()) {
                     umSql2 += "  INNER JOIN sch_user_messages AS um ON m.id=um.messageID ";
                 }
@@ -464,9 +471,39 @@ public class MessageController extends StandardModelController<Message> {
                 for (ForumTopicCounts count : totalCounts) {
                     ForumTopic topic = topicMap.get(count.getParentId());
                     topic.setTotalCount(count.getTotalCount());
+                    topic.setLatestId(count.getLatestId());
                 }
             }
         }
+
+        // Get the latest messages for each topic
+        if (topicMap.size() > 0) {
+            List<Long> latestIds = list();
+            for(ForumTopic ft: topicMap.values()) {
+                latestIds.add(ft.getLatestId());
+            }
+            DB.SqlAndParams inSql = DB.instance().toInQueryParams(latestIds);
+            List<Message> messages = filterBy("id", latestIds, FilterOperator.ANY).all();
+            for (Message message: messages) {
+                ForumTopic topic = topicMap.getOrDefault(message.getThreadId(), null);
+                if (topic == null) {
+                    continue;
+                }
+                IUser user = UserController.instance().forId(message.getFromUserId());
+                if (user == null) {
+                    continue;
+                }
+                UserProfile up = UserProfileController.instance().forStallionUser(user.getId());
+                if (up == null) {
+                    continue;
+                }
+                topic.setLatestUsername(user.getUsername());
+                topic.setLatestAvatarUrl(up.getAvatarUrl());
+                topic.setLatestAt(message.getCreatedAt());
+
+            }
+        }
+
 
         ForumTopicContext ctx = new ForumTopicContext();
         for(ForumTopic topic: topics1) {

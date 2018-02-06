@@ -9,24 +9,30 @@
          padding: .8em 20px .8em 20px;
          position: fixed;
          width: 100%;
+         max-width: 900px;
          background-color: white;
+         z-index: 1;
          .forum-name {
              margin-top: 0em;
              margin-bottom: 0em;
-             max-width: 700px;
+             font-size: 18px;
+             font-weight: bold;
+             padding-left: 40px;
              a.btn {
                  float: right;
                  margin-top: -3px;
              }
              .material-icons {
+                 font-weight: normal;
                  vertical-align: -15%;
+                 font-size: 18px;
              }
          }
      }
      .forum-top-body {
          max-width: 900px;
          border-top: 1px solid transparent;
-         margin-top: 70px;
+         margin-top: 53px;
          padding: 0em 20px 20px 20px;
          
      }
@@ -34,8 +40,8 @@
          margin-bottom: 2em;
      }
      .channel-favorite, .channel-settings-icon-link  {
-         float: right;
-         margin-right: 20px;
+         /*float: right;
+         margin-right: 20px; */
      }
      .channel-favorite.material-icons {
          cursor: pointer;
@@ -46,6 +52,27 @@
      }
      .channel-favorite-on.material-icons {
          color: #eae080;
+     }
+     .topic-counts {
+         display: inline-block;
+         font-weight: 600;
+         color: #999;
+     }
+     .created-at {
+         color: #888;
+         font-size: 12px;
+     }
+
+     h5 {
+         width: 100%;
+         color: #F9F9F9;
+         background-color: #999;
+         padding: 6px;
+         margin: 0px;
+         display: none;
+     }
+     .topic-section {
+         margin-bottom: 0px;
      }
      
  }
@@ -58,7 +85,7 @@
             <h3 class="forum-name">
                 <i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i>
                 {{ channel.name }}
-                <a class="btn btn-primary btn-md" :href="'#/forum/' + channelId  + '/new-thread'">New Thread</a>
+                <a class="btn btn-primary btn-md" :href="'#/forum/' + channelId  + '/new-thread'">New Topic</a>
                 <a v-if="channel.owner" class="channel-settings-icon-link" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
                 <i @click="toggleFavorite" :class="['material-icons', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']">star</i> 
             </h3>
@@ -68,7 +95,7 @@
             <div class="topic-section" v-if="pinnedTopics.length">
                 <h5>Pinned Topics</h5>
                 <div v-for="topic in pinnedTopics">
-                    <forum-topic-row :topic="topic"></forum-topic-row>
+                    <forum-topic-row :topic="topic" :pinned="true"></forum-topic-row>
                 </div>
             </div>
             <div class="topic-section" v-if="watchedTopics.length">
@@ -77,7 +104,7 @@
                     <em>No watched topics updated in the last 10 days.</em>
                 </div>
                 <div v-for="topic in watchedTopics">
-                    <forum-topic-row :topic="topic"></forum-topic-row>
+                    <forum-topic-row :watched="true" :topic="topic"></forum-topic-row>
                 </div>
             </div>
             <div class="topic-section">
@@ -86,7 +113,7 @@
                     <em>No new topics in the last 10 days.</em>
                 </div>
                 <div v-for="topic in newTopics">
-                    <forum-topic-row :topic="topic"></forum-topic-row>
+                    <forum-topic-row :topic="topic" :newish="true"></forum-topic-row>
                 </div>
             </div>
             <div class="topic-section">

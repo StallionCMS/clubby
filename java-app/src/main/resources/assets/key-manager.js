@@ -364,8 +364,8 @@ var KeyGenerator = function() {
             self.privateKey = keyPair.privateKey;
             step2ExportPublicKey();
         }).catch(function(err) {
-            debug(e);
-            self.reject(e);
+            debug(err);
+            self.reject(err);
         });          
     };
 
