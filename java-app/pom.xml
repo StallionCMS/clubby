@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.stallion</groupId>
-    <artifactId>clubhouse</artifactId>
+    <groupId>io.clubby</groupId>
+    <artifactId>clubby-server</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>clubhouse</name>
+    <name>Clubby Server</name>
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -104,10 +104,10 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.stallion.clubhouse.MainRunner</mainClass>
+                            <mainClass>io.clubby.server.MainRunner</mainClass>
                         </manifest>
                         <manifestEntries>
-                            <pluginBooterClass>io.stallion.clubhouse.ClubhousePlugin</pluginBooterClass>
+                            <pluginBooterClass>io.clubby.server.ClubbyPlugin</pluginBooterClass>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                         </manifestEntries>
                     </archive>
