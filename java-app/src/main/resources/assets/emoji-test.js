@@ -3,7 +3,7 @@
 
 
 wdtEmojiBundle.defaults.emojiSheets = {
-    'apple': '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png'
+    'apple': '/st-resource/clubby/emoji/sheets/sheet_apple_64_indexed_128.png'
 };
 wdtEmojiBundle.defaults.type = 'apple';
 

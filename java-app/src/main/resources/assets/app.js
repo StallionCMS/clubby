@@ -164,6 +164,13 @@ console.log("executing app.js");
                 }
             },
             {
+                path: '/clubhouse-settings/:tab',
+                component: vueComponents['clubhouse-settings'],
+                meta: {
+                    authRequired: true
+                }
+            },
+            {
                 path: '/channel-members/:channelId',
                 component: vueComponents['channel-members'],
                 meta: {
@@ -256,18 +263,18 @@ console.log("executing app.js");
                         
                         console.error('PRIVATE KEY LOGIN ERROR ', err);
                         if (ClubhouseMobileInterop.isAppMode) {
-                            ClubhouseMobileInterop.redirectToLogin();
+                            ClubhouseMobileInterop.redirectToLogin(to.fullPath);
                         } else {
-                            next('/login');
+                            next('/login?returnPath=' + encodeURIComponent(to.fullPath));
                         }
                     });
                     return;
                 }
             }
             if (ClubhouseMobileInterop.isAppMode) {
-                ClubhouseMobileInterop.redirectToLogin();
+                ClubhouseMobileInterop.redirectToLogin(to.fullPath);
             } else {
-                next('/login');
+                next('/login?returnPath=' + encodeURIComponent(to.fullPath));
             }
             return;
         });
@@ -346,8 +353,8 @@ console.log("executing app.js");
 
     app.setupEmojiConverter = function() {
         var conv = new EmojiConvertor();
-            conv.img_sets.apple.path = '/st-resource/clubhouse/emoji/sheets/';
-            conv.img_sets.apple.sheet = '/st-resource/clubhouse/emoji/sheets/sheet_apple_64_indexed_128.png';
+            conv.img_sets.apple.path = '/st-resource/clubby/emoji/sheets/';
+            conv.img_sets.apple.sheet = '/st-resource/clubby/emoji/sheets/sheet_apple_64_indexed_128.png';
             // Configure this library to use the sheets defined in `img_sets` (see above)
             conv.use_sheet = true;
         conv.img_set = 'apple';

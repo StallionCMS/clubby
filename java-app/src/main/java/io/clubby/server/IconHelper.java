@@ -26,7 +26,7 @@ public class IconHelper {
             return file;
         }
 
-        String name = AdminSettings.getSiteName();
+        String name = ClubbyDynamicSettings.getSiteName();
         if (empty(name)) {
             String url = Settings.instance().getSiteUrl();
             if (empty(url)) {

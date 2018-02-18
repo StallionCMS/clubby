@@ -2,6 +2,7 @@ package io.clubby.server;
 
 import static io.stallion.utils.Literals.*;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.clubby.server.emailers.LoginVerifyEmailer;
 import io.stallion.Context;
 import io.stallion.exceptions.ClientException;
@@ -15,6 +16,7 @@ import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.UserController;
 import io.stallion.utils.GeneralUtils;
+import io.stallion.utils.json.RestrictedViews;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.POST;
@@ -86,9 +88,9 @@ public class AuthEndpoints implements EndpointResource {
         if ("true".equals(Context.getRequest().getQueryParams().get("appLoginStep2"))) {
             return map(
                     val("userId", user.getId()),
-                    val("iconBase64", AdminSettings.getIconBase64()),
+                    val("iconBase64", ClubbyDynamicSettings.getIconBase64()),
                     val(
-                            "site", new Site().setName(AdminSettings.getSiteName())
+                            "site", new Site().setName(ClubbyDynamicSettings.getSiteName())
                     )
             );
         } else if (user.getId().equals(Context.getUser().getId())) {
@@ -196,12 +198,17 @@ public class AuthEndpoints implements EndpointResource {
 
 
     @POST
+    @JsonView(value = RestrictedViews.Owner.class)
     @Path("/private-key-login-step2")
     public Object privateKeyLoginStep2(
             @BodyParam("username") String username,
             @BodyParam("tokenKey") String tokenKey,
             @BodyParam("token") String token,
-            @BodyParam("generateElectronAuthCookie") Boolean generateElectronAuthCookie
+            @BodyParam("generateAppAuthCookie") Boolean generateAppAuthCookie,
+            @BodyParam(value = "deviceId", required = false) String deviceId,
+            @BodyParam(value = "deviceName", required = false) String deviceName,
+            @BodyParam(value = "deviceOS", required = false) String deviceOS,
+            @BodyParam(value = "registrationToken", required = false) String registrationToken
     ) throws Exception {
         IUser user = UserController.instance().forUsername(username);
         if (emptyInstance(user)) {
@@ -224,9 +231,38 @@ public class AuthEndpoints implements EndpointResource {
         UserController.instance().addSessionCookieForUser(user, false);
 
 
-        String electronAuthCookie = null;
-        if (generateElectronAuthCookie) {
-            electronAuthCookie = UserController.instance().userToCookieString(user, true);
+        String appAuthCookie = null;
+        if (generateAppAuthCookie) {
+            appAuthCookie = UserController.instance().userToCookieString(user, true);
+        }
+        Context.setUser(user);
+
+        if (!empty(deviceId)) {
+
+            // Delete previous sessions from this device
+            if (!empty(deviceId)) {
+                List<MobileSession> existings = MobileSessionController.instance()
+                        .filter("deviceId", deviceId)
+                        .filter("userId", user.getId())
+                        .all();
+                for(MobileSession ms: existings) {
+                    MobileSessionController.instance().hardDelete(ms);
+                }
+            }
+
+            MobileSession mb = new MobileSession()
+                    .setDeviceName(deviceName)
+                    .setDeviceOperatingSystem(MobileSession.OperatingSystems.valueOf(deviceOS))
+                    .setIpAddress(Context.getRequest().getActualIp())
+                    .setLastSignInAt(utcNow())
+                    .setDeviceId(deviceId)
+                    .setPassphraseEncryptionSecret(GeneralUtils.randomTokenBase32(40))
+                    .setRegistrationToken(registrationToken)
+                    .setSessionKey(UUID.randomUUID() + "-" + GeneralUtils.randomTokenBase32(24))
+                    .setUserId(user.getId())
+                    ;
+
+            MobileSessionController.instance().save(mb);
         }
 
 
@@ -234,7 +270,7 @@ public class AuthEndpoints implements EndpointResource {
                 val("rememberDeviceToken", makeRememberDeviceCookie(user)),
                 val("user", user),
                 val("userProfile", profile),
-                val("electronAuthCookie", electronAuthCookie),
+                val("appAuthCookie", appAuthCookie),
                 val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId()))
         );
 
@@ -372,11 +408,11 @@ public class AuthEndpoints implements EndpointResource {
                 val(
                         "user", user
                 ),
-                val("iconBase64", AdminSettings.getIconBase64()),
+                val("iconBase64", ClubbyDynamicSettings.getIconBase64()),
                 val("authcookie", cookie),
                 val("passphraseEncryptionSecret", mb.getPassphraseEncryptionSecret()),
                 val(
-                        "site", new Site().setName(AdminSettings.getSiteName())
+                        "site", new Site().setName(ClubbyDynamicSettings.getSiteName())
                         ),
                 val("defaultChannelId", ChannelController.instance().getFirstUserChannel(user.getId())),
                 val("userProfile", up)

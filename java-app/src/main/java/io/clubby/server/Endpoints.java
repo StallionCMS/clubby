@@ -65,7 +65,7 @@ public class Endpoints implements EndpointResource {
             profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
             defaultChannelId = ChannelController.instance().getFirstUserChannel(Context.getUser().getId());
         }
-        Context.getResponse().getMeta().setTitle("Clubhouse");
+        Context.getResponse().getMeta().setTitle("Clubby");
 
         if (Context.getUser().isAnon()) {
             if (ChannelController.instance().getStash().getItems().size() == 0) {
@@ -74,16 +74,16 @@ public class Endpoints implements EndpointResource {
         }
 
         Map ctx = map(
-            val("pluginName", "clubhouse"),
+            val("pluginName", "clubby"),
             val("theApplicationContextJson", Sanitize.htmlSafeJson(
                     map(
                             val("isFirstUser", isFirstUser),
                             val("site", map(
                                     val("siteUrl", Settings.instance().getSiteUrl()),
                                     val("cdnUrl", Settings.instance().getCdnUrl()),
-                                    val("name", AdminSettings.getSiteName()),
-                                    val("logo", AdminSettings.getIconUrl()),
-                                    val("iconBase64", AdminSettings.getIconBase64())
+                                    val("name", ClubbyDynamicSettings.getSiteName()),
+                                    val("logo", ClubbyDynamicSettings.getIconUrl()),
+                                    val("iconBase64", ClubbyDynamicSettings.getIconBase64())
                             )),
                             val("user", Context.getUser()),
                             val("profile", profile),
@@ -91,7 +91,7 @@ public class Endpoints implements EndpointResource {
                     )
             ))
         );
-        return TemplateRenderer.instance().renderTemplate("clubhouse:app.jinja", ctx);
+        return TemplateRenderer.instance().renderTemplate("clubby:app.jinja", ctx);
     }
 
 
@@ -307,7 +307,7 @@ public class Endpoints implements EndpointResource {
                 val("embedUrl", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("embedUrl", ""))),
                 val("iframeId", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("iframeId", "")))
         );
-        return TemplateRenderer.instance().renderTemplate("clubhouse:oembed.jinja", ctx);
+        return TemplateRenderer.instance().renderTemplate("clubby:oembed.jinja", ctx);
     }
 
 
@@ -317,7 +317,7 @@ public class Endpoints implements EndpointResource {
     @Produces("text/html")
     public Object emojiTest() {
         Map ctx = map();
-        return TemplateRenderer.instance().renderTemplate("clubhouse:emoji.jinja", ctx);
+        return TemplateRenderer.instance().renderTemplate("clubby:emoji.jinja", ctx);
     }
 
     @GET

@@ -1,6 +1,7 @@
 package io.clubby.server;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
@@ -22,7 +23,7 @@ public class Notifier {
 
     }
 
-    public static void sendNotification(Long userId, String title, String body) {
+    public static void sendNotification(Long userId, String title, String body, Map messageData) {
         MobileSession session = MobileSessionController
                 .instance()
                 .filter("userId", userId)
@@ -33,6 +34,14 @@ public class Notifier {
             return;
         }
 
+        if (ClubbyDynamicSettings.isUseClubbyHostForPushNotification()) {
+            CentralHostApiConnector.sendMobilePushNotification(title, body, messageData, list(session.getRegistrationToken()));
+            return;
+        }
+        if (empty(ClubbySettings.getInstance().getFirebaseServerKey())) {
+            Log.warn("Tried to send a mobile push notification but no firebaseServerKey setting in conf/clubby.toml was configured.");
+            return;
+        }
 
 
         RequestBody b = new RequestBody()

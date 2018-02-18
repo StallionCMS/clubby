@@ -5,9 +5,14 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import io.clubby.server.emailers.TestConfigEmailer;
+import io.clubby.server.emailers.UserInviteEmailer;
 import io.stallion.Context;
 import io.stallion.dataAccess.filtering.SortDirection;
-import io.stallion.email.ContactableEmailer;
 import io.stallion.exceptions.ClientException;
 import io.stallion.requests.validators.SafeMerger;
 import io.stallion.restfulEndpoints.BodyParam;
@@ -15,6 +20,7 @@ import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.restfulEndpoints.MinRole;
 import io.stallion.restfulEndpoints.ObjectParam;
 import io.stallion.settings.Settings;
+import io.stallion.settings.childSections.EmailSettings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.User;
@@ -59,15 +65,52 @@ public class AdminEndpoints implements EndpointResource {
 
         Map<String, Object> ctx = map();
         ctx.put("userAndProfiles", combos);
+        ctx.put("license", or(ClubbyDynamicSettings.getLicense(), new License()));
+        ctx.put("emailSettings", or(Settings.instance().getEmail(), new EmailSettings()));
+        ctx.put("emailType", ClubbyDynamicSettings.getEmailType());
         ctx.put("settings",
                 map(
-                        val("siteName", AdminSettings.getSiteName()),
-                        val("iconUrl", AdminSettings.getIconUrl()),
-                        val("iconImageId", AdminSettings.getIconImageId())
+                        val("siteName", ClubbyDynamicSettings.getSiteName()),
+                        val("iconUrl", ClubbyDynamicSettings.getIconUrl()),
+                        val("iconImageId", ClubbyDynamicSettings.getIconImageId())
                 )
                 );
         return ctx;
     }
+
+
+
+
+    @POST
+    @Path("/save-license")
+    @MinRole(Role.ADMIN)
+    public Object saveLicense(
+            @BodyParam("key") String key
+    ) {
+        License license = ClubbyDynamicSettings.getLicense();
+        if (license == null) {
+            license = new License().setKey(key);
+        }
+        try {
+            HttpResponse<JsonNode> result = Unirest
+                    .post("https://hosterlocal.clubby.io/hosting-api/v1/connect/verify-license")
+                    .header("Auth", key)
+                    .asJson();
+            if (result.getStatus() == 200) {
+                license.setKey(key);
+                license.setExpiresAt(result.getBody().getObject().getLong("expiresAt"));
+                license.setType(License.LicenseType.valueOf(result.getBody().getObject().getString("type")));
+                ClubbyDynamicSettings.updateLicenseKey(license);
+                return map(val("license", license));
+            } else {
+                throw new ClientException("Invalid license.");
+            }
+        } catch (UnirestException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     @POST
     @Path("/save-settings")
@@ -77,13 +120,53 @@ public class AdminEndpoints implements EndpointResource {
             @BodyParam(value = "iconImageId", required = false, allowEmpty = true) Long iconImageId
     ) {
         if (!empty(siteName)) {
-            AdminSettings.setSiteName(siteName);
+            ClubbyDynamicSettings.updateSiteName(siteName);
         }
         if (!empty(iconImageId)) {
-            AdminSettings.setIconImageId(iconImageId);
+            ClubbyDynamicSettings.updateIconImageId(iconImageId);
         }
         return true;
     }
+
+
+
+
+    @POST
+    @Path("/use-clubby-hoster-for-email")
+    @MinRole(Role.ADMIN)
+    public Object useClubbyHosterForEmail(
+
+    ) {
+
+        ClubbyDynamicSettings.updateEmailType("clubbyhost");
+
+        return true;
+    }
+
+
+
+    @POST
+    @Path("/save-email-settings")
+    @MinRole(Role.ADMIN)
+    public Object saveEmailSettings(
+            @ObjectParam EmailSettings updatedEmailSettings
+    ) {
+
+
+        ClubbyDynamicSettings.updateEmailSettings(updatedEmailSettings);
+        ClubbyDynamicSettings.updateEmailType("custom");
+        return true;
+    }
+
+
+    @POST
+    @Path("/send-test-email")
+    @MinRole(Role.ADMIN)
+    public Object sendTestEmail() {
+        new TestConfigEmailer(Context.getUser()).sendEmail();
+        return true;
+    }
+
 
 
 
@@ -140,29 +223,22 @@ public class AdminEndpoints implements EndpointResource {
     }
 
 
-    public static class UserInviteEmailer extends ContactableEmailer<IUser> {
-        private IUser inviter;
-        public UserInviteEmailer(IUser user, IUser inviter, String token) {
-            super(user);
-            this.inviter = inviter;
-            put("inviteLink", Settings.instance().getSiteUrl() + "/#accept-invite?userId=" + user.getId() + "&token=" + token);
-        }
 
-        @Override
-        public boolean isTransactional() {
-            return true;
-        }
 
-        @Override
-        public String getTemplate() {
-            return "clubhouse:emails/invite-user.jinja";
-        }
+    @POST
+    @Path("/resend-invite")
+    @MinRole(Role.ADMIN)
+    public Object resendInvitation(@BodyParam("userId") Long userId) {
+        IUser user = UserController.instance().forIdOrNotFound(userId);
 
-        @Override
-        public String getSubject() {
-            return inviter.getDisplayName() + " invites you to chat!";
-        }
+        String token = UserController.instance().makeEncryptedToken(user, "invite", user.getResetToken());
+
+        boolean result =new UserInviteEmailer(user, Context.getUser(), token).sendEmail();
+
+        return result;
+
     }
+
 
     @POST
     @Path("/deactivate")

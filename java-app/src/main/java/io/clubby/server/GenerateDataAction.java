@@ -295,6 +295,11 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
                     if (base % 15 == 0) {
                         um.setMentioned(true);
                     }
+                    if (base > 1001) {
+                        um.setRead(true);
+                        um.setMentioned(false);
+                    }
+
                 }
 
                 UserMessageController.instance().save(um);

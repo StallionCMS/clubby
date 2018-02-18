@@ -6,8 +6,8 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
+import io.clubby.server.emailers.MessageEmailer;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.email.ContactableEmailer;
 import io.stallion.jobs.Job;
 import io.stallion.services.Log;
 import io.stallion.users.User;
@@ -60,29 +60,6 @@ public class EmailMessagesJob implements Job {
         }
 
 
-    }
-
-    public static class MessageEmailer extends ContactableEmailer<User> {
-        public MessageEmailer(User user, UserProfile profile, List<MessageCombo> combos) {
-            super(user);
-            put("profile", profile);
-            put("messages", combos);
-        }
-
-        @Override
-        public boolean isTransactional() {
-            return false;
-        }
-
-        @Override
-        public String getTemplate() {
-            return "clubhouse:/emails/message-notifications.jinja";
-        }
-
-        @Override
-        public String getSubject() {
-            return "Notifications for messages.";
-        }
     }
 
 }

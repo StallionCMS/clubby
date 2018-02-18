@@ -36,6 +36,9 @@ public class ClubbyPlugin extends StallionJavaPlugin {
             Settings.instance().getUsers().setLoginPage("/#/login");
         }
 
+        ClubbyDynamicSettings.syncToStallionEmailSettings();
+
+
         UploadedFileController.register();
         ChannelController.register();
         ChannelMemberController.register();

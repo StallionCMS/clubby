@@ -1,13 +1,10 @@
 
 # The URL at which your site is located
-#siteUrl = "https://clubhouse.local"
-#cdnUrl = "https://clubhouse.local"
+#siteUrl = "https://indyhall.clubby.io"
+#cdnUrl = "https://indyhall.clubby.io"
 
-#siteUrl = "https://indyhall.folkmot.com"
-#cdnUrl = "https://indyhall.folkmot.com"
-
-siteUrl = "https://macbook.folkmot.com"
-cdnUrl = "https://macbook.folkmot.com"
+siteUrl = "https://macbook.clubby.io"
+cdnUrl = "https://macbook.clubby.io"
 
 
 # The public facing name of your site. Will be included in various standard templates by default.

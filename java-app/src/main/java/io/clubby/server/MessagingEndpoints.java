@@ -15,6 +15,7 @@ import io.stallion.restfulEndpoints.BodyParam;
 import io.stallion.restfulEndpoints.EndpointResource;
 import io.stallion.restfulEndpoints.MinRole;
 import io.stallion.restfulEndpoints.ObjectParam;
+import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.UserController;
@@ -521,8 +522,22 @@ public class MessagingEndpoints implements EndpointResource {
 
         WebSocketEventHandler.sendMessageToUser(um.getUserId(), JSON.stringify(map(val("message", combo), val("type", "new-message"))));
 
+        Map messageData = map();
+        messageData.put("siteUrl", Settings.instance().getSiteUrl());
+        messageData.put("channelId", message.getChannelId());
+        messageData.put("channelType", channel.getChannelType().toString());
+        messageData.put("messageId", message.getId());
+        messageData.put("threadId", message.getThreadId());
+        messageData.put("userId", um.getUserId());
+        String path = "/#/channel/" + message.getChannelId() + "&messageId=" + message.getId();
+        if (channel.getChannelType().equals(ChannelType.FORUM)) {
+            path = "/#/forum/" + message.getChannelId() + "/" + message.getId() + "?messageId=" + message.getId();
+        }
+        messageData.put("path", path);
+
+
         if (um.isMentioned() || channel.getChannelType().equals(ChannelType.DIRECT_MESSAGE)) {
-            Notifier.sendNotification(um.getUserId(), "New message from " + message.getFromUsername(), "");
+            Notifier.sendNotification(um.getUserId(), "New message from " + message.getFromUsername(), "", messageData);
         }
     }
 

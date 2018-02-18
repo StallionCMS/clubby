@@ -23,7 +23,7 @@
          stallion.autoGrow({}, $(this.$el));
          //new EmojiPicker({
          //    emojiable_selector: this.$el,
-         //    assetsPath: '/st-resource/clubhouse/emoji/img'
+         //    assetsPath: '/st-resource/clubby/emoji/img'
          //}).discover();
          //$(this.$el).emojiarea();
      },

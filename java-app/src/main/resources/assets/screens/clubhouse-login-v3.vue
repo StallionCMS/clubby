@@ -194,7 +194,11 @@
                              username: self.username,
                              tokenKey: tokenKey,
                              token: decryptedToken,
-                             generateElectronAuthCookie: window.isInElectron || false
+                             generateAppAuthCookie: ClubhouseMobileInterop.isAppMode || false,
+                             deviceOS: self.$route.query.deviceOS,
+                             deviceName: self.$route.query.deviceName,
+                             deviceId: self.$route.query.deviceId,
+                             registrationToken: self.$route.query.registrationToken
                          },
                          success: function(o) {
                              clubhouseImportPublicAndPrivateKey(
@@ -209,12 +213,24 @@
                                  console.log('private key loaded, login complete');
                                  sessionStorage['private-key-passphrase-' + o.user.id] = self.encryptionPassword;
 
-                                 
+                                 console.log('return URL ', self.$route.query.returnPath);
                                  ClubhouseVueApp.stateManager.start();
                                  ClubhouseVueApp.stateManager.loadContext(function(ctx) {
                                      Vue.nextTick(function() {
-                                         console.log('login.vue navigate home after tick');
-                                         window.location.hash = '/';
+                                         if (self.$route.query.returnPath) {
+                                             var returnPath = self.$route.query.returnPath;
+                                             // TODO: need to distinguish between when we really
+                                             // want to go to a new full URL
+                                             var hashIndex = returnPath.indexOf('#');
+                                             if (hashIndex > -1) {
+                                                 returnPath = returnPath.substr(hashIndex + 1);
+                                             }
+                                             console.log('login.vue navigate to return url after tick ', returnPath);
+                                             window.location.hash = returnPath;
+                                         } else {
+                                             console.log('login.vue navigate home after tick');
+                                             window.location.hash = '/';
+                                         }
                                      });
                                  });
 
@@ -222,9 +238,7 @@
                                      window.localStorage.rememberDeviceToken = o.rememberDeviceToken;
                                      window.localStorage['remember-device-token-' + self.username] = o.rememberDeviceToken;
                                  }
-                                 ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.electronAuthCookie, self.encryptionPassword);
-                                 console.log('login.vue nagivate home');
-                                 //window.location.hash = '/';
+                                 ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.appAuthCookie, self.encryptionPassword);
                                  
                              }).catch(function(err) {
                                  self.processing = false;

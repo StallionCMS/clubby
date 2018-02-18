@@ -7,7 +7,6 @@ import java.util.*;
 import static io.stallion.utils.Literals.*;
 
 import io.clubby.server.*;
-import io.stallion.clubhouse.*;
 import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
 import io.stallion.settings.Settings;

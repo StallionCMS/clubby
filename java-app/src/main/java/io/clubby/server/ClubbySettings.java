@@ -11,6 +11,7 @@ public class ClubbySettings extends BasePluginSettings {
         return getInstance(ClubbySettings.class, "clubby");
     }
 
+
     @SettingMeta
     private String firebaseSettingsJson;
     @SettingMeta

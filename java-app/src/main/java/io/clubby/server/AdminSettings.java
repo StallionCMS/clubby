@@ -21,7 +21,7 @@ import io.stallion.utils.json.JSON;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 
-
+@Deprecated
 public class AdminSettings {
 
     private static String siteName;
