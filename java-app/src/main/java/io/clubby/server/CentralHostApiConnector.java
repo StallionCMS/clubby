@@ -10,6 +10,8 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nimbusds.jose.util.IOUtils;
+import io.stallion.exceptions.ClientException;
+import io.stallion.exceptions.WebException;
 import io.stallion.services.Log;
 import io.stallion.utils.json.JSON;
 
@@ -17,7 +19,7 @@ import io.stallion.utils.json.JSON;
 public class CentralHostApiConnector {
 
     public static String baseUrl() {
-        return "https://hosterlocal.clubby.io";
+        return ClubbySettings.getInstance().getHostApiUrl();
     }
 
     public static String version() {
@@ -41,11 +43,13 @@ public class CentralHostApiConnector {
                             ))
                     )
                     .asString();
-            Log.fine("Invite email API call response: {0} {1}", response.getStatus(), response.getBody());
+
             if (response.getStatus() == 200) {
+                Log.fine("Invite email API call response: {0} {1}", response.getStatus(), response.getBody());
                 return true;
             } else {
-                return false;
+                Log.warn("Invite email API call response error: {0} {1}", response.getStatus(), response.getBody());
+                throw new WebException("Internal error sending invite email. Is your license key up to date? Contact support or your admin.", 500);
             }
         } catch (UnirestException e) {
             throw new RuntimeException(e);
@@ -67,11 +71,13 @@ public class CentralHostApiConnector {
                             ))
                     )
                     .asJson();
-            Log.fine("Two-factor email API call response: {0} {1}", response.getStatus(), response.getBody());
+
             if (response.getStatus() == 200) {
+                Log.fine("Two-factor email API call response: {0} {1}", response.getStatus(), response.getBody());
                 return true;
             } else {
-                return false;
+                Log.warn("Two-factor email API call response error: {0} {1}", response.getStatus(), response.getBody());
+                throw new WebException("Internal error sending email to verify new client. Please contact support.", 500);
             }
         } catch (UnirestException e) {
             throw new RuntimeException(e);
@@ -90,10 +96,12 @@ public class CentralHostApiConnector {
                             val("clubbyVersion", version())
                     )))
                     .asJson();
-            Log.fine("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
+
             if (response.getStatus() == 200) {
+                Log.fine("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
                 return true;
             } else {
+                Log.warn("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
                 return false;
             }
         } catch (UnirestException e) {
@@ -114,10 +122,12 @@ public class CentralHostApiConnector {
                             val("clubbyVersion", version())
                     )))
                     .asJson();
-            Log.fine("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
+
             if (response.getStatus() == 200) {
+                Log.fine("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
                 return response.getBody().getObject().getBoolean("succeeded");
             } else {
+                Log.warn("Chat notification API call response: {0} {1}", response.getStatus(), response.getBody());
                 return false;
             }
         } catch (UnirestException e) {

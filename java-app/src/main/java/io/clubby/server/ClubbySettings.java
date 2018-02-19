@@ -22,6 +22,9 @@ public class ClubbySettings extends BasePluginSettings {
     @SettingMeta
     private String iconUrl = "";
 
+    @SettingMeta(val = "https://host.clubby.io")
+    private String hostApiUrl;
+
 
     public String getFirebaseSettingsJson() {
         return firebaseSettingsJson;
@@ -58,6 +61,15 @@ public class ClubbySettings extends BasePluginSettings {
 
     public ClubbySettings setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
+        return this;
+    }
+
+    public String getHostApiUrl() {
+        return hostApiUrl;
+    }
+
+    public ClubbySettings setHostApiUrl(String hostApiUrl) {
+        this.hostApiUrl = hostApiUrl;
         return this;
     }
 

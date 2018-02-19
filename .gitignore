@@ -23,7 +23,7 @@ target
 site-pro-spec.txt
 nohup
 stallion.local.toml
-clubhouse.toml
+clubby.toml
 src/test/resources/example_site/app-data
 site/bin
 site/.stallion-scripts
