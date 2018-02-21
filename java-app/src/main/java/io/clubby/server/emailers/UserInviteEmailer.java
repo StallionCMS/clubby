@@ -1,5 +1,6 @@
 package io.clubby.server.emailers;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import io.stallion.email.ContactableEmailer;
 import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
+import io.stallion.utils.GeneralUtils;
 
 
 public class UserInviteEmailer extends ContactableEmailer<IUser> {
@@ -40,6 +42,13 @@ public class UserInviteEmailer extends ContactableEmailer<IUser> {
         }
     }
 
+    private static final DateTimeFormatter MINUTE_FORMAT  =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+
+    @Override
+    public String getUniqueKey() {
+        return "invite-email--" + GeneralUtils.slugify(this.user.getEmail()) + "--" +MINUTE_FORMAT.format(utcNow());
+    }
 
     @Override
     public boolean isTransactional() {

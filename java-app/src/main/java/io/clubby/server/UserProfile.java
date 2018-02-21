@@ -31,6 +31,7 @@ public class UserProfile extends ModelBase {
     private boolean emailMeWhenMentioned = true;
     private boolean notifyWhenMentioned = true;
     private String avatarUrl = "";
+    private Long avatarFileId = 0L;
 
     private String passwordFourCharactersHashed = "";
     private String passwordSalt = "";
@@ -153,6 +154,16 @@ public class UserProfile extends ModelBase {
 
     public UserProfile setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+        return this;
+    }
+
+    @Column
+    public Long getAvatarFileId() {
+        return avatarFileId;
+    }
+
+    public UserProfile setAvatarFileId(Long avatarFileId) {
+        this.avatarFileId = avatarFileId;
         return this;
     }
 

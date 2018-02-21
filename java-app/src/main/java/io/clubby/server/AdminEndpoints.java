@@ -93,7 +93,7 @@ public class AdminEndpoints implements EndpointResource {
         }
         try {
             HttpResponse<JsonNode> result = Unirest
-                    .post("https://hosterlocal.clubby.io/hosting-api/v1/connect/verify-license")
+                    .post(ClubbySettings.getInstance().getHostApiUrl() + "/hosting-api/v1/connect/verify-license")
                     .header("Auth", key)
                     .asJson();
             if (result.getStatus() == 200) {

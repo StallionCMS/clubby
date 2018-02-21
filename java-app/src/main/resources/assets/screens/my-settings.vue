@@ -95,6 +95,7 @@
          onIconUpload: function(data) {
              var self = this;
              self.userProfile.avatarUrl = data.fileInfo.smallUrl;
+             self.userProfile.avatarFileId = data.fileInfo.id;
          },
          fetchData: function() {
              var self = this;

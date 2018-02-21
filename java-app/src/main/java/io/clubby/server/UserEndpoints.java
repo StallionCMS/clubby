@@ -8,6 +8,8 @@ import static io.stallion.utils.Literals.*;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import io.stallion.Context;
+import io.stallion.contentPublishing.UploadedFile;
+import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.exceptions.*;
 import io.stallion.requests.validators.SafeMerger;
@@ -110,7 +112,7 @@ public class UserEndpoints implements EndpointResource {
     @MinRole(Role.ANON)
     public Object acceptInvitationContext(@QueryParam("token") String token, @QueryParam("userId") Long userId) {
         IUser user = UserController.instance().forIdOrNotFound(userId);
-        String expectedToken = UserController.instance().readEncryptedToken(user, "invite", token, 60);
+        String expectedToken = UserController.instance().readEncryptedToken(user, "invite", token, 60 * 24 *2);
         if (!user.getResetToken().equals(expectedToken)) {
             throw new ClientException("Invalid invite token.");
         }
@@ -331,11 +333,22 @@ public class UserEndpoints implements EndpointResource {
                 .merge(userAndProfile.getUser(), user);
         user.setDisplayName(StringUtils.strip(user.getGivenName() + " " + user.getFamilyName(), " "));
         new SafeMerger()
-                .optional("aboutMe", "contactInfo", "avatarUrl", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
+                .optional("aboutMe", "contacAtInfo", "avatarUrl", "avatarFileId", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
                 .merge(userAndProfile.getUserProfile(), profile);
 
         UserController.instance().save(user);
         UserProfileController.instance().save(profile);
+
+        if (!empty(profile.getAvatarFileId())) {
+            UploadedFile file = (UploadedFile)UploadedFileController.instance().forId(profile.getAvatarFileId());
+            if (file != null) {
+                if (!file.isPubliclyViewable()) {
+                    file.setPubliclyViewable(true);
+                    UploadedFileController.instance().save(file);
+                }
+            }
+        }
+
         return new UserAndProfile().setUser(user).setUserProfile(profile);
     }
 

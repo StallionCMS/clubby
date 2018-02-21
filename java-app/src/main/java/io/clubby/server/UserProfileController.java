@@ -20,7 +20,14 @@ public class UserProfileController extends StandardModelController<UserProfile> 
     }
 
     public UserProfile forStallionUser(Long userId) {
-        return forUniqueKey("userId", userId);
+        UserProfile up = forUniqueKey("userId", userId);
+        if (up == null) {
+            up = filter("userId", userId).first();
+            if (up == null) {
+                up = filter("userId", userId).setUseCache(false).first();
+            }
+        }
+        return up;
     }
 
     public UserProfile forStallionUserOrNotFound(Long userId) {
