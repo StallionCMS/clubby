@@ -333,7 +333,7 @@ public class UserEndpoints implements EndpointResource {
                 .merge(userAndProfile.getUser(), user);
         user.setDisplayName(StringUtils.strip(user.getGivenName() + " " + user.getFamilyName(), " "));
         new SafeMerger()
-                .optional("aboutMe", "contacAtInfo", "avatarUrl", "avatarFileId", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
+                .optional("aboutMe", "contactInfo", "avatarUrl", "avatarFileId", "webSite", "emailMeWhenMentioned", "notifyWhenMentioned")
                 .merge(userAndProfile.getUserProfile(), profile);
 
         UserController.instance().save(user);

@@ -70,7 +70,7 @@ var ClubhouseMobileInterop = new function() {
             electronInterop.onLoggedIn(userId, username, authcookie, password);
         } else if (self.isAndroidApp) {
             AndroidInterface.onLoggedIn(theApplicationContext.site.siteUrl, userId, username, authcookie, password);
-        } else if (window.webkit) {
+        } else if (window.webkit && webkit.messageHandlers.onLoggedIn) {
             webkit.messageHandlers.onLoggedIn.postMessage(JSON.stringify(message))
         }
     }

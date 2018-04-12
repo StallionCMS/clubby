@@ -31,6 +31,9 @@ public class UserProfileController extends StandardModelController<UserProfile> 
     }
 
     public UserProfile forStallionUserOrNotFound(Long userId) {
-        return forUniqueKeyOrNotFound("userId", userId);
+        UserProfile up = forStallionUser(userId);
+        if (up == null) {
+            throw new io.stallion.exceptions.NotFoundException("User not found for id.");
+        }
     }
 }
