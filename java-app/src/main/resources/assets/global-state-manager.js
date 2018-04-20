@@ -355,11 +355,14 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         manager.clubhouseSocket.onclose = function(event) {
             if (event.code === 1008) {
                 stallion.showError('You are not logged in.');
-                alert('not logged in!');
                 if (ClubhouseMobileInterop.isAppMode) {
                     ClubhouseMobileInterop.redirectToLogin();
                 } else {
                     window.location.hash = '/login';
+                    setTimeout(function() {
+                        vueApp.$store.commit('updateCurrentUser', {user: {}, userProfile: {}});
+                    }, 20);
+                    
                 }
                 return;
             }
