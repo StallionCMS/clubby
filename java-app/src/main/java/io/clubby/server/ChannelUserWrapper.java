@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 
 import io.stallion.users.IUser;
 import io.stallion.utils.DateUtils;
-import sun.plugin.util.*;
 
 
 public class ChannelUserWrapper {

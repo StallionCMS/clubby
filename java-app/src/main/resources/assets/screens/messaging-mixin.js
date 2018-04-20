@@ -532,9 +532,9 @@ var ClubhouseMessagingMixin = {
                 // We are visible and active, no notification needed
                 return;
             }
-            var link = 'https://clubhouse.local/#/channel/' + message.channelId;
+            var link = theApplicationContext.site.siteUrl + '/#/channel/' + message.channelId;
             if (message.threadId) {
-                link = 'https://clubhouse.local/#/forum/' + message.channelId + '/' + message.threadId + '?messageId=' + message.id;
+                link = theApplicationContext.site.siteUrl + '/#/forum/' + message.channelId + '/' + message.threadId + '?messageId=' + message.id;
             }
             
 

@@ -335,9 +335,9 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                     if (u && u.avatarUrl) {
                         iconUrl = u.avatarUrl;
                     }
-                    var link = 'https://clubhouse.local/#/channel/' + data.message.channelId;
+                    var link = theApplicationContext.site.siteUrl + '/#/channel/' + data.message.channelId;
                     if (data.message.threadId) {
-                        link = 'https://clubhouse.local/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
+                        link = theApplicationContext.site.siteUrl + '/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
                     }
                     console.log('call sendNotification');
                     stallionClubhouseApp.sendNotifiction(

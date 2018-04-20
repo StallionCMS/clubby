@@ -11,7 +11,7 @@ $(document).ready(function() {
         parent.postMessage({
             iframeHeight: $('body').outerHeight(true),
             iframeId: iframeId
-        }, 'https://clubhouse.local');
+        }, theApplicationContext.site.siteUrl);
         console.log('message posted!');
     }
     var watchedCount = 0;
