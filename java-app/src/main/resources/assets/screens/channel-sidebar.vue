@@ -80,13 +80,14 @@
      }
      .unread-mentions-count {
 
-         background-color: #bd1515;
+         background-color: #a22727;
          display: inline-block;
          border-radius: 9px;         
          width: 18px;
          height: 18px;
-         padding: 1px 1px 1px 5px;
-         font-size: 12px;
+         padding: 1px 1px 1px 1px;
+         text-align: center;
+         font-size: 11px;
      }
      .channel-unread {
          color: #FFF;

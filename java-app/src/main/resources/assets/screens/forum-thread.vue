@@ -74,8 +74,8 @@
          border: 1px solid transparent;
      }
      .a-message-avatar {
-         max-width: 80px;
-         max-height: 50px;
+         max-width: 40px;
+         max-height: 40px;
      }
      .a-message-right {
          width: 650px;
@@ -437,6 +437,7 @@
              resetting: false,
              showDeleteModal: false,
              threadIndexPosition: {index: 0, position: 0},
+             threadIndexToGoToAfterPageLoad: null,
              viewingMessage: {},
              viewingMessageIndex: 0,
          };
@@ -546,9 +547,9 @@
              });
              this.offsets = offsets;
              this.viewingMessage = this.messages[0];
-             
              if (self.isFirstFetch) {
-                 $div.scroll(this.onScroll);
+                 //$div.scroll(this.onScroll);
+                 $(window).scroll(this.onScroll);
                  self.isFirstFetch = false;
                  if (this.$route.query.messageId) {
                      self.goToId(parseInt(this.$route.query.messageId, 10));
@@ -556,10 +557,15 @@
                  }
              } else {
                  if (self.currentThreadIndexPosition) {
-                     var offset = self.offsetByThreadIndex[self.currentThreadIndexPosition.index];
-                     $div.scrollTop(offset-self.currentThreadIndexPosition.position);
+                     //setTimeout(function() {
+                         var offset = self.offsetByThreadIndex[self.currentThreadIndexPosition.index];
+                     //$div.scrollTop(offset-self.currentThreadIndexPosition.position);
+                         $(window).scrollTop(offset-self.currentThreadIndexPosition.position);
+                     //}, 300);
                  }
              }
+
+             
 
              setTimeout(function() {
                  self.beginningLoading = false;
@@ -572,7 +578,7 @@
          onScroll: function(evt) {
              var self = this;
              var lastScrollTop = self.lastScrollTop
-             var thisScrollTop = $(this.$el).find('.topic-body').scrollTop();
+             var thisScrollTop = $(window).scrollTop();//$(this.$el).find('.topic-body').scrollTop();
              self.lastScrollTop = thisScrollTop;
              this.checkScrollLoadNewPageMaybe(lastScrollTop);
              if (!self.loadOnScroll) {
@@ -704,7 +710,7 @@
              }
 
              var self = this;
-             var $div = $(this.$el).find('.topic-body');
+             var $div = $(window);e//$(this.$el).find('.topic-body');
              var movingDown = true;
              if ($div.scrollTop() === lastScrollTop) {
                  console.log('repeat scroll top');
@@ -774,6 +780,7 @@
                  var page = p + 1;
                  if (page * self.pageSize > newThreadIndex) {
                      if (self.pages[p] === null) {
+                         self.threadIndexToGoToAfterPageLoad = newThreadIndex;
                          self.loadOnScroll = false;
                          self.currentThreadIndexPosition = {
                              index: newThreadIndex,

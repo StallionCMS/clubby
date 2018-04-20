@@ -71,8 +71,9 @@ h6 {
     margin-top: 0px;
     position: fixed;
     width: 100%;
-    height: 50px;
     z-index: 10;
+
+    
 
     .header-meta {
         color: #888;
@@ -115,6 +116,7 @@ h6 {
     .column-header-name {
         vertical-align: 0%;
         display: inline-block;
+        font-size: 18px;
         .material-icons {
             font-size: 16px;
             vertical-align: -20%;
@@ -200,6 +202,17 @@ h6 {
     width: 100vw;
 }
 
+@media (max-width: 700px) {
+    .channel-feed-vue .column-fixed-header {
+        padding-left: 7px;
+    }
+    #clubhouse-main-view .forum-top-level-vue .forum-header {
+        .forum-name {
+            padding-left: 0px;
+        }
+    }    
+}
+
 @media (min-width: 700px) {
     .mobile-view-topbar-vue {
         display: none;
@@ -215,6 +228,7 @@ h6 {
     .channel-feed-vue .channel-messages, .post-message-box {
         width: calc(100hw-220px);
     }
+
     
 }
 
@@ -228,6 +242,7 @@ h6 {
         width: 200px;
         float: right;
     }
+   
 }
 
 
@@ -307,3 +322,14 @@ h6 {
     background-color: #fff; 
     border-radius: 8px; 
 } 
+
+
+
+@media (pointer: coarse) {
+
+    .channel-sidebar-vue .sidebar-items a.channel-link {
+        font-size: 16px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+}

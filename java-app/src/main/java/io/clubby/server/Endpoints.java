@@ -208,7 +208,7 @@ public class Endpoints implements EndpointResource {
 
         // Get mention count by channel
         List<Map<String, Object>> records = DB.instance().findRecords("" +
-                "SELECT um.channelId, COUNT(*) as mentions FROM sch_user_messages AS um " +
+                "SELECT m.channelId, COUNT(*) as mentions FROM sch_user_messages AS um " +
                 " INNER JOIN sch_messages AS m ON m.id=um.messageId  " +
                 " LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
                 "WHERE um.`mentioned`=1 AND um.`read`=0 AND um.userId=? " +
@@ -231,7 +231,7 @@ public class Endpoints implements EndpointResource {
 
         // Get unread channels
         List<Long> channelIds = DB.instance().queryColumn("" +
-                        " SELECT DISTINCT(um.channelId) FROM sch_user_messages AS um " +
+                        " SELECT DISTINCT(m.channelId) FROM sch_user_messages AS um " +
                         " INNER JOIN sch_messages AS m ON um.messageId=m.id " +
                          "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
                         " WHERE " +

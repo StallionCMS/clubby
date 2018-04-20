@@ -35,5 +35,6 @@ public class UserProfileController extends StandardModelController<UserProfile> 
         if (up == null) {
             throw new io.stallion.exceptions.NotFoundException("User not found for id.");
         }
+        return up;
     }
 }

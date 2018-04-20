@@ -100,8 +100,9 @@
          padding-right: 6px;
      }
      .push-pin-icon {
-         height: 14px;
-         width: 14px;
+         height: 20px;
+         width: 20px;
+         border: 2px solid white;
          opacity: .3;
      }
      .topic-row-edge-bar {
@@ -114,14 +115,15 @@
          }
      }
      .label-mentions-count {
-         background-color: #943;
+         background-color: #a22727;
          display: inline-block;
          width: 20px;
          height: 20px;
          border-radius: 10px;
-         font-size: 11px;
+         border: 1px solid white;
+         font-size: 10px;
          text-align: center;
-         padding-top: 3px;
+         padding-top: 1px;
          color: white;
      }
      .new-unread-label .material-icons {

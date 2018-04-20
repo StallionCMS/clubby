@@ -315,9 +315,14 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 }
                 console.log('message on non-open channel', data.message);
                 if (!data.message.read) {
-                    vueApp.$store.commit('newChannelMessage', data.message);
+                    if (!vueApp.$store.state.channelById[data.message.channelId]) {
+                        ClubhouseVueApp.stateManager.loadContext();
+                    } else {
+                        vueApp.$store.commit('newChannelMessage', data.message);
+                    }
                 }
                 if (data.message.mentioned || data.message.hereMentioned && !data.message.read) {
+                    console.log('message is mentioned and not read');
                     var text = '<click to go to message>';
                     if (data.message.messageJson) {
                         var d = JSON.parse(data.message.messageJson);
@@ -334,6 +339,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                     if (data.message.threadId) {
                         link = 'https://clubhouse.local/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
                     }
+                    console.log('call sendNotification');
                     stallionClubhouseApp.sendNotifiction(
                         'Message from ' + data.message.fromUsername,
                         {

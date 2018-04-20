@@ -278,6 +278,7 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
             for (Long userId: list(GEORGE_ID, JOHN_ID, PAUL_ID)) {
                 x++;
                 UserMessage um = new UserMessage()
+                        .setChannelId(message.getChannelId())
                         .setHereMentioned(false)
                         .setMentioned(false)
                         .setRead(true)

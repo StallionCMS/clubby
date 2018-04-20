@@ -53,7 +53,7 @@
             </div>
             <div class="p" v-if="chosenMembers.length">
                 <em>Open group direct message with:</em>
-                <span v-for="(member, index) in chosenMembers"><b>{{ member.displayName }}</b><span v-if="index!=members.length-1">, </span></span>
+                <span v-for="(member, index) in chosenMembers"><b>{{ member.displayName }}</b><span v-if="index!=otherUsers.length-1">, </span></span>
                 <div class="p">
                     <button @click="openDirectMessage(chosenMembers)" class="btn btn-md btn-danger">Open {{ chosenMembers.length }} person chat &#187;</button>
                 </div>
@@ -75,22 +75,22 @@
  module.exports = {
      data: function() {
          var self = this;
-         var members = JSON.parse(JSON.stringify(self.$store.state.allUsers));
-         members.forEach(function(m) {
-             m.chosen = false;
-         });
          return {
              userSearch: '',
              chosenMembers: [],
-             members: members,
              user: this.$store.state.user
          };
      },
      computed: {
+        
          otherUsers: function() {
              var self = this;
+             var members = JSON.parse(JSON.stringify(self.$store.state.allUsers));
+             members.forEach(function(m) {
+                 m.chosen = false;
+             });
              var search = self.userSearch.toLowerCase();
-             return self.members.filter(function(user) {
+             return members.filter(function(user) {
                  if (user.id == self.user.id) {
                      return false;
                  }
@@ -147,6 +147,8 @@
                  },
                  url: '/clubhouse-api/messaging/open-direct-message',
                  success: function(o) {
+                     //ClubhouseGlobalStateManager.loadContext();
+                     ClubhouseVueApp.stateManager.loadContext();
                      window.location.hash = '/channel/' + o.channel.id;
                  }
              });

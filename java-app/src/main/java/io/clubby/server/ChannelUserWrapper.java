@@ -2,7 +2,9 @@ package io.clubby.server;
 
 import java.time.ZonedDateTime;
 
+import io.stallion.users.IUser;
 import io.stallion.utils.DateUtils;
+import sun.plugin.util.*;
 
 
 public class ChannelUserWrapper {
@@ -19,6 +21,25 @@ public class ChannelUserWrapper {
     private String avatarUrl = "";
     private Long channelMemberId = 0L;
     private boolean approved = false;
+
+    public static ChannelUserWrapper fromUserAndProfile(IUser user, UserProfile profile, boolean onlineNow) {
+        ChannelUserWrapper w = new ChannelUserWrapper()
+                .setUsername(user.getUsername())
+                .setEmail(user.getEmail())
+                .setAboutMe(profile.getAboutMe())
+                .setWebSite(profile.getWebSite())
+                .setContactInfo(profile.getContactInfo())
+                .setPublicKeyJwkJson(profile.getPublicKeyJwkJson())
+                .setDisplayName(user.getDisplayName())
+                .setAvatarUrl(profile.getAvatarUrl())
+                .setApproved(user.getApproved())
+                .setId(user.getId());
+        if (onlineNow) {
+            w.setLastActiveAt(DateUtils.utcNow());
+            w.setState("AWAKE");
+        }
+        return w;
+    }
 
     public String getUsername() {
         return username;

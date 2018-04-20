@@ -65,6 +65,7 @@
                  },
                  url: '/clubhouse-api/messaging/open-direct-message',
                  success: function(o) {
+                     ClubhouseVueApp.stateManager.loadContext();
                      window.location.hash = '/channel/' + o.channel.id;
                  }
              });

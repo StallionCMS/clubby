@@ -5,8 +5,50 @@
              margin-top: -4px;
          }
      }
+
+     .channel-right-icon {
+         margin-right: 5px;
+     }
+     
      border-top: 1px solid #4b4c58;
      margin-top: -2px;
+
+     .open-settings-link, .open-settings-link > .material-icons {
+         color: #444;
+         text-decoration: none;
+         display: flex;
+     }
+     .open-settings-link:hover, .open-settings-link:hover > .material-icons{
+         color: #23527c;
+         text-decoration: none;
+     }
+     .open-settings-link:active {
+         color: #23727c;
+         text-decoration: none;
+     }     
+     
+
+     .channel-context-menu {
+         z-index: 100;
+         background-color: white;
+         border: 1px solid #ccc;
+         width: 300px;
+         padding-bottom: 1em;
+         padding-top: 1em;
+         box-shadow: rgba(55, 55, 55, 0.1) 0px 15px 50px 0px, rgba(55, 55, 55, 0.1) 0px 12px 15px 0px;
+
+         
+         a {
+             font-weight: 400;
+             color: #444;
+             display: block;
+             padding: 5px 15px;
+         }
+         a:hover {
+             text-decoration: none;
+             background-color: #F2F2F2;
+         }
+     }
 
      .channel-start-message {
          color: #888;
@@ -86,8 +128,8 @@
          border: 1px solid transparent;
      }
      .a-message-avatar {
-         max-width: 80px;
-         max-height: 50px;
+         max-width: 40px;
+         max-height: 40px;
      }
      .a-message-right {
          width: calc(100% - 50px);
@@ -209,28 +251,34 @@
      }
      
  }
+
+ .channel-feed-vue.channel-direct-message {
+     .column-header-name {
+         font-size: 14px;
+     }
+ }
 </style>
 
 <template>
-    <div class="channel-feed-vue" >
+    <div :class="['channel-feed-vue',  channel && channel.channelType==='DIRECT_MESSAGE' ? 'channel-direct-message' : '']" >
         <div v-if="channel" class="column-fixed-header">
             <div class="column-header-name">
-                <span class="hash-icon" v-if="!channel.inviteOnly && !isEncrypted">#</span>
-                <span class="" v-if="channel.inviteOnly"><i class="material-icons">lock</i></span>
-                <span class="" v-if="isEncrypted"><i class="material-icons">security</i></span>
-                {{ channelName }}
+                <a @click="showChannelContextMenu" href="javascript:;" class="open-settings-link">
+                    <span class="channel-right-icon hash-icon" v-if="!channel.inviteOnly && !isEncrypted">&nbsp;#</span>
+                    <span class="channel-right-icon" v-if="channel.inviteOnly"><i class="material-icons">lock</i></span>
+                    <span class="channel-right-icon" v-if="isEncrypted"><i class="material-icons">security</i></span>
+                    <div>{{ channelName }}<i class="material-icons">keyboard_arrow_down</i></div>
+                </a>
+            </div>
+            <div v-if="contextMenuShown" class="channel-context-menu">
+                <a href="javascript:;" @click="toggleFavorite"><span v-if="!channel.favorite">Make Favorite</span><span v-if="channel.favorite">Unfavorite</span></a>
+                <a :href="'#/channel-members/' + channelId">View channel members ({{ members ? members.length : '-' }} members)</a>
+                <a v-if="isChannelOwner && (channel.channelType==='CHANNEL' || channel.channelType==='FORUM')" class="column-header-icon" :href="'#/channel-settings/' + channelId">Settings</a>
+                
             </div>
             <!-- <div class="column-header-search">
                 <input type="text" placeholder="Search" class="form-control">
             </div>-->                        
-            <div class="header-meta">
-                
-                <a v-if="channel.channelType==='CHANNEL'" class="column-header-text-icon" :href="'#/channel-members/' + channelId"><span><span class="column-header-text">{{ members ? members.length : '-' }}</span> <i class="material-icons">people</i></span></a>
-                <a href="javascript:;" @click="toggleFavorite" :class="['column-header-icon', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']"><i class="material-icons">star</i></a>
-                <a v-if="isChannelOwner && channel.channelType==='CHANNEL'" class="column-header-icon" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
-                
-            </div>
-            
         </div>
         <div class="channel-loading-div" v-if="!isLoaded">
             Loading messages...
@@ -298,6 +346,7 @@
      mixins: [ClubhouseMessagingMixin],
      data: function() {
          return {
+             contextMenuShown: false
          }
      },
      watch: {
@@ -316,7 +365,9 @@
              }
          });
      },
-         
+     beforeDestroy: function() {
+         document.removeEventListener('click', this.hideChannelContextMenu);
+     },
      methods: {
          getAvatarUrl: function(userId) {
              var self = this;
@@ -379,6 +430,21 @@
                      self.$store.commit('channelUpdated', self.channel);
                  }
              });
+         },
+         showChannelContextMenu: function() {
+             var self = this;
+             if (this.contextMenuShown) {
+                 this.hideChannelContextMenu();
+             } else {
+                 setTimeout(function() {
+                     document.addEventListener('click', self.hideChannelContextMenu);
+                 }, 20);
+                 this.contextMenuShown = true;
+             }
+         },
+         hideChannelContextMenu: function() {
+             this.contextMenuShown = false;
+             document.removeEventListener('click', this.hideChannelContextMenu);
          }
      }
  }

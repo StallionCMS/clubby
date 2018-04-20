@@ -19,6 +19,7 @@ var ClubhouseMessagingMixin = {
             page: 1,
             pageSize: 50,
             pages: [],
+            pendingDecryptionMessageIds: {},
             publicKeysAvailable: false,
             newMessage: '',
             reactToMessage: null,
@@ -419,6 +420,9 @@ var ClubhouseMessagingMixin = {
             } else if (isEdit && !existing) {
                 return;
             }
+            if (self.pendingDecryptionMessageIds[incoming.id] && !isEdit) {
+                return;
+            }
             if (!existing) {
                 var showUser = true;
                 if (self.messages.length > 0) {
@@ -442,6 +446,7 @@ var ClubhouseMessagingMixin = {
                 message.$index = existing.$index;
             }
             if (self.isEncrypted) {
+                self.pendingDecryptionMessageIds[incoming.id] = true;
                 clubhouseDecryptMessage(
                     self.$store.state.privateKey,
                     hexToArray(incoming.messageEncryptedJson),//info.encryptedMessageBytes,
@@ -478,6 +483,7 @@ var ClubhouseMessagingMixin = {
                                 }
                             }
                         }
+                    delete self.pendingDecryptionMessageIds[incoming.id];
                 }).catch(function(err) {
                     console.error(err);
                 });

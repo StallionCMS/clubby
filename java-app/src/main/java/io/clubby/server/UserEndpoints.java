@@ -7,6 +7,7 @@ import static io.stallion.utils.Literals.*;
 
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.contentPublishing.UploadedFile;
 import io.stallion.contentPublishing.UploadedFileController;
@@ -185,6 +186,12 @@ public class UserEndpoints implements EndpointResource {
         if (rememberThisDevice) {
             rememberToken = new AuthEndpoints().makeRememberDeviceCookie(user);
         }
+
+
+        WebSocketEventHandler.notifyNewMember(
+                new ChannelUserWrapper()
+                        .fromUserAndProfile(user, profile, true)
+        );
 
         return map(
                 val("rememberDeviceToken", rememberToken),

@@ -271,15 +271,18 @@ public class MessageController extends StandardModelController<Message> {
                 "SELECT COUNT(`read`) AS unreadCount, COUNT(IF(mentioned = '0', NULL, 1)) as mentionedCount" +
                         " FROM sch_user_messages AS um" +
                         "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +
+                        "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id  " +
                         " WHERE " +
                         "  um.channelId=? AND" +
                         "  userId=? AND" +
                         "  `read`=0 AND" +
                         "  um.deleted=0 AND" +
-                        "  m.deleted=0  " +
+                        "  m.deleted=0 AND" +
+                        "  m.fromUserId!=? AND " +
+                        "  (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0)   " +
                         "" +
                         "",
-                channelId, userId
+                channelId, userId, userId
         );
         ctx.setUnreadCount(((Long)countsRecord.get("unreadCount")).intValue());
         ctx.setUnreadMentionsCount(((Long)countsRecord.get("mentionedCount")).intValue());
@@ -412,6 +415,7 @@ public class MessageController extends StandardModelController<Message> {
             DB.SqlAndParams inSql = DB.instance().toInQueryParams(allTopicIds);
             List idParams = new ArrayList<>(inSql.getParamsList());
             inSql.getParamsList().add(userId);
+            inSql.getParamsList().add(userId);
 
             {
                 String umSql = " " +
@@ -422,6 +426,8 @@ public class MessageController extends StandardModelController<Message> {
                         "    AND `read`=0 " +
                         "    AND userId=? " +
                         "    AND m.deleted=0 " +
+                        "    AND m.fromUserId!=? " +
+                        "    AND um.deleted=0 " +
                         " GROUP BY threadId ";
 
                 List<ForumTopicCounts> counts = DB.instance().queryBean(
