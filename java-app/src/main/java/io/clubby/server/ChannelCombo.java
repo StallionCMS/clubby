@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.stallion.Context;
 import io.stallion.utils.json.JSON;
 
+import javax.persistence.Column;
+
 
 public class ChannelCombo {
     private Long id;
@@ -24,6 +26,7 @@ public class ChannelCombo {
     private Long channelMemberId = 0L;
     private boolean encrypted = false;
     private Boolean favorite = false;
+    private boolean inviteOnly = false;
 
 
     public Long getId() {
@@ -152,6 +155,15 @@ public class ChannelCombo {
 
     public ChannelCombo setFavorite(Boolean favorite) {
         this.favorite = favorite;
+        return this;
+    }
+
+    public boolean isInviteOnly() {
+        return inviteOnly;
+    }
+
+    public ChannelCombo setInviteOnly(boolean inviteOnly) {
+        this.inviteOnly = inviteOnly;
         return this;
     }
 }

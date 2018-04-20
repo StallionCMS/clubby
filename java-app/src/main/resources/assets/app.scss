@@ -198,9 +198,11 @@ h6 {
     100% { left: 0; }
 }
 
-.channel-feed-vue .channel-messages, .post-message-box {
+.channel-feed-vue .channel-messages, .post-message-box, .forum-top-level-vue .forum-header  {
     width: 100vw;
 }
+
+
 
 @media (max-width: 700px) {
     .channel-feed-vue .column-fixed-header {
@@ -212,6 +214,8 @@ h6 {
         }
     }    
 }
+
+
 
 @media (min-width: 700px) {
     .mobile-view-topbar-vue {
@@ -225,9 +229,11 @@ h6 {
         left: 0px;
         width: 220px;
     }
-    .channel-feed-vue .channel-messages, .post-message-box {
-        width: calc(100hw-220px);
+    .channel-feed-vue .channel-messages, .post-message-box, .forum-top-level-vue .forum-header {
+        width: calc(100vw - 220px);
     }
+
+    
 
     
 }
@@ -235,7 +241,7 @@ h6 {
 @media (min-width: 905px) {
     .channel-feed-vue .channel-messages, .post-message-box {
         max-width: 500px;
-        width: calc(100vw-400px);
+        width: calc(100vw - 400px);
     }
     .channel-right-panel {
         padding-top: 70px;

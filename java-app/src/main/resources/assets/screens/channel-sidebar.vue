@@ -159,7 +159,7 @@
             </div>
             <div v-if="loggedIn" class="loggedin-name">
                 <div>{{ $store.state.user.displayName || $store.state.user.username }}</div>
-                <div><a href="#/my-settings">Settings</a> <span style="color: rgba(230, 230, 230, .6);">&#8226;</span> <a href="/st-users/logoff">Log off</a></div>
+                <div><a href="#/my-settings">My Settings</a> <span style="color: rgba(230, 230, 230, .6);">&#8226;</span> <a href="/st-users/logoff">Log off</a></div>
             </div>
         </div>
     </div>

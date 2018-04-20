@@ -1,6 +1,8 @@
 <style lang="scss">
  .emoji-popup-vue {
-
+     .wdt-emoji-popup {
+         z-index: 100;
+     }
  }
 </style>
 

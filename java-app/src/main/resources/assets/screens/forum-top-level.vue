@@ -8,8 +8,6 @@
          border-bottom: 1px solid #F0F0F0;
          padding: .8em 20px .8em 20px;
          position: fixed;
-         width: 100%;
-         max-width: 900px;
          background-color: white;
          z-index: 1;
          .forum-name {
@@ -18,13 +16,18 @@
              font-size: 18px;
              font-weight: bold;
              padding-left: 40px;
+             display: block;
+             max-width: 858px;
+             .forum-name-inner {
+                 vertical-align: -35%;
+             }
              a.btn {
                  float: right;
                  margin-top: -3px;
              }
              .material-icons {
                  font-weight: normal;
-                 vertical-align: -15%;
+                 vertical-align: -55%;
                  font-size: 18px;
              }
          }
@@ -32,9 +35,12 @@
      .forum-top-body {
          max-width: 900px;
          border-top: 1px solid transparent;
-         margin-top: 53px;
+         margin-top: 60px;
          padding: 0em 20px 20px 20px;
          
+     }
+     .topic-section:first-child {
+         margin-top: -12px;
      }
      .topic-section {
          margin-bottom: 2em;
@@ -74,6 +80,53 @@
      .topic-section {
          margin-bottom: 0px;
      }
+     .open-settings-link, .open-settings-link > .material-icons {
+         color: #444;
+         text-decoration: none;
+
+     }
+     .open-settings-link:hover, .open-settings-link:hover > .material-icons{
+         color: #23527c;
+         text-decoration: none;
+     }
+     .open-settings-link:active {
+         color: #23727c;
+         text-decoration: none;
+     }     
+     
+
+     .channel-context-menu {
+         position: absolute;
+         z-index: 100;
+         top: 40px;
+         left: 10px;
+         background-color: white;
+         border: 1px solid #ccc;
+         width: 300px;
+         padding-bottom: 1em;
+         padding-top: 1em;
+         box-shadow: rgba(55, 55, 55, 0.1) 0px 15px 50px 0px, rgba(55, 55, 55, 0.1) 0px 12px 15px 0px;
+
+         
+         a {
+             font-weight: 400;
+             color: #444;
+             display: block;
+             padding: 5px 15px;
+         }
+         a:hover {
+             text-decoration: none;
+             background-color: #F2F2F2;
+         }
+     }
+
+     .no-topics {
+         margin-left:40px;
+         margin-top: 1em;
+         margin-bottom: 1em;
+         color: #999;
+         
+     }
      
  }
 </style>
@@ -83,13 +136,20 @@
     <div class="forum-top-level-vue">
         <div v-if="channel" class="forum-header">
             <h3 class="forum-name">
-                <i v-if="channel.encrypted" class="material-icons">security</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i>
-                {{ channel.name }}
-                <a class="btn btn-primary btn-md" :href="'#/forum/' + channelId  + '/new-thread'">New Topic</a>
-                <a v-if="channel.owner" class="channel-settings-icon-link" :href="'#/channel-settings/' + channelId"><i class="material-icons">settings</i></a>
-                <i @click="toggleFavorite" :class="['material-icons', 'channel-favorite', channel.favorite ? 'channel-favorite-on' : '']">star</i> 
+                <a @click="showChannelContextMenu" href="javascript:;" class="open-settings-link">
+                    <i v-if="channel.encrypted && channel.inviteOnly" class="material-icons">enhanced_encryption</i> <i v-if="!channel.encrypted && channel.inviteOnly" class="material-icons">lock</i>
+                    <span class="forum-name-inner">{{ channel.name }}</span>
+                    <i class="material-icons">keyboard_arrow_down</i>
+                </a>
+                <a class="btn btn-large btn-primary" :href="'/forum/' + channel.id + '/new-thread'">New Topic</a>
             </h3>
         </div>
+        <div v-if="contextMenuShown" class="channel-context-menu">
+                <a href="javascript:;" @click="toggleFavorite"><span v-if="!channel.favorite">Make Favorite</span><span v-if="channel.favorite">Unfavorite</span></a>
+                <a :href="'#/channel-members/' + channelId">View forum members</a>
+                <a v-if="channel.owner" class="column-header-icon" :href="'#/channel-settings/' + channelId">Settings</a>
+                
+            </div>        
         <div v-if="isLoading"><loading-div></loading-div></div>        
         <div v-if="!isLoading" class="forum-top-body">
             <div class="topic-section" v-if="pinnedTopics.length">
@@ -100,8 +160,8 @@
             </div>
             <div class="topic-section" v-if="watchedTopics.length">
                 <h5>Your watched topics updated in the last 10 days</h5>
-                <div v-if="watchedTopics.length == 0">
-                    <em>No watched topics updated in the last 10 days.</em>
+                <div class="no-topics" v-if="watchedTopics.length == 0">
+                    No watched topics updated in the last 10 days.
                 </div>
                 <div v-for="topic in watchedTopics">
                     <forum-topic-row :watched="true" :topic="topic"></forum-topic-row>
@@ -109,8 +169,8 @@
             </div>
             <div class="topic-section">
                 <h5>New Topics in the last 10 days.</h5>
-                <div v-if="newTopics.length == 0">
-                    <em>No new topics in the last 10 days.</em>
+                <div class="no-topics" v-if="newTopics.length == 0">
+                    No new topics in the last 10 days.
                 </div>
                 <div v-for="topic in newTopics">
                     <forum-topic-row :topic="topic" :newish="true"></forum-topic-row>
@@ -118,8 +178,8 @@
             </div>
             <div class="topic-section">
                 <h5>All Topics</h5>
-                <div v-if="updatedTopics.length == 0">
-                    <em>No other topics found.</em>
+                <div class="no-topics" v-if="updatedTopics.length == 0">
+                    No other topics found.
                 </div>
                 <div v-for="topic in updatedTopics">
                     <forum-topic-row :topic="topic"></forum-topic-row>
@@ -133,6 +193,7 @@
  module.exports = {
      data: function() {
          return {
+             contextMenuShown: false,
              isLoading: true,
              channel: null,
              pinnedTopics: [],
@@ -147,6 +208,9 @@
      watch: {
          '$route': 'onRoute'
      },
+     beforeDestroy: function() {
+         document.removeEventListener('click', this.hideChannelContextMenu);
+     },     
      methods: {
          refresh: function() {
              this.fetchData();
@@ -207,6 +271,21 @@
 */
                  }
              });
+         },
+         showChannelContextMenu: function() {
+             var self = this;
+             if (this.contextMenuShown) {
+                 this.hideChannelContextMenu();
+             } else {
+                 setTimeout(function() {
+                     document.addEventListener('click', self.hideChannelContextMenu);
+                 }, 20);
+                 this.contextMenuShown = true;
+             }
+         },
+         hideChannelContextMenu: function() {
+             this.contextMenuShown = false;
+             document.removeEventListener('click', this.hideChannelContextMenu);
          }
      }
  };

@@ -264,9 +264,9 @@
         <div v-if="channel" class="column-fixed-header">
             <div class="column-header-name">
                 <a @click="showChannelContextMenu" href="javascript:;" class="open-settings-link">
-                    <span class="channel-right-icon hash-icon" v-if="!channel.inviteOnly && !isEncrypted">&nbsp;#</span>
-                    <span class="channel-right-icon" v-if="channel.inviteOnly"><i class="material-icons">lock</i></span>
-                    <span class="channel-right-icon" v-if="isEncrypted"><i class="material-icons">security</i></span>
+                    <span class="channel-right-icon hash-icon" v-if="!channel.inviteOnly">&nbsp;#</span>
+                    <span class="channel-right-icon" v-if="channel.inviteOnly && !isEncrypted"><i class="material-icons">lock</i></span>
+                    <span class="channel-right-icon" v-if="channel.inviteOnly && isEncrypted"><i class="material-icons">enhanced_encryption</i></span>
                     <div>{{ channelName }}<i class="material-icons">keyboard_arrow_down</i></div>
                 </a>
             </div>

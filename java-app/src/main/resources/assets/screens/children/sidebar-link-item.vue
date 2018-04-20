@@ -15,10 +15,10 @@
             <span v-if="channel.mentionsCount>0" class="unread-mentions-count">{{ channel.mentionsCount }}</span>
         </a>        
         <a v-if="channel.channelType!=='DIRECT_MESSAGE'" :class="{'channel-unread': channel.hasNew, 'channel-link': true, active: channel.id === activeChannelId}" :href="link">
-            <span v-if="!channel.encrypted && !channel.inviteOnly && channel.channelType ==='CHANNEL'" style="font-size:12px;" class="material-icons">#</span>
-            <span v-if="!channel.encrypted && !channel.inviteOnly && channel.channelType ==='DIRECT_MESSAGE'" style="font-size:12px;" class="material-icons"></span>
-            <i v-if="!channel.encrypted && !channel.inviteOnly && channel.channelType ==='FORUM'" style="font-size:12px;" class="material-icons">forum</i>
-            <i v-if="channel.encrypted" style="font-size:12px;" class="material-icons">security</i>
+            <span v-if="!channel.inviteOnly && channel.channelType ==='CHANNEL'" style="font-size:12px;" class="material-icons">#</span>
+            <span v-if="!channel.inviteOnly && channel.channelType ==='DIRECT_MESSAGE'" style="font-size:12px;" class="material-icons"></span>
+            <i v-if="!channel.inviteOnly && channel.channelType ==='FORUM'" style="font-size:12px;" class="material-icons">forum</i>
+            <i v-if="channel.encrypted && channel.inviteOnly" style="font-size:12px;" class="material-icons">enhanced_encryption</i>
             <i v-if="!channel.encrypted && channel.inviteOnly" style="font-size:12px;" class="material-icons">lock</i>
             <span>{{ channel.name }}</span>
             <span v-if="channel.mentionsCount>0" class="unread-mentions-count">{{ channel.mentionsCount }}</span>

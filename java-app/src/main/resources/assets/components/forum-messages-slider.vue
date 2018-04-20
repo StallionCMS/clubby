@@ -117,9 +117,9 @@
              if (date.isBefore(moment().subtract(300, 'days'))) {
                  dateFormatted = date.format('MMM D, YYYY');
              } else if (date.isBefore(moment().subtract(30, 'days'))) {
-                 dateFormatted = date.format('MMM DDD');
+                 dateFormatted = date.format('MMM D');
              } else if (date.isBefore(moment().subtract(1, 'days'))) {
-                 dateFormatted = date.format('MMM DDD');
+                 dateFormatted = date.format('MMM D');
              }
              this.targetPostIndex = i + 1;
              this.targetPostDate = dateFormatted;
