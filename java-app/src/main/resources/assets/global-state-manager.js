@@ -336,9 +336,11 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                         iconUrl = u.avatarUrl;
                     }
                     var link = theApplicationContext.site.siteUrl + '/#/channel/' + data.message.channelId;
+                    /*
                     if (data.message.threadId) {
                         link = theApplicationContext.site.siteUrl + '/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
                     }
+                    */
                     console.log('call sendNotification');
                     stallionClubhouseApp.sendNotifiction(
                         'Message from ' + data.message.fromUsername,

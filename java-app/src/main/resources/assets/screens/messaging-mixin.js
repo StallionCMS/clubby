@@ -482,6 +482,13 @@ var ClubhouseMessagingMixin = {
                                     Vue.nextTick(self.afterIncomingMessage);
                                 }
                             }
+                            // If we are near the bottom, scroll down
+                            var scrollBottom = $(window).height() + $(document.body).scrollTop();
+                            if (document.body.scrollHeight < (scrollBottom + 100)) {
+                                Vue.nextTick(function() {
+                                    window.scrollTo(0,document.body.scrollHeight);
+                                });
+                            }
                         }
                     delete self.pendingDecryptionMessageIds[incoming.id];
                 }).catch(function(err) {
@@ -532,16 +539,18 @@ var ClubhouseMessagingMixin = {
                 // We are visible and active, no notification needed
                 return;
             }
-            var link = theApplicationContext.site.siteUrl + '/#/channel/' + message.channelId;
+            var link = theApplicationContext.site.siteUrl + '/#/channel/' + incoming.channelId;
+            /*
             if (message.threadId) {
-                link = theApplicationContext.site.siteUrl + '/#/forum/' + message.channelId + '/' + message.threadId + '?messageId=' + message.id;
+                link = theApplicationContext.site.siteUrl + '/#/forum/' + incoming.channelId + '/' + message.threadId + '?messageId=' + message.id;
             }
+            */
             
 
             stallionClubhouseApp.sendNotifiction(
                 'Message from ' + incoming.fromUsername,
                 {
-                    body: message.text,
+                    body: '',
                     icon: 'https://www.gravatar.com/avatar/' + self.hashUser(incoming.fromUsername) + '?d=retro',
                     silent: false
                 },

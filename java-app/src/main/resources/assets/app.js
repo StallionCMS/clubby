@@ -324,7 +324,6 @@ console.log("executing app.js");
 
     app.sendNotifiction = function(text, data, link) {
         // Let's check if the browser supports notifications
-        debugger;
         if (!("Notification" in window)) {
             return;
         }
