@@ -32,6 +32,7 @@ public class WebSocketBooter {
         {
             // Initialize javax.websocket layer
             ServerContainer wscontainer = WebSocketServerContainerInitializer.configureContext(context);
+            wscontainer.setDefaultMaxSessionIdleTimeout(60 * 60 * 1000);
 
             // Add WebSocket endpoint to javax.websocket layer
             wscontainer.addEndpoint(WebSocketEventHandler.class);

@@ -18,17 +18,19 @@
     <div id="app-wrap">
       <div id="{{ pluginName }}-app">
           <div class="row" style="margin-top: 0px;padding-top:0px;">
-              <div id="vue-app"  style="margin-top: 0px;padding-top:0px; border-top: 1px solid #000;">
-                <channel-sidebar></channel-sidebar>
-                <div id="clubhouse-main-view" class="wdt-emoji-picker-parent">
-                  <mobile-view-topbar></mobile-view-topbar>
-                  <transition name="fade">
-                    <router-view></router-view>
-                  </transition>
-                </div>
+            <div id="vue-app"  style="margin-top: 0px;padding-top:0px; border-top: 1px solid #000;">
+              <ws-connection-toast></ws-connection-toast>
+              <channel-sidebar></channel-sidebar>
+              <div id="clubhouse-main-view" class="wdt-emoji-picker-parent">
+                <mobile-view-topbar></mobile-view-topbar>
+                
+                <transition name="fade">
+                  <router-view></router-view>
+                </transition>
               </div>
-            </div><!--/row-->
-        </div><!--end /presto-app-->
+            </div>
+          </div><!--/row-->
+      </div><!--end /presto-app-->
     </div>
 </div><!--/container-->
 <div style="display:none;">

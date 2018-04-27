@@ -33,3 +33,4 @@
 00330-create-table-stallion_short_code_tokens
 00340-alter-sch_user_profiles-add-2
 00350-alter-sch_user_profiles-add-1
+00360-alter-sch_user_profiles-add-2

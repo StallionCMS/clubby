@@ -7,8 +7,10 @@ function ClubhouseMakeVuex() {
                 publicKey: null,
                 privateKey: null,
                 activeChannelId: null,
+                idleStatus: 'AWAKE', // AWAKE, IDLE
                 forumChannels: [],
                 sidebarPoppedUp: false,
+                websocketStatus: {state: 'PENDING', reconnectIn: 0, failedCount: 0},
                 directMessageChannels: [],
                 standardChannels: [],
                 allUsers: [],
@@ -23,6 +25,9 @@ function ClubhouseMakeVuex() {
                 publicKey: function(state, publicKey) {
                     state.publicKey = publicKey;
                 },
+                websocketStatus(state, websocketStatus) {
+                    state.websocketStatus = websocketStatus;
+                },                
                 privateKeyAndPassword(state, data) {
                     state.privateKey = data.privateKey;
                     sessionStorage['private-key-passphrase-' + state.user.id] = data.encryptionPassword;
@@ -136,6 +141,9 @@ function ClubhouseMakeVuex() {
                 activeChannelId: function(state, channelId) {
                     console.log('set active channelid ', channelId);
                     state.activeChannelId = channelId;
+                },
+                idleStatus: function(state, status) {
+                    state.idleStatus = status;
                 }
             }            
         });
@@ -218,8 +226,54 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 manager.setupWebSocket();
             }
             manager.setupIframeResizeListener();
+            manager.setupIfVisible();
         }
     };
+
+    manager.containerShown = function() {
+        if (electronInterop) {
+            electronInterop.isHidden = false;
+        }
+        vueApp.$store.commit('idleStatus', 'AWAKE');
+        manager.updateUserState('AWAKE');
+    }
+
+    manager.containerHidden = function() {
+        if (electronInterop) {
+            electronInterop.isHidden = true;
+        }
+        vueApp.$store.commit('idleStatus', 'IDLE');
+        manager.updateUserState('IDLE');
+    }
+    
+
+    manager.setupIfVisible = function() {
+
+        ifvisible.on("idle", function(){
+            console.log('now idle');
+            vueApp.$store.commit('idleStatus', 'IDLE');
+            manager.updateUserState('IDLE');
+        });
+        
+        ifvisible.on("wakeup", function(){
+            console.log('on wakeup');
+            vueApp.$store.commit('idleStatus', 'AWAKE');
+            manager.updateUserState('AWAKE');
+        });
+
+        ifvisible.on("blur", function(){
+            console.log('now hidden');
+            vueApp.$store.commit('idleStatus', 'IDLE');
+            manager.updateUserState('IDLE');
+        });
+        
+        ifvisible.on("focus", function(){
+            console.log('on focus');
+            vueApp.$store.commit('idleStatus', 'AWAKE');
+            manager.updateUserState('AWAKE');
+        });        
+    
+    }
     
 
     
@@ -236,6 +290,16 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         });
     };
 
+    manager.updateUserState = function(state) {
+        if (!manager.clubhouseSocket || !manager.clubhouseSocket.readyState === 1) {
+            return;
+        }
+        console.log('update user state', state);
+        manager.clubhouseSocket.send('updateUserState\n\n' + JSON.stringify({
+            state: state
+        }));
+    }
+
     manager.setupWebSocket = function() {
 
         var scheme = 'wss://';
@@ -244,13 +308,15 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         }
     
         //manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")));
-        manager.clubhouseSocket = new WebSocket(scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession")) || '');
+        var wsUrl = scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession") || '') + "&userState=" + (vueApp.$store.state.idleStatus || 'AWAKE');
+        manager.clubhouseSocket = new WebSocket(wsUrl);
         
         console.log('setup web socket.');
 
         
         manager.clubhouseSocket.onopen = function(event) {
             console.log('websocket opened ', event);
+            vueApp.$store.commit('websocketStatus', {state: 'OPEN'});
             manager.loadContext();
             if (vueApp.currentChannelComponent && vueApp.currentChannelComponent.isLoaded) {
                 vueApp.currentChannelComponent.refresh();
@@ -273,6 +339,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
 
         manager.clubhouseSocket.onerror = function(event) {
             console.log('websocket onerror ', event);
+            vueApp.$store.commit('websocketStatus', {state: 'ERROR'});
         }
 
         
@@ -322,6 +389,8 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                     }
                 }
                 if (data.message.mentioned || data.message.hereMentioned && !data.message.read) {
+                    
+                    
                     console.log('message is mentioned and not read');
                     var text = '<click to go to message>';
                     if (data.message.messageJson) {
@@ -336,11 +405,11 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                         iconUrl = u.avatarUrl;
                     }
                     var link = theApplicationContext.site.siteUrl + '/#/channel/' + data.message.channelId;
-                    /*
-                    if (data.message.threadId) {
+
+                    if (data.message.channelType === 'FORUM') {
                         link = theApplicationContext.site.siteUrl + '/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
                     }
-                    */
+
                     console.log('call sendNotification');
                     stallionClubhouseApp.sendNotifiction(
                         'Message from ' + data.message.fromUsername,
@@ -356,6 +425,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         }
         manager.clubhouseSocket.onclose = function(event) {
             if (event.code === 1008) {
+                vueApp.$store.commit('websocketStatus', {state: 'PENDING', reconnectIn: 0, failedCount: 0});
                 stallion.showError('You are not logged in.');
                 if (ClubhouseMobileInterop.isAppMode) {
                     ClubhouseMobileInterop.redirectToLogin();
@@ -372,10 +442,11 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             console.log('failCount ', manager.reconnectFailCount, manager);
             var wait = parseInt(manager.reconnectWait * Math.pow(manager.reconnectFailCount, 1.8), 10);
             console.log('web socket closed, reconnect in ', wait, event);
+            vueApp.$store.commit('websocketStatus', {state: 'CLOSED', reconnectIn: parseInt(wait / 1000.0, 10), failedCount: manager.reconnectFailCount});
             setTimeout(manager.setupWebSocket, wait);
             if (manager.reconnectFailCount > 5) {
                 var retrySeconds = parseInt(wait / 1000, 10);
-                stallion.showError('Error connecting to server. Retrying in ' + retrySeconds + ' seconds.');
+                //stallion.showError('Error connecting to server. Retrying in ' + retrySeconds + ' seconds.');
             }
         }
     };

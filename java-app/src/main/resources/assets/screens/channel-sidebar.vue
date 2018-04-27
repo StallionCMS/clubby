@@ -121,6 +121,11 @@
          display: inline-block;
          margin-right: 2px;
      }
+     .user-idle-bubble {
+         color: #f99f53;
+         display: inline-block;
+         margin-right: 2px;
+     }
      .user-offline-bubble {
          display: inline-block;
          margin-right: 2px;

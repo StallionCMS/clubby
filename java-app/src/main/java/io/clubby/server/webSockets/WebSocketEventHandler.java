@@ -16,6 +16,8 @@ import io.stallion.utils.json.JSON;
 
 import org.eclipse.jetty.websocket.common.WebSocketSession;
 
+import javax.jws.soap.SOAPBinding;
+import javax.persistence.Column;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 
@@ -23,6 +25,7 @@ import javax.websocket.server.ServerEndpoint;
 @ServerEndpoint(value="/events/")
 public class WebSocketEventHandler {
     private static Map<Long, Map<String, Session>> sessionsByUserId = map();
+
 
 
 
@@ -70,11 +73,42 @@ public class WebSocketEventHandler {
         sessionsByUserId.get(result.getUser().getId()).put(sess.getId(), sess);
         //boolean UserController.instance().checkCookieAndAuthorizeForCookieValue(token);
         System.out.println("Socket Connected: " + sess);
-        //notifyUserStateChange(
-        UserStateController.instance().updateState(result.getUser().getId(), UserStateType.AWAKE);
+
+        if (sess.getRequestParameterMap().containsKey("userState") && sess.getRequestParameterMap().get("userState").size() > 0) {
+            String state = sess.getRequestParameterMap().get("userState").get(0);
+            sess.getUserProperties().put("userState", UserStateType.valueOf(state));
+            updateStateMaybe(result.getUser().getId());
+        }
+
+
+
 
         String message = JSON.stringify(map(val("type", "confirmed-ws-open"), val("userId", result.getUser().getId())));
         sess.getAsyncRemote().sendText(message);
+    }
+
+    public static void updateStateMaybe(Long userId) {
+        UserStateType newState = null;
+        if (sessionsByUserId.getOrDefault(userId, map()).values().size() == 0) {
+            newState = UserStateType.OFFLINE;
+        } else {
+            boolean isAwake = false;
+            for (Map.Entry<String, Session> entry: sessionsByUserId.getOrDefault(userId, map()).entrySet()) {
+                UserStateType userState = (UserStateType)entry.getValue().getUserProperties().getOrDefault("userState", null);
+                if (UserStateType.AWAKE.equals(userState)) {
+                    isAwake = true;
+                }
+            }
+            if (isAwake) {
+                newState = UserStateType.AWAKE;
+            } else {
+                newState = UserStateType.IDLE;
+            }
+        }
+        UserState existing = UserStateController.instance().forUniqueKey("userId", userId);
+        if (existing == null || !newState.equals(existing.getState())) {
+            UserStateController.instance().updateState(userId, newState);
+        }
     }
 
 
@@ -154,8 +188,45 @@ public class WebSocketEventHandler {
     @OnMessage
     public void onWebSocketText(String message, Session session)
     {
-        System.out.println("Received TEXT message: " + message);
+        Log.fine("Received TEXT message: " + message);
+        int i = message.indexOf("\n\n");
+        if (i > -1) {
+            String action = message.substring(0, i);
+            String json = message.substring(i);
+            if (action.equals("updateUserState")) {
+                receiveUpdateUserState(json, session);
+            }
+        }
+
     }
+
+    public void receiveUpdateUserState(String json, Session session) {
+        UserStateInfo info = JSON.parse(json, UserStateInfo.class);
+        session.getUserProperties().put("userState", info.getState());
+        IUser user = (IUser)session.getUserProperties().getOrDefault("user", null);
+        if (user == null) {
+            return;
+        }
+        Log.fine("New session user state for user {0} to {1}", user.getEmail(), info.getState());
+        updateStateMaybe(user.getId());
+
+    }
+
+
+    public static class UserStateInfo {
+        private UserStateType state;
+
+        public UserStateType getState() {
+            return state;
+        }
+
+        public UserStateInfo setState(UserStateType state) {
+            this.state = state;
+            return this;
+        }
+    }
+
+
 
     @OnClose
     public void onWebSocketClose(Session session, CloseReason reason)
@@ -169,9 +240,7 @@ public class WebSocketEventHandler {
                 }
 
             }
-            if (sessionsByUserId.getOrDefault(user.getId(), map()).values().size() == 0) {
-                UserStateController.instance().updateState(user.getId(), UserStateType.OFFLINE);
-            }
+            updateStateMaybe(user.getId());
         }
         System.out.println("Socket Closed: " + reason);
     }

@@ -470,6 +470,8 @@ var ClubhouseMessagingMixin = {
                                 Vue.set(self.pages, self.page-1, self.pages[self.page-1]);
                                 // Add to offsets dictionary
                             }
+
+                            
                             
                             self.showMessageNotificationMaybe(incoming, message);
                             if (!message.read) {
@@ -486,7 +488,7 @@ var ClubhouseMessagingMixin = {
                             var scrollBottom = $(window).height() + $(document.body).scrollTop();
                             if (document.body.scrollHeight < (scrollBottom + 100)) {
                                 Vue.nextTick(function() {
-                                    window.scrollTo(0,document.body.scrollHeight);
+                                    window.scrollTo(0, document.body.scrollHeight);
                                 });
                             }
                         }
@@ -535,16 +537,15 @@ var ClubhouseMessagingMixin = {
             if (!incoming.mentioned && !incoming.hereMentioned) {
                 return;
             }
-            if (ifvisible.now() && !ifvisible.now('hidden') && !ifvisible.now('idle')) {
-                // We are visible and active, no notification needed
+            if (!stallionClubhouseApp.isIdleOrHidden()) {
                 return;
             }
             var link = theApplicationContext.site.siteUrl + '/#/channel/' + incoming.channelId;
-            /*
-            if (message.threadId) {
+
+            if (incoming.channelType === 'FORUM') {
                 link = theApplicationContext.site.siteUrl + '/#/forum/' + incoming.channelId + '/' + message.threadId + '?messageId=' + message.id;
             }
-            */
+
             
 
             stallionClubhouseApp.sendNotifiction(

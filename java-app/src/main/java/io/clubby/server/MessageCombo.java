@@ -1,5 +1,6 @@
 package io.clubby.server;
 
+import javax.persistence.Column;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import static io.stallion.utils.Literals.*;
 public class MessageCombo {
     private Long id = null;
     private Long channelId = null;
+    private ChannelType channelType = ChannelType.CHANNEL;
     private String messageEncryptedJson = null;
     private String messageEncryptedJsonVector = "";
     private String messageJson = null;
@@ -46,6 +48,17 @@ public class MessageCombo {
         this.id = id;
         return this;
     }
+
+    public ChannelType getChannelType() {
+        return channelType;
+    }
+
+    public MessageCombo setChannelType(ChannelType channelType) {
+        this.channelType = channelType;
+        return this;
+    }
+
+
 
     public String getMessageEncryptedJson() {
         return messageEncryptedJson;

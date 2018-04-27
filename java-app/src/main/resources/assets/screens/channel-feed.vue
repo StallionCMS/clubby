@@ -333,6 +333,8 @@
                 
                 <!--<input type="text" class="form-control" v-model="newMessage">-->
             </form>
+            <button class="btn btn-xs" @click="fetchPage()">O</button>
+            {{ $store.state.idleStatus }}
         </div>
         <div class="p">&nbsp;</div>
         <emoji-popup @input="insertEmoji" ref="messageemojipopup"></emoji-popup>

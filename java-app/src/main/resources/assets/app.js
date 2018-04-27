@@ -304,7 +304,12 @@ console.log("executing app.js");
         var vueApp;
         window.ClubhouseVueApp =  vueApp = new Vue({
             store: store,
-            router: router
+            router: router,
+            watch: {
+                '$store.state.websocketStatus': function(newStatus) {
+                    console.log('new web socket status', newStatus);
+                }
+            }
         });
         vueApp.currentChannelComponent = null;
         
@@ -323,6 +328,20 @@ console.log("executing app.js");
 
 
     app.sendNotifiction = function(text, data, link) {
+        var silent = true;
+        var pref = 'SILENT';
+        if (ClubhouseMobileInterop.isMobile) {
+            pref = ClubhouseVueApp.$store.state.userProfile.mobileNotifyPreference;
+        } else {
+            pref = ClubhouseVueApp.$store.state.userProfile.desktopNotifyPreference;
+        }
+        if (pref === 'NONE') {
+            return;
+        }
+        if (pref === 'SOUND') {
+            silent = false;
+        }
+        data.silent = silent;
         // Let's check if the browser supports notifications
         if (!("Notification" in window)) {
             return;
@@ -364,6 +383,24 @@ console.log("executing app.js");
 
 
     };
+
+    app.isIdleOrHidden = function() {
+        if (window.electronInterop) {
+            if (electronInterop.isHidden) {
+                return true;
+            }
+        }
+        if (!ifvisible.now()) {
+            return true;
+        }
+        if (ifvisible.now('hidden')) {
+            return true;
+        }
+        if (ifvisible.now('hidden')) {
+            return true;
+        }
+        return false;
+    }
 
     app.dmChannelName = function() {
         

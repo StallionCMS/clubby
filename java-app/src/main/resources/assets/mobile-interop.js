@@ -59,6 +59,16 @@ var ClubhouseMobileInterop = new function() {
         }
     }
 
+    self.updateProfile = function(user, profile) {
+        if (self.isElectron) {
+            electronInterop.updateProfile(user, profile);
+        } else if (self.isAndroidApp) {
+            //AndroidInterface.updateProfile(user, profile);
+        } else if (window.webkit && webkit.messageHandlers && webkit.messageHandlers.updateProfile) {
+            webkit.messageHandlers.updateProfile.postMessage(JSON.stringify({user: user, profile: profile}))
+        }        
+    }
+    
     self.onLoggedIn = function(userId, username, authcookie, password) {
         var message = {
                 userId: userId,

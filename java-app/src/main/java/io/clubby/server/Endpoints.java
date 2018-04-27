@@ -107,8 +107,18 @@ public class Endpoints implements EndpointResource {
                 "   INNER JOIN sch_channels AS c ON c.id=m.channelId" +
                 "   INNER JOIN sch_channel_members AS cm ON cm.channelId=c.id AND cm.userId=um.userId " +
                 "   LEFT OUTER JOIN sch_messages AS tm ON m.threadId=tm.id " +
-                " WHERE `mentioned`=1 AND `read`=0 AND um.userId=? AND cm.userId=? AND m.deleted=0 AND um.deleted=0 AND c.deleted=0 AND cm.deleted=0 AND (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) ",
-                Context.getUser().getId(), Context.getUser().getId());
+                " WHERE " +
+                "    `mentioned`=1 AND " +
+                "    `read`=0 AND " +
+                "    um.userId=? AND " +
+                "    cm.userId=? AND " +
+                "    m.deleted=0 AND " +
+                "    um.deleted=0 AND " +
+                "    c.deleted=0 AND " +
+                "    cm.deleted=0 AND " +
+                "    m.fromUserId!=? AND " +
+                "    (m.threadId IS NULL OR m.threadId=0 OR tm.deleted=0) ",
+                Context.getUser().getId(), Context.getUser().getId(), Context.getUser().getId());
         List<Long> unread = DB.instance().queryColumn("" +
                         " SELECT m.id FROM sch_user_messages as um " +
                         "   INNER JOIN sch_messages AS m ON m.id=um.messageId " +

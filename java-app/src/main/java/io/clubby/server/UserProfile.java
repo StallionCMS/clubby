@@ -30,17 +30,23 @@ public class UserProfile extends ModelBase {
     private String email = "";
     private boolean emailMeWhenMentioned = true;
     private boolean notifyWhenMentioned = true;
+    private UserNotifyPreference mobileNotifyPreference = UserNotifyPreference.VIBRATE;
+    private UserNotifyPreference desktopNotifyPreference = UserNotifyPreference.SILENT;
+
     private String avatarUrl = "";
     private Long avatarFileId = 0L;
 
     private String passwordFourCharactersHashed = "";
     private String passwordSalt = "";
 
+
+
     private String googleAuthenticatorKey = "";
     private List<String> googleAuthenticatorScratchCodes = list();
     private Boolean twoFactorEnabled = false;
     private String twoFactorCookieSecret = "";
     private List<TwoFactorSession> twoFactorSessions = list();
+
 
 
 
@@ -144,6 +150,26 @@ public class UserProfile extends ModelBase {
 
     public UserProfile setNotifyWhenMentioned(boolean notifyWhenMentioned) {
         this.notifyWhenMentioned = notifyWhenMentioned;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public UserNotifyPreference getMobileNotifyPreference() {
+        return mobileNotifyPreference;
+    }
+
+    public UserProfile setMobileNotifyPreference(UserNotifyPreference mobileNotifyPreference) {
+        this.mobileNotifyPreference = mobileNotifyPreference;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public UserNotifyPreference getDesktopNotifyPreference() {
+        return desktopNotifyPreference;
+    }
+
+    public UserProfile setDesktopNotifyPreference(UserNotifyPreference desktopNotifyPreference) {
+        this.desktopNotifyPreference = desktopNotifyPreference;
         return this;
     }
 

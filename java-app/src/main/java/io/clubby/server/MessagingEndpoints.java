@@ -493,8 +493,10 @@ public class MessagingEndpoints implements EndpointResource {
 
 
     public MessageCombo messageUserMessageToCombo(Message message, UserMessage um) {
+        Channel channel = ChannelController.instance().forId(message.getChannelId());
         MessageCombo combo = new MessageCombo()
                 .setId(message.getId())
+                .setChannelType(channel.getChannelType())
                 .setMessageJson(message.getMessageJson())
                 .setMessageEncryptedJson(message.getMessageEncryptedJson())
                 .setMessageEncryptedJsonVector(message.getMessageEncryptedJsonVector())

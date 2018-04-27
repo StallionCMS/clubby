@@ -239,6 +239,7 @@
                                      window.localStorage['remember-device-token-' + self.username] = o.rememberDeviceToken;
                                  }
                                  ClubhouseMobileInterop.onLoggedIn(o.user.id, o.user.username, o.appAuthCookie, self.encryptionPassword);
+                                 ClubhouseMobileInterop.updateProfile(o.user, o.userProfile);
                                  
                              }).catch(function(err) {
                                  self.processing = false;

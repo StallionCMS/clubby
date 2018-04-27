@@ -46,10 +46,10 @@
                             <input class="form-control" type="text" v-model="userProfile.aboutMe">
                         </div>
                         <div class="form-group">
-                            <label>My Avatar URL</label>
+                            <label>My Avatar</label>
                             <div>
                                 <img class="icon-image" :src="userProfile.avatarUrl">
-                                <image-upload-target message="Drag an image to upload click to open a picker." @uploaded="onIconUpload"></image-upload-target>
+                                <image-upload-target message="Drag an image here to upload, or click on this box to open a file picker." @uploaded="onIconUpload"></image-upload-target>
                             </div>
                         </div>
                         <div class="form-group">
@@ -60,10 +60,24 @@
                             <label><input type="checkbox" v-model="userProfile.emailMeWhenMentioned">
                                 Email me messages where I am mentioned?</label>
                         </div>
-                        <div class="checkbox">
-                            <label><input type="checkbox" v-model="userProfile.notifyWhenMentioned">
-                                Show notifications when I am mentioned?</label>
+                        <div class="form-group">
+                            <label>Desktop Notifications</label>
+                            <select class="form-control" v-model="userProfile.desktopNotifyPreference">
+                                <option value="SOUND">Sound</option>
+                                <option value="SILENT">Silent</option>
+                                <option value="NONE">None</option>
+                            </select>
                         </div>
+                        <div class="form-group">
+                            <label>Mobile Notifications</label>
+                            <select class="form-control" v-model="userProfile.mobileNotifyPreference">
+                                <option value="SOUND">Sound</option>
+                                <option value="VIBRATE">Vibrate</option>
+                                <option value="SILENT">Silent</option>
+                                <option value="NONE">None</option>
+                            </select>
+                        </div>                        
+                       
                         <div class="form-group p">
                             <button type="submit" class="btn btn-primary btn-xl">Save Changes</button>
                         </div>
@@ -133,6 +147,7 @@
                  success: function(o) {
                      self.$store.commit('updateCurrentUser', o);
                      stallion.showSuccess('User updated');
+                     ClubhouseMobileInterop.updateProfile(o.user, o.userProfile);
                  }
              });
          }

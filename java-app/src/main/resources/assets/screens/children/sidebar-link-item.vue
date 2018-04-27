@@ -7,7 +7,7 @@
 <template>
     <div class="sidebar-link-item-vue">
         <a v-if="channel.channelType=='DIRECT_MESSAGE'" :class="{'channel-unread': channel.hasNew, 'direct-message-link': true, 'channel-link': true, active: channel.id === activeChannelId}" :href="'#/channel/' + channel.id">
-            <span v-if="channel.directMessageUserIdsList.length===1" class="username-span" ><span class="user-awake-bubble" v-if="$store.state.allUsersById[channel.directMessageUserIdsList[0]].state==='AWAKE'">&#9679;</span><span class="user-offline-bubble" v-else>&#9675;</span>{{$store.state.allUsersById[channel.directMessageUserIdsList[0]].username}}</span>
+            <span v-if="channel.directMessageUserIdsList.length===1" class="username-span" ><span class="user-awake-bubble" v-if="userState==='AWAKE'">&#9679;</span><span class="user-idle-bubble" v-if="userState==='IDLE'">&#9679;</span><span class="user-offline-bubble" v-if="userState !== 'AWAKE' && userState !== 'IDLE'">&#9675;</span>{{$store.state.allUsersById[channel.directMessageUserIdsList[0]].username}}</span>
             <span v-else>
                 <span class="dm-user-count">{{ channel.directMessageUserIdsList.length }}</span>
                 <span class="username-span" v-for="userId,index in channel.directMessageUserIdsList" v-if="userId != $store.state.user.id">{{ $store.state.allUsersById[userId].username }}<span v-if="index < (channel.directMessageUserIdsList.length-1)">,</span></span>
@@ -40,6 +40,13 @@
          };
      },
      computed: {
+         userState: function() {
+             if (this.channel.directMessageUserIdsList.length !== 1) {
+                 return '';
+             } else {
+                 return this.$store.state.allUsersById[this.channel.directMessageUserIdsList[0]].state
+             }
+         },
          link: function() {
              if (this.channel.channelType === 'FORUM') {
                  return '#/forum/' + this.channel.id

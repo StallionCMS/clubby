@@ -4,6 +4,7 @@ import java.util.List;
 
 import static io.stallion.utils.Literals.*;
 
+import io.stallion.Context;
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 import io.stallion.dataAccess.db.Converter;
@@ -38,6 +39,7 @@ public class Channel extends ModelBase {
         this.name = name;
         return this;
     }
+
 
     @Column
     public ChannelType getChannelType() {

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `sch_messages` (
     `deletedat`  bigint(20)  NOT NULL  DEFAULT '0' ,
     `fromuserid`  bigint(20)  NOT NULL  DEFAULT '0' ,
     `fromusername`  varchar(255)  NULL ,
-    `messageencryptedjson`  varchar(255)  NULL ,
+    `messageencryptedjson`  longtext  NULL ,
     `parentmessageid`  bigint(20)  NOT NULL  DEFAULT '0' ,
     `edited`  bit(1)  NOT NULL  DEFAULT 0 ,
     `editedat`  datetime  NULL ,
