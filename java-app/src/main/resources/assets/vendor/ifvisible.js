@@ -15,7 +15,8 @@
     }
   })(this, function() {
     var addEvent, customEvent, doc, fireEvent, hidden, idleStartedTime, idleTime, ie, ifvisible, init, initialized, status, trackIdleStatus, visibilityChange;
-    ifvisible = {};
+      ifvisible = {};
+      
     doc = document;
     initialized = false;
     status = "active";
@@ -149,7 +150,10 @@
     trackIdleStatus = function() {
       var timer, wakeUp;
       timer = [];
-      wakeUp = function() {
+      wakeUp = function(evt) {
+          if (evt && evt.type === 'scroll' && ifvisible.ignoreScrollUntil > new Date().getTime()) {
+              return;
+          }
         timer.map(clearTimeout);
         if (status !== "active") {
           ifvisible.wakeup();
@@ -197,7 +201,11 @@
       initialized = true;
       return trackIdleStatus();
     };
-    ifvisible = {
+   ifvisible = {
+       ignoreScrollUntil: 0,
+       ignoreScrollForTwoSeconds: function() {
+           this.ignoreScrollUntil = new Date().getTime() + 2000;
+       },
       setIdleDuration: function(seconds) {
         return idleTime = seconds * 1000;
       },

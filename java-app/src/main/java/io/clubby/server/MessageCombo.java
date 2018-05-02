@@ -33,6 +33,7 @@ public class MessageCombo {
     private Long toUserId = null;
     private String fromUsername = null;
     private ZonedDateTime createdAt = null;
+    private ZonedDateTime updatedAt = null;
     private Boolean read = true;
     private Map<String, List<String>> reactions = map();
     private Long userMessageId = 0L;
@@ -148,6 +149,15 @@ public class MessageCombo {
 
     public MessageCombo setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
+        return this;
+    }
+
+    public ZonedDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public MessageCombo setUpdatedAt(ZonedDateTime updatedAt) {
+        this.updatedAt = updatedAt;
         return this;
     }
 

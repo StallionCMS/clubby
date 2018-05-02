@@ -19,7 +19,9 @@ public class UserMessage extends ModelBase {
     private boolean mentioned = false;
     private boolean hereMentioned = false;
     private boolean emailNotifySent = false;
+    private boolean mobileNotifyPending = false;
     private Boolean watched = false;
+
 
     @Column
     public Long getMessageId() {
@@ -119,6 +121,17 @@ public class UserMessage extends ModelBase {
 
     public UserMessage setEmailNotifySent(boolean emailNotifySent) {
         this.emailNotifySent = emailNotifySent;
+        return this;
+    }
+
+
+    @Column(nullable = false)
+    public boolean isMobileNotifyPending() {
+        return mobileNotifyPending;
+    }
+
+    public UserMessage setMobileNotifyPending(boolean mobileNotifyPending) {
+        this.mobileNotifyPending = mobileNotifyPending;
         return this;
     }
 

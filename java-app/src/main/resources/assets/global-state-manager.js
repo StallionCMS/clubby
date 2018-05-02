@@ -143,12 +143,20 @@ function ClubhouseMakeVuex() {
                     state.activeChannelId = channelId;
                 },
                 idleStatus: function(state, status) {
+                    if (status === 'AWAKE' && state.idleStatus !== status) {
+                        setTimeout(function() {
+                            var $box = $('#post-message-box');
+                            if ($box.length > 0 && $box.is(':visible')) {
+                                $box.get(0).focus();
+                            }
+                        }, 700);
+                    }
                     state.idleStatus = status;
                 }
             }            
         });
 
-    var previousMentionCount = 0;
+    var previousMentionCount = null;
     var previousHasNew = false;
     
     function checkUpdateFavicon(channelById) {
@@ -169,6 +177,7 @@ function ClubhouseMakeVuex() {
                 hasNew = true;
             }
         });
+
         if (hasNew === previousHasNew && mentionsCount === previousMentionCount) {
             console.log('no updates to mentions or hasNew');
             return
@@ -189,14 +198,18 @@ function ClubhouseMakeVuex() {
                 //textColor : '#ff0',
             });
             var image = document.getElementById('chat-off-image');
-            if (hasMentions || hasNew) {
+            if (hasMentions || hasNew || mentionsCount > 0) {
                 image = document.getElementById('chat-active-image');
             }
             favicon.image(image);
 
             if (mentionsCount > 0) {
                 favicon.badge(mentionsCount);
+            } else {
+                //favicon.badge(3);
             }
+
+            //
 
             console.log('updated favicon');
         } catch (err) {
@@ -213,6 +226,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     manager.reconnectWait = 200;
     manager.reconnectFailCount = 0;
     manager.started = false;
+    manager.madeFirstConnection = false;
     console.log('new global state manager');
 
     
@@ -234,6 +248,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         if (electronInterop) {
             electronInterop.isHidden = false;
         }
+        console.log('conatiner shown, awake now');
         vueApp.$store.commit('idleStatus', 'AWAKE');
         manager.updateUserState('AWAKE');
     }

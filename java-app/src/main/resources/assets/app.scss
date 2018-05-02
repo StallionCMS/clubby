@@ -60,6 +60,21 @@ h6 {
     }
 }
 
+.user-awake-bubble {
+         color: #494;
+         display: inline-block;
+         margin-right: 2px;
+}
+.user-idle-bubble {
+    color: #f99f53;
+    display: inline-block;
+    margin-right: 2px;
+}
+.user-offline-bubble {
+    display: inline-block;
+    margin-right: 2px;
+}
+
 
 .column-fixed-header {
     background-color: #FFF;
@@ -69,10 +84,11 @@ h6 {
     font-weight: bold;
     padding-left: 20px;
     margin-top: 0px;
+    top: 0px;
     position: fixed;
     width: 100%;
     z-index: 10;
-
+    
     
 
     .header-meta {

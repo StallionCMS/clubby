@@ -16,6 +16,8 @@ var ClubhouseMessagingMixin = {
             messages: [],
             messagesDecrypted: [],
             messageToDelete: null,
+            messagesToMarkRead: [],
+            mostRecentMessageAt: 0,
             page: 1,
             pageSize: 50,
             pages: [],
@@ -34,6 +36,8 @@ var ClubhouseMessagingMixin = {
     },
     watch: {
         '$route': 'onRoute',
+        '$store.state.idleStatus': 'idleStatusChange',
+        '$store.state.websocketStatus': 'socketStatusChange' 
     },
     methods: {
         /////// LOADING CHANNEL & MESSAGES
@@ -91,6 +95,7 @@ var ClubhouseMessagingMixin = {
                 url: '/clubhouse-api/messaging/channel-messages-context/' + self.channelId + '?page=' + page + '&threadId=' + self.threadId + '&pageSize=' + self.pageSize, 
                 success: function(o) {
                     var pageIndex = page - 1;
+                    self.mostRecentMessageAt = o.retrievedAt;
                     self.isChannelOwner = o.channelMembership.owner;
                     self.fetching = false;
                     self.page = page;
@@ -330,7 +335,7 @@ var ClubhouseMessagingMixin = {
                 simpleLineBreaks: true
             });
             html = converter.makeHtml(html);
-
+            html = html.replace(/<a/g, '<a target="_blank"');
             
             
             if (markdown.length > 0 && markdown.indexOf(':') === 0 && markdown.indexOf(' ') === -1 && markdown.lastIndexOf(':') === markdown.length -1) {
@@ -400,14 +405,39 @@ var ClubhouseMessagingMixin = {
             }
             return m;
         },
-        
-
+        socketStatusChange: function(cur, prev) {
+            console.log('socketStatus change', cur, prev);
+            if (!cur.state || !prev.state) {
+                return;
+            }
+            if (cur.state === 'OPEN' && (prev.state === 'ERROR' || prev.state == 'CLOSED')) {
+                this.onReconnect();
+            }
+        },
+        onReconnect: function() {
+            var self = this;
+            console.log('messaging-mixin:onReconnect');
+            stallion.request({
+                url: '/clubhouse-api/messaging/count-channel-messages-since',
+                data: {channelId: self.channelId, mostRecentMessageAt: self.mostRecentMessageAt},
+                method: 'POST',
+                success: function(o) {
+                    console.log('since last update, message count was ', o.count);
+                    self.mostRecentMessageAt = o.retrievedAt;
+                    if (o.count > 0) {
+                        self.onRoute();
+                    }
+                }
+            });
+        },
         //////// INCOMING EVENTS & MESSAGES //////
         handleIncomingMessage: function(incoming, type, data, event) {
             var self = this;
             var isEdit = type === 'message-edited';
             var message = null;
             var existing = null;
+            self.mostRecentMessageAt = incoming.updatedAt * 1000;
+
             self.messages.forEach(function(msg) {
                 console.log('msg.id ', msg.id, incoming.id);
                 if (msg.id === incoming.id) {
@@ -422,7 +452,7 @@ var ClubhouseMessagingMixin = {
             }
             if (self.pendingDecryptionMessageIds[incoming.id] && !isEdit) {
                 return;
-            }
+            }            
             if (!existing) {
                 var showUser = true;
                 if (self.messages.length > 0) {
@@ -475,19 +505,24 @@ var ClubhouseMessagingMixin = {
                             
                             self.showMessageNotificationMaybe(incoming, message);
                             if (!message.read) {
-                                stallion.request({
-                                    url: '/clubhouse-api/messaging/mark-read',
-                                    method: 'POST',
-                                    data: {messageId: message.id}
-                                });
+                                if (self.$store.state.idleStatus === 'AWAKE') {
+                                    stallion.request({
+                                        url: '/clubhouse-api/messaging/mark-read',
+                                        method: 'POST',
+                                        data: {messageId: message.id}
+                                    });
+                                } else {
+                                    self.messagesToMarkRead.push(message.id);
+                                }                                
                                 if (self.afterIncomingMessage) {
                                     Vue.nextTick(self.afterIncomingMessage);
                                 }
                             }
                             // If we are near the bottom, scroll down
-                            var scrollBottom = $(window).height() + $(document.body).scrollTop();
+                            var scrollBottom = $(window).height() + window.scrollY;
                             if (document.body.scrollHeight < (scrollBottom + 100)) {
                                 Vue.nextTick(function() {
+                                    ifvisible.ignoreScrollForTwoSeconds();
                                     window.scrollTo(0, document.body.scrollHeight);
                                 });
                             }
@@ -517,15 +552,20 @@ var ClubhouseMessagingMixin = {
                         Vue.nextTick(self.afterIncomingMessage);
                     }
                     if (!message.read) {
-                        stallion.request({
-                            url: '/clubhouse-api/messaging/mark-read',
-                            method: 'POST',
-                            data: {messageId: message.id}
-                        });
+                        if (self.$store.state.idleStatus === 'AWAKE') {
+                            stallion.request({
+                                url: '/clubhouse-api/messaging/mark-read',
+                                method: 'POST',
+                                data: {messageId: message.id}
+                            });
+                        } else {
+                            self.messagesToMarkRead.push(message.id);
+                        }
                     }
                 }
             }
         },
+        
         showMessageNotificationMaybe: function(incoming, message) {
             var self = this;
             if (incoming.read) {
@@ -751,6 +791,21 @@ var ClubhouseMessagingMixin = {
                     });             
                 });
             
+        },
+        idleStatusChange: function(status, old) {
+            var self = this;
+            if (status === 'AWAKE' && this.messagesToMarkRead.length > 0) {
+                stallion.request({
+                    url: '/clubhouse-api/messaging/mark-read',
+                    method: 'POST',
+                    data: {messageIds: this.messagesToMarkRead},
+                    success: function() {
+                        self.$store.commit('markChannelSeen', this.channelId);
+                        ClubhouseMobileInterop.tellAppToUpdateMentions();
+                    }
+                });
+                this.messagesToMarkRead = [];
+            }
         },
         ////// DELETE A MESSAGE //////////////
         openDeleteModal: function(message) {

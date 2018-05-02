@@ -34,6 +34,7 @@ public class Notifier {
             return;
         }
 
+
         if (ClubbyDynamicSettings.isUseClubbyHostForPushNotification()) {
             CentralHostApiConnector.sendMobilePushNotification(title, body, messageData, list(session.getRegistrationToken()));
             return;

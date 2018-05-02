@@ -11,7 +11,7 @@
      }
      
      border-top: 1px solid #4b4c58;
-     margin-top: -2px;
+     /*margin-top: -2px;*/
 
      .open-settings-link, .open-settings-link > .material-icons {
          color: #444;
@@ -333,8 +333,6 @@
                 
                 <!--<input type="text" class="form-control" v-model="newMessage">-->
             </form>
-            <button class="btn btn-xs" @click="fetchPage()">O</button>
-            {{ $store.state.idleStatus }}
         </div>
         <div class="p">&nbsp;</div>
         <emoji-popup @input="insertEmoji" ref="messageemojipopup"></emoji-popup>
@@ -359,18 +357,29 @@
      },
      mounted: function() {
          var self = this;
+         document.addEventListener('scroll', self.onScroll);
+         /*
          $(this.$el).find('.channel-messages').scroll(function(e) {
              var el = this;
+             debugger;
              if (el.scrollTop === 0 && self.hasPrevious) {
                  console.log('load new page!');
                  self.fetchPage(self.page + 1);
              }
-         });
+         });*/
      },
      beforeDestroy: function() {
          document.removeEventListener('click', this.hideChannelContextMenu);
+         document.removeEventListener('scroll', this.onScroll);
      },
      methods: {
+         onScroll: function() {
+             var self = this;
+             if (window.scrollY === 0 && self.hasPrevious) {
+                 window.scrollTo(1, document.body.scrollHeight);
+                 self.fetchPage(self.page + 1);
+             }
+         },
          getAvatarUrl: function(userId) {
              var self = this;
              if (self.$store.state.allUsersById && self.$store.state.allUsersById[userId]) {

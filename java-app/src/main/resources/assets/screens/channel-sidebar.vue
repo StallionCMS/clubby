@@ -116,20 +116,7 @@
      .username-span:first-child {
          margin-left: -18px;
      }
-     .user-awake-bubble {
-         color: #494;
-         display: inline-block;
-         margin-right: 2px;
-     }
-     .user-idle-bubble {
-         color: #f99f53;
-         display: inline-block;
-         margin-right: 2px;
-     }
-     .user-offline-bubble {
-         display: inline-block;
-         margin-right: 2px;
-     }
+     
      .add-channel-link {
          display: inline-block;
          vertical-align: -25%;         
@@ -163,7 +150,7 @@
                 <sidebar-link-item :channel="channel" :active-channel-id="activeChannelId" v-for="channel in directMessageChannels"></sidebar-link-item>
             </div>
             <div v-if="loggedIn" class="loggedin-name">
-                <div>{{ $store.state.user.displayName || $store.state.user.username }}</div>
+                <div>{{ $store.state.user.displayName || $store.state.user.username }} <span class="user-awake-bubble" v-if="myState==='AWAKE'">&#9679;</span><span class="user-idle-bubble" v-if="myState==='IDLE'">&#9679;</span><span class="user-offline-bubble" v-if="myState !== 'AWAKE' && myState !== 'IDLE'">&#9675;</span> </div>
                 <div><a href="#/my-settings">My Settings</a> <span style="color: rgba(230, 230, 230, .6);">&#8226;</span> <a href="/st-users/logoff">Log off</a></div>
             </div>
         </div>
@@ -201,6 +188,18 @@
              return this.$store.state.standardChannels.filter(function(channel) {
                  return !channel.favorite && !channel.deleted
              });
+         },
+         myState: function() {
+             if (this.$store.state.websocketStatus.state !== 'OPEN') {
+                 return 'OFFLINE';
+             }
+             if (this.$store.state.user && this.$store.state.user.id) {
+                 var u = this.$store.state.allUsersById[this.$store.state.user.id]
+                 if (u) {
+                     return u.state;
+                 }
+             }
+             return 'AWAKE';
          },
          favorites: function() {
              var favs = [];

@@ -34,3 +34,4 @@
 00340-alter-sch_user_profiles-add-2
 00350-alter-sch_user_profiles-add-1
 00360-alter-sch_user_profiles-add-2
+00370-alter-sch_user_messages-add-1

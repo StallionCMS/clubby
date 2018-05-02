@@ -53,7 +53,7 @@ public class MessagingEndpoints implements EndpointResource {
         ctx.put("channel", channel);
         ctx.put("channelMembership", channelMember);
         ctx.put("members", ChannelController.instance().listChannelUsers(channelId));
-
+        ctx.put("retrievedAt", mils());
         if (!empty(threadId)) {
             MessageController.ThreadContext tc = MessageController.instance().loadMessagesForForumThread(
                     Context.getUser().getId(), channelId, threadId, page, true);
@@ -131,9 +131,34 @@ public class MessagingEndpoints implements EndpointResource {
 
     @POST
     @Path("/mark-read")
-    public Object markRead(@BodyParam("messageId") Long messageId) {
-        MessageController.instance().markRead(Context.getUser().getId(), messageId);
+    public Object markRead(@BodyParam(value = "messageId", required = false) Long messageId, @BodyParam(value = "messageIds", required = false) List<Long> messageIds) {
+        if (messageIds == null) {
+            messageIds = list();
+        }
+        if (messageId != null)  {
+            messageIds.add(messageId);
+        }
+
+        for(Object mid: messageIds) {
+            Long midL = null;
+            if (mid instanceof Integer) {
+                midL = new Long((Integer)mid);
+            } else {
+                midL = (Long)mid;
+            }
+            MessageController.instance().markRead(Context.getUser().getId(), midL);
+        }
+
         return true;
+    }
+
+    @POST
+    @Path("/count-channel-messages-since")
+    public Object markRead(@BodyParam("channelId") Long channelId, @BodyParam("mostRecentMessageAt") Long mostRecentMessageAt) {
+        return map(
+                val("retrievedAt", mils()),
+                val("count", MessageController.instance().countMessagesUpdatedSinceTime(Context.getUser().getId(), channelId, mostRecentMessageAt))
+        );
     }
 
 
@@ -222,7 +247,7 @@ public class MessagingEndpoints implements EndpointResource {
 
     public void notifyMessageUpdated(Message message) {
         for(UserMessage um: UserMessageController.instance().filter("messageId", message.getId()).all()) {
-            MessageCombo combo = messageUserMessageToCombo(message, um);
+            MessageCombo combo = MessageController.instance().messageUserMessageToCombo(message, um);
             WebSocketEventHandler.sendMessageToUser(um.getUserId(), JSON.stringify(map(val("message", combo), val("type", "message-edited"))));
         }
     }
@@ -295,7 +320,7 @@ public class MessagingEndpoints implements EndpointResource {
             }
             UserMessageController.instance().save(um);
 
-            notifyOfNewMessage(message, um, channel);
+            MessageController.instance().notifyOfNewMessage(message, um, channel);
 
         }
 
@@ -372,7 +397,7 @@ public class MessagingEndpoints implements EndpointResource {
                 um.setMentioned(true);
             }
             UserMessageController.instance().save(um);
-            notifyOfNewMessage(message, um, channel);
+            MessageController.instance().notifyOfNewMessage(message, um, channel);
 
         }
 
@@ -492,56 +517,6 @@ public class MessagingEndpoints implements EndpointResource {
     }
 
 
-    public MessageCombo messageUserMessageToCombo(Message message, UserMessage um) {
-        Channel channel = ChannelController.instance().forId(message.getChannelId());
-        MessageCombo combo = new MessageCombo()
-                .setId(message.getId())
-                .setChannelType(channel.getChannelType())
-                .setMessageJson(message.getMessageJson())
-                .setMessageEncryptedJson(message.getMessageEncryptedJson())
-                .setMessageEncryptedJsonVector(message.getMessageEncryptedJsonVector())
-                .setCreatedAt(message.getCreatedAt())
-                .setEdited(message.isEdited())
-                .setParentMessageId(message.getParentMessageId())
-                .setThreadId(message.getThreadId())
-                .setEncryptedPasswordHex(um.getEncryptedPasswordHex())
-                .setPasswordVectorHex(um.getPasswordVectorHex())
-                .setFromUserId(message.getFromUserId())
-                .setFromUsername(message.getFromUsername())
-                .setRead(um.isRead())
-                .setUserMessageId(um.getId())
-                .setChannelId(message.getChannelId())
-                ;
-
-        if (um.isHereMentioned() || um.isMentioned()) {
-            combo.setMentioned(true);
-        }
-        return combo;
-    }
-
-    public void notifyOfNewMessage(Message message, UserMessage um, Channel channel) {
-        MessageCombo combo = messageUserMessageToCombo(message, um);
-
-        WebSocketEventHandler.sendMessageToUser(um.getUserId(), JSON.stringify(map(val("message", combo), val("type", "new-message"))));
-
-        Map messageData = map();
-        messageData.put("siteUrl", Settings.instance().getSiteUrl());
-        messageData.put("channelId", message.getChannelId());
-        messageData.put("channelType", channel.getChannelType().toString());
-        messageData.put("messageId", message.getId());
-        messageData.put("threadId", message.getThreadId());
-        messageData.put("userId", um.getUserId());
-        String path = "/#/channel/" + message.getChannelId() + "&messageId=" + message.getId();
-        if (channel.getChannelType().equals(ChannelType.FORUM)) {
-            path = "/#/forum/" + message.getChannelId() + "/" + message.getId() + "?messageId=" + message.getId();
-        }
-        messageData.put("path", path);
-
-
-        if (um.isMentioned() || channel.getChannelType().equals(ChannelType.DIRECT_MESSAGE)) {
-            Notifier.sendNotification(um.getUserId(), "New message from " + message.getFromUsername(), "", messageData);
-        }
-    }
 
     public static class EncryptedMessageContainer {
         private String messageEncryptedJson = "";

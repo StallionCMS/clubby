@@ -2,6 +2,7 @@ package io.clubby.server;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,15 +11,18 @@ import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
 
+import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.dataAccess.filtering.FilterOperator;
+import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
+import io.stallion.utils.json.JSON;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -39,6 +43,9 @@ public class MessageController extends StandardModelController<Message> {
         if (empty(obj.getCreatedAt())) {
             obj.setCreatedAt(DateUtils.utcNow());
         }
+        if (empty(obj.getUpdatedAt())) {
+            obj.setUpdatedAt(DateUtils.utcNow());
+        }
         if (empty(obj.getThreadUpdatedAt())) {
             obj.setThreadUpdatedAt(obj.getCreatedAt());
         }
@@ -48,6 +55,11 @@ public class MessageController extends StandardModelController<Message> {
             }
         }
 
+    }
+
+    @Override
+    public void onPreSavePrepare(Message obj) {
+        obj.setUpdatedAt(DateUtils.utcNow());
     }
 
     public boolean currentUserCanDelete(Message message) {
@@ -70,6 +82,141 @@ public class MessageController extends StandardModelController<Message> {
         }
         return false;
     }
+
+    public long countMessagesUpdatedSinceTime(Long userId, Long channelId, Long since) {
+        ChannelMember cm = ChannelMemberController.instance().forUserChannel(userId, channelId);
+        if (cm == null) {
+            return 0;
+        }
+        String sinceFormatted = DateUtils.SQL_FORMAT.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli(since), UTC));
+        Long c = DB.instance().queryScalar("" +
+                " SELECT COUNT(*) FROM sch_user_messages AS um" +
+                "   INNER JOIN sch_messages as m ON um.messageId=m.id " +
+                " WHERE" +
+                "    m.row_updated_at>=? OR " +
+                "    um.row_updated_at>=? AND " +
+                "    um.userId=? AND " +
+                "    m.channelId=? ",
+                sinceFormatted, sinceFormatted, userId, channelId
+        );
+        return c;
+    }
+
+
+    public void notifyOfNewMessage(Message message, UserMessage um, Channel channel) {
+        MessageCombo combo = messageUserMessageToCombo(message, um);
+
+        WebSocketEventHandler.sendMessageToUser(um.getUserId(), JSON.stringify(map(val("message", combo), val("type", "new-message"))));
+
+        if (combo.isMentioned() || channel.getChannelType().equals(ChannelType.DIRECT_MESSAGE)) {
+            if (combo.getFromUserId() != combo.getToUserId()) {
+                checkSendMobileNotificationForNewMessageMaybe(combo, channel);
+            }
+        }
+
+    }
+
+    public void checkSendMobileNotificationForNewMessageMaybe(MessageCombo combo, Channel channel) {
+        boolean pending = false;
+        boolean shouldSend = false;
+
+        // If notifications are off, return without doing anything
+        UserProfile up = UserProfileController.instance().forStallionUser(combo.getToUserId());
+        if (up != null && UserNotifyPreference.NONE.equals(up.getMobileNotifyPreference())) {
+            return;
+        }
+
+        // If user is awake, no mobile notifications. If user is IDLE, and they have a mobile session, we send
+        // them a notification if they don't read the new message within 1 to 2 minutes.
+        // If user is disconnected entirely, send a notification immediately.
+        UserState state = UserStateController.instance().filter("userId", combo.getToUserId()).first();
+        if (state != null && state.getState().equals(UserStateType.AWAKE)) {
+            return;
+        } else if (state != null && state.getState().equals(UserStateType.IDLE)) {
+            int c = MobileSessionController.instance().filter("userId", combo.getToUserId()).count();
+            if (c > 0) {
+                pending = true;
+            }
+            if (Settings.instance().getSiteUrl().startsWith("https://macbook.clubby.io")) {
+                pending = false;
+                shouldSend = true;
+            }
+        } else {
+            shouldSend = true;
+        }
+
+        if (shouldSend) {
+            sendMobileNotificationOfMessage(combo, channel);
+        } else if (pending) {
+            DB.instance().execute(
+                    "UPDATE sch_user_messages SET mobileNotifyPending=1 WHERE id = ? ",
+                    combo.getUserMessageId()
+            );
+        }
+
+
+
+    }
+
+    public void sendMobileNotificationOfMessage(MessageCombo combo) {
+        Channel channel = ChannelController.instance().forId(combo.getChannelId());
+        sendMobileNotificationOfMessage(combo, channel);
+    }
+
+    public void sendMobileNotificationOfMessage(MessageCombo combo, Channel channel) {
+
+        Map messageData = map();
+        messageData.put("siteUrl", Settings.instance().getSiteUrl());
+        messageData.put("channelId", combo.getChannelId());
+        messageData.put("channelType", channel.getChannelType().toString());
+        messageData.put("messageId", combo.getId());
+        messageData.put("threadId", combo.getThreadId());
+        messageData.put("userId", combo.getToUserId());
+        String path = "/#/channel/" + combo.getChannelId() + "&messageId=" + combo.getId();
+        if (channel.getChannelType().equals(ChannelType.FORUM)) {
+            path = "/#/forum/" + combo.getChannelId() + "/" + combo.getThreadId() + "?messageId=" + combo.getId();
+        }
+        messageData.put("path", path);
+
+
+        Notifier.sendNotification(combo.getToUserId(), "New message from " + combo.getFromUsername(), "", messageData);
+
+        DB.instance().execute(
+                "UPDATE sch_user_messages SET mobileNotifyPending=0 WHERE id = ? ",
+                combo.getUserMessageId()
+        );
+    }
+
+
+    public MessageCombo messageUserMessageToCombo(Message message, UserMessage um) {
+        Channel channel = ChannelController.instance().forId(message.getChannelId());
+        MessageCombo combo = new MessageCombo()
+                .setId(message.getId())
+                .setChannelType(channel.getChannelType())
+                .setMessageJson(message.getMessageJson())
+                .setMessageEncryptedJson(message.getMessageEncryptedJson())
+                .setMessageEncryptedJsonVector(message.getMessageEncryptedJsonVector())
+                .setCreatedAt(message.getCreatedAt())
+                .setUpdatedAt(message.getUpdatedAt())
+                .setEdited(message.isEdited())
+                .setParentMessageId(message.getParentMessageId())
+                .setThreadId(message.getThreadId())
+                .setEncryptedPasswordHex(um.getEncryptedPasswordHex())
+                .setPasswordVectorHex(um.getPasswordVectorHex())
+                .setFromUserId(message.getFromUserId())
+                .setFromUsername(message.getFromUsername())
+                .setToUserId(um.getUserId())
+                .setRead(um.isRead())
+                .setUserMessageId(um.getId())
+                .setChannelId(message.getChannelId())
+                ;
+
+        if (um.isHereMentioned() || um.isMentioned()) {
+            combo.setMentioned(true);
+        }
+        return combo;
+    }
+
 
     public void markRead(Long userId, Long messageId) {
         DB.instance().execute("UPDATE sch_user_messages SET `read`=1 WHERE userId=? AND messageId=?", userId, messageId);
@@ -106,10 +253,12 @@ public class MessageController extends StandardModelController<Message> {
         }
     }
 
-    public List<MessageCombo> loadUnseenMessages(ZonedDateTime since) {
+    public List<MessageCombo> loadUnseenMessagesForEmailNotify(ZonedDateTime before) {
+        ZonedDateTime after = before.minusDays(3);
         String sql = "" +
                 " SELECT " +
                 "    m.id as id, " +
+                "    m.channelId AS channelId, " +
                 "    m.messageEncryptedJson," +
                 "    m.messageEncryptedJsonVector, " +
                 "    m.messageJson as messageJson," +
@@ -136,11 +285,55 @@ public class MessageController extends StandardModelController<Message> {
                 "     um.emailNotifySent=0 AND " +
                 "     us.state!='AWAKE' AND " +
                 "     um.read=0 AND" +
-                "     m.createdAt<? " +
+                "     m.createdAt<? AND " +
+                "     m.createdAt>? AND " +
+                "     m.fromUserId!=um.userId " +
                 "" +
                 " ORDER BY m.createdAt ASC ";
         List<MessageCombo> combos = DB.instance()
-                .queryBean(MessageCombo.class, sql, DateUtils.SQL_FORMAT.format(since));
+                .queryBean(MessageCombo.class, sql, DateUtils.SQL_FORMAT.format(before), DateUtils.SQL_FORMAT.format(after));
+
+        return combos;
+    }
+
+    public List<MessageCombo> loadUnseenMessagesForMobileNotify(ZonedDateTime before) {
+        ZonedDateTime after = before.minusDays(3);
+        String sql = "" +
+                " SELECT " +
+                "    m.id as id, " +
+                "    m.messageEncryptedJson," +
+                "    m.messageEncryptedJsonVector, " +
+                "    m.messageJson as messageJson, " +
+                "    m.channelId as channelId, " +
+                "    m.parentMessageId,  " +
+                "    m.edited," +
+                "    m.fromUserId," +
+                "    m.fromUsername," +
+                "    m.createdAt," +
+                "    m.title, " +
+                "    um.id AS userMessageId, " +
+                "    um.userId AS toUserId, " +
+                "    um.encryptedPasswordHex, " +
+                "    um.passwordVectorHex, " +
+                "    um.read  " +
+                "    " +
+                "  " +
+                " FROM sch_messages as m" +
+                " INNER JOIN sch_user_messages AS um ON um.messageId=m.id " +
+                " INNER JOIN sch_user_states AS us ON us.userId=um.userId " +
+                " WHERE " +
+                "     m.deleted=0 AND " +
+                "     um.deleted=0 AND " +
+                "     um.mentioned=1 AND" +
+                "     um.mobileNotifyPending=1 AND " +
+                "     us.state!='AWAKE' AND " +
+                "     um.read=0 AND" +
+                "     m.createdAt<? AND " +
+                "     m.createdAt>? " +
+                "" +
+                " ORDER BY m.createdAt ASC ";
+        List<MessageCombo> combos = DB.instance()
+                .queryBean(MessageCombo.class, sql, DateUtils.SQL_FORMAT.format(before), DateUtils.SQL_FORMAT.format(after));
 
         return combos;
     }

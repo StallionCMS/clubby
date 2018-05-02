@@ -72,20 +72,7 @@ public class ClubbyPlugin extends StallionJavaPlugin {
         Notifier.init();
 
 
-        JobCoordinator.instance().registerJob(
-                new JobDefinition()
-                        .setJobClass(EmailMessagesJob.class)
-                        .setName("email-messages")
-                        .setAlertThresholdMinutes(90)
-                        .setSchedule(
-                                new Schedule()
-                                        .everyMonth()
-                                        .everyDay()
-                                        .everyHour()
-                                        .minutes(0, 10, 20, 30, 40, 50)
-                        )
-
-        );
+        JobCoordinator.instance().registerJob(new SendNotificationsJob());
 
 
     }
