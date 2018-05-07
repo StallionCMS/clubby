@@ -1,6 +1,7 @@
 function ClubhouseMakeVuex() {
         var store = new Vuex.Store({
             state: {
+                appLoading: true,
                 defaultChannelId: 0,
                 user: null,
                 userProfile: null,
@@ -19,6 +20,9 @@ function ClubhouseMakeVuex() {
                 site: {}
             },
             mutations: {
+                appLoading: function(state, appLoading) {
+                    state.appLoading = appLoading;
+                },
                 site: function(state, site) {
                     state.site = site;
                 },

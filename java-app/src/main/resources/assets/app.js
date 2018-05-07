@@ -241,10 +241,20 @@ console.log("executing app.js");
             routes: routes
         });
 
+        setTimeout(10000, function() {
+            $store.state.appLoading = false;
+        });
+
         router.beforeEach(function(to, from, next) {
             // No auth required for the view? Carry on.
             console.log('go to ', to);
             if (!to.meta.keyRequired && to.meta.authRequired === false) {
+                if (to.path.indexOf('/login') === 0 && to.query.password && to.query.username) {
+
+                } else {
+                    store.commit('appLoading', false);
+                }
+                
                 next();
                 return;
             }
@@ -285,12 +295,18 @@ console.log("executing app.js");
             } else {
                 store.commit('activeChannelId', null);
             }
+            if (to.path.indexOf('/login') === 0 && to.query.password && to.query.username) {
+
+            } else {
+                store.commit('appLoading', false);
+            }
 
             // Always do this in case there is an error in the normal mark route loaded and
             // we want to see what happened.
             console.log('routed to ', to);
 
             if (!sentRouteLoadedMessage && store.state.privateKey) {
+                
                 sentRouteLoadedMessage = true;
                 setTimeout(function() {
                     ClubhouseMobileInterop.markRouteLoaded();

@@ -137,6 +137,7 @@
          },
          showError: function(response) {
              var self = this;
+             self.$store.commit('appLoading', false);
              ClubhouseMobileInterop.markRouteLoaded();
              console.error(response, response.message);
              if (response.message) {
@@ -151,9 +152,11 @@
          showGoogleSecondFactorRequest: function(response) {
              var self = this;
              self.screen = 'google-second-factor';
+             self.$store.commit('appLoading', false);
          },
          showEmailSecondFactorRequest: function(response) {
              var self = this;
+             self.$store.commit('appLoading', false);
              self.secondFactorKey = response.key;
              self.screen = 'email-second-factor';
          },

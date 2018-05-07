@@ -177,6 +177,8 @@ public class MessageController extends StandardModelController<Message> {
             path = "/#/forum/" + combo.getChannelId() + "/" + combo.getThreadId() + "?messageId=" + combo.getId();
         }
         messageData.put("path", path);
+        messageData.put("fromUsername", combo.getFromUsername());
+        messageData.put("siteName", ClubbyDynamicSettings.getSiteName());
 
 
         Notifier.sendNotification(combo.getToUserId(), "New message from " + combo.getFromUsername(), "", messageData);

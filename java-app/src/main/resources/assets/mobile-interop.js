@@ -27,6 +27,14 @@ var ClubhouseMobileInterop = new function() {
         $('#st-clubhouse-body').addClass('clubhouse-ios-app')
     }
 
+    self.onPause = function() {
+        console.log('on app pause');
+        if (window.ClubhouseVueApp && ClubhouseVueApp.stateManager && ClubhouseVueApp.stateManager.clubhouseSocket) {
+            console.log('close the websocket');
+            ClubhouseVueApp.stateManager.clubhouseSocket.close();
+        }
+    };
+
     self.toggleNavigation = function() {
         var store = window.ClubhouseVueApp.$store;
         console.log('toggle navigation ', store);
