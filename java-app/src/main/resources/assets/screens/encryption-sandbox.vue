@@ -98,12 +98,13 @@
          run: function() {
              var self = this;
              clubhouseGeneratePrivateAndPublicKey(self.georgePassword).then(function(result) {
+                 
                  self.encryptedPrivateKeyJwkJson = result.privateKeyEncryptedHex;
                  self.publicKeyJwkString = result.publicKeyHex;
                  self.profile = {
-                     publicKeyJwkJson: result.publicKeyHex,
-                     privateKeyJwkEncryptedHex: result.privateKeyEncryptedHex,
-                     privateKeyVectorHex: result.privateKeyEncryptionVectorHex
+                     publicKeyJwkJson: result.publicKeyJwkJson,
+                     privateKeyJwkEncryptedHex: result.privateKeyJwkEncryptedHex,
+                     privateKeyVectorHex: result.privateKeyVectorHex
                  }
                  console.log('es1. Generated private & public key, now encrypting message');
                  self.encryptMessage();

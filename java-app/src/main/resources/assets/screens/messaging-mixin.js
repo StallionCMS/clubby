@@ -238,11 +238,16 @@ var ClubhouseMessagingMixin = {
                                 hexToArray(message.passwordVectorHex)//ep.passwordVector,
                             ).then(function(bodyJson) {
                                     console.log('decrypted message ', bodyJson);
-                                    var data = JSON.parse(bodyJson);
-                                    message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
-                                    message.text = data.bodyMarkdown;
-                                    console.log('message.html! ', message.html);
-                                    Vue.set(self.messages, message.$index, message);
+                                    
+                                    try {
+                                        var data = JSON.parse(bodyJson);
+                                        message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
+                                        message.text = data.bodyMarkdown;
+                                        console.log('message.html! ', message.html);
+                                        Vue.set(self.messages, message.$index, message);
+                                    } catch (err) {
+                                        console.error(err);
+                                    }
                                     leftToDecrypt--;
                                     if (leftToDecrypt <= 0) {
                                         self.messagesDecrypted = true;

@@ -19,7 +19,7 @@
 
 <template>
     <div v-if="$store.state.appLoading" class="app-loading-mask-vue">
-        <h4>Application Loading</h4>
+        <h4>Loading Clubby</h4>
         <img src="/st-resource/clubby/spinner.gif">
     </div>
 </template>

@@ -104,7 +104,7 @@ var Encrypter = function() {
                 iv: vector
             },
             enc.symettricKey,
-            convertStringToArrayBufferView(enc.message)
+            encodeUTF8(enc.message) //convertStringToArrayBufferView(enc.message)
         );
         encrypt_promise.then(
             function(result){
@@ -279,7 +279,7 @@ var ReEncrypter = function() {
                 iv: vector
             },
             enc.symettricKey,
-            convertStringToArrayBufferView(enc.message)
+            encodeUTF8(enc.message) //convertStringToArrayBufferView(enc.message)
         );
         encrypt_promise.then(
             function(result){
@@ -411,7 +411,7 @@ var Decrypter = function() {
         decrypt_promise.then(
             function(result){
                 var bytes = new Uint8Array(result);
-                var message = convertArrayBufferViewtoString(bytes);
+                var message = decodeUTF8(bytes);//convertArrayBufferViewtoString(bytes);
                 console.log('received message ', message);
                 self.callback(message);
             }, 
