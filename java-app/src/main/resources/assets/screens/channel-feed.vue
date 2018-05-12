@@ -75,21 +75,27 @@
          background-color: white;
          padding: 0px;
          padding-top: 0px;
+         
          form {
              padding-right: 20px;
              padding-left: 20px;
              padding-bottom: 20px;
-             .form-control {
+             textarea.form-control {
                  width: 100%;
                  border: 3px solid #BBB;
+                 padding-right: 30px;
              }
          }
      }
+
      
      .a-message-outer {
          position: relative;
          margin-bottom: 0px;
          margin-top: .5em;
+         .message-html {
+             word-break: break-all;
+         }
          .message-html p:last-child {
              margin-bottom: 0em;
          }
@@ -286,7 +292,7 @@
         <div class="channel-right-panel">
         </div>
         <div class="channel-messages always-show-scrollbars" style="">
-            <div v-if="messagesDecrypted && isLoaded">
+            <div v-if="allLoaded">
                 <div v-if="!hasPrevious" class="channel-start-message">
                     <h5>This is the begining of the "{{channelName}}" channel.</h5>
                 </div>

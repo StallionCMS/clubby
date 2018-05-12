@@ -206,6 +206,13 @@ console.log("executing app.js");
                 }
             },
             {
+                path: '/session-explorer',
+                component: vueComponents['session-explorer'],
+                meta: {
+                    authRequired: true
+                }
+            },            
+            {
                 path: '/',
                 component: vueComponents['app-home-v4'],
                 meta: {

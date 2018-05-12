@@ -12,6 +12,9 @@ import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainer
 
 
 public class WebSocketBooter {
+
+    private ServerContainer serverContainer;
+
     public Server boot(Server server, HandlerCollection handlerCollection, ServeCommandOptions options) {
         if (server == null) {
             server = new Server();

@@ -237,6 +237,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     manager.start = function() {
         if (manager.started) {
             console.log('manager already started');
+            return;
         }
         if (vueApp.$store.state.user && vueApp.$store.state.user.id) {
             manager.started = true;

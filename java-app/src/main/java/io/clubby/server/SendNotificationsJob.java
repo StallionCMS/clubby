@@ -109,7 +109,7 @@ public class SendNotificationsJob extends JobComplete {
         List<MessageCombo> combos = MessageController.instance().loadUnseenMessagesForEmailNotify(since);
         Log.info("Found messageCombos {0}", combos);
         for(MessageCombo combo: combos) {
-            if (!userMessageByUserId.containsKey(combo.getFromUserId())) {
+            if (!userMessageByUserId.containsKey(combo.getToUserId())) {
                 userMessageByUserId.put(combo.getToUserId(), list());
             }
             userMessageByUserId.get(combo.getToUserId()).add(combo);

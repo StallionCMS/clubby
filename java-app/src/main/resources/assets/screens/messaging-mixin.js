@@ -34,10 +34,16 @@ var ClubhouseMessagingMixin = {
     created: function() {
         this.onRoute();
     },
+    computed: {
+        'allLoaded': function() {
+            return this.isLoaded && this.messagesDecrypted;
+        }
+    },
     watch: {
         '$route': 'onRoute',
         '$store.state.idleStatus': 'idleStatusChange',
-        '$store.state.websocketStatus': 'socketStatusChange' 
+        '$store.state.websocketStatus': 'socketStatusChange',
+        'allLoaded': 'onAllLoadedChanged'
     },
     methods: {
         /////// LOADING CHANNEL & MESSAGES
@@ -602,6 +608,25 @@ var ClubhouseMessagingMixin = {
                 },
                 link
             );
+        },
+        onAllLoadedChanged: function(cur, org) {
+            var self = this;
+            if (cur === true) {
+                if (ClubhouseMobileInterop.isMobile || ClubhouseMobileInterop.isMobileApp) {
+                    Vue.nextTick(function() {
+                        $('#post-message-box').focus(function(e) {
+                            var scrollBottom = $(window).height() + window.scrollY;
+                            var shouldScrollDown = document.body.scrollHeight < (scrollBottom + 400);
+                            setTimeout(function() {
+                                if (shouldScrollDown) {
+                                    window.scrollTo(0, document.body.scrollHeight);
+                                }
+                            }, 500);
+                        })
+                    });
+                }
+            
+            }
         },
         /////// SAVE/POST NEW MESSAGE
         postMessage: function() {

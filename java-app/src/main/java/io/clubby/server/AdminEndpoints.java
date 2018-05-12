@@ -1,5 +1,6 @@
 package io.clubby.server;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.clubby.server.emailers.TestConfigEmailer;
 import io.clubby.server.emailers.UserInviteEmailer;
+import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.dataAccess.filtering.SortDirection;
 import io.stallion.exceptions.ClientException;
@@ -27,11 +29,10 @@ import io.stallion.users.User;
 import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.GeneralUtils;
+import org.eclipse.jetty.websocket.common.WebSocketSession;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.websocket.Session;
+import javax.ws.rs.*;
 
 
 @Produces("application/json")
@@ -108,6 +109,33 @@ public class AdminEndpoints implements EndpointResource {
         } catch (UnirestException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @GET
+    @Path("/session-explorer")
+    @MinRole(Role.ADMIN)
+    public Object sessionExplorer(@QueryParam("userId") Long userId) {
+        Map ctx = map();
+
+        List<Map> sessions = list();
+        ctx.put("sessions", sessions);
+
+        Map<String, Session> sessionMap = WebSocketEventHandler.getSessionsByUserId().getOrDefault(userId, Collections.EMPTY_MAP);
+        for(Map.Entry<String, Session> entry: sessionMap.entrySet()) {
+            WebSocketSession sess = (WebSocketSession)entry.getValue();
+            sessions.add(
+                    map(
+                            val("URI", entry.getValue().getRequestURI().toString()),
+                            val("real-ip", ((WebSocketSession) entry.getValue()).getUpgradeRequest().getHeader("x-Real-Ip")),
+                            val("User-agent", ((WebSocketSession) entry.getValue()).getUpgradeRequest().getHeader("User-agent")),
+                            val("userState", entry.getValue().getUserProperties().get("userState"))
+                    )
+            );
+        }
+
+
+        return ctx;
     }
 
 

@@ -26,7 +26,9 @@ import javax.websocket.server.ServerEndpoint;
 public class WebSocketEventHandler {
     private static Map<Long, Map<String, Session>> sessionsByUserId = map();
 
-
+    public static Map<Long, Map<String, Session>> getSessionsByUserId() {
+        return sessionsByUserId;
+    }
 
 
     @OnOpen

@@ -141,7 +141,7 @@
                     <span class="forum-name-inner">{{ channel.name }}</span>
                     <i class="material-icons">keyboard_arrow_down</i>
                 </a>
-                <a class="btn btn-large btn-primary" :href="'/forum/' + channel.id + '/new-thread'">New Topic</a>
+                <a class="btn btn-large btn-primary" :href="'#/forum/' + channel.id + '/new-thread'">New Topic</a>
             </h3>
         </div>
         <div v-if="contextMenuShown" class="channel-context-menu">

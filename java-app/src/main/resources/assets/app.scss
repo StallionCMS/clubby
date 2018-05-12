@@ -228,7 +228,17 @@ h6 {
         .forum-name {
             padding-left: 0px;
         }
-    }    
+    }
+    #clubhouse-main-view {
+        form {
+            padding: 0px;
+        }
+        #post-message-box {
+            border-width: 0px;
+            border-top: 2px solid #999;
+            border-radius: 0px;
+        }
+    }
 }
 
 
