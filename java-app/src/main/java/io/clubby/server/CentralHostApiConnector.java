@@ -10,6 +10,7 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.nimbusds.jose.util.IOUtils;
+import io.stallion.email.Contactable;
 import io.stallion.exceptions.ClientException;
 import io.stallion.exceptions.WebException;
 import io.stallion.services.Log;
@@ -84,14 +85,15 @@ public class CentralHostApiConnector {
         }
     }
 
-    public static boolean sendEmailChatNotification(String toName, String toEmail, String body) {
+    public static boolean sendEmailChatNotification(Contactable user, String body) {
         try {
             HttpResponse<JsonNode> response = Unirest
                     .post(baseUrl() + "/hosting-api/v1/notify/send-email-chat-notification")
                     .header("Auth", ClubbyDynamicSettings.getLicense().getKey())
                     .body(JSON.stringify(map(
-                            val("toName", toName),
-                            val("toEmail", toEmail),
+                            val("toUserId", user.getId()),
+                            val("toName", user.getDisplayName()),
+                            val("toEmail", user.getEmail()),
                             val("body", body),
                             val("clubbyVersion", version())
                     )))

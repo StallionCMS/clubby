@@ -117,7 +117,7 @@ public class SendNotificationsJob extends JobComplete {
 
         for(Map.Entry<Long, List<MessageCombo>> entry: userMessageByUserId.entrySet()) {
             User user = (User)UserController.instance().forId(entry.getKey());
-            Log.info("Have message combos for user {0} {1}", user.getUsername(), entry.getValue().size());
+            Log.info("Have message combos for user {0} userId: {1}: message count: {2}", user.getUsername(), user.getId(), entry.getValue().size());
             if (user == null) {
                 continue;
             }
@@ -128,7 +128,7 @@ public class SendNotificationsJob extends JobComplete {
 
             if (profile.isEmailMeWhenMentioned()) {
                 // Actually send the email
-                Log.info("Send notify email to {0}", user.getUsername());
+                Log.info("Send notify email to {0} email {1} userId: ", user.getUsername(), user.getEmail(), user.getId());
                 new MessageEmailer(user, profile, entry.getValue()).sendEmail();
             }
 

@@ -598,12 +598,12 @@ var ClubhouseMessagingMixin = {
             }
 
             
-
+            
             stallionClubhouseApp.sendNotifiction(
                 'Message from ' + incoming.fromUsername,
                 {
                     body: '',
-                    icon: 'https://www.gravatar.com/avatar/' + self.hashUser(incoming.fromUsername) + '?d=retro',
+                    icon: self.getAvatarUrl(incoming.fromUserId),
                     silent: false
                 },
                 link

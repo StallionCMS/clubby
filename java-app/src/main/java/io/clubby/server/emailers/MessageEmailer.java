@@ -27,8 +27,7 @@ public class MessageEmailer extends ContactableEmailer<User> {
     public boolean sendEmail() {
         if (ClubbyDynamicSettings.isUseClubbyHostForEmail()) {
             return CentralHostApiConnector.sendEmailChatNotification(
-                    user.getDisplayName(),
-                    user.getEmail(),
+                   user,
                     "You have messages"
             );
         } else {
