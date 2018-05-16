@@ -219,7 +219,7 @@ var ClubhouseMessagingMixin = {
                                 true,
                                 ["encrypt"]
                             ).then(function(result) {
-                                console.log('got public key for member ', member.username);
+                                console.debug('got public key for member ', member.username);
                                 member.publicKey = result;
                                 keysProcessed++;
                                 if (keysProcessed >= self.members.length) {
@@ -243,13 +243,13 @@ var ClubhouseMessagingMixin = {
                                 hexToArray(message.encryptedPasswordHex),//ep.encryptedPasswordBytes,
                                 hexToArray(message.passwordVectorHex)//ep.passwordVector,
                             ).then(function(bodyJson) {
-                                    console.log('decrypted message ', bodyJson);
+                                    console.debug('decrypted message ', bodyJson);
                                     
                                     try {
                                         var data = JSON.parse(bodyJson);
                                         message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
                                         message.text = data.bodyMarkdown;
-                                        console.log('message.html! ', message.html);
+                                        console.debug('message.html! ', message.html);
                                         Vue.set(self.messages, message.$index, message);
                                     } catch (err) {
                                         console.error(err);
@@ -267,6 +267,7 @@ var ClubhouseMessagingMixin = {
                                     }
                                     self.$store.commit('updateChannelSeen', {channelId: self.channelId, mentionsCount: o.unreadMentionsCount, hasNew: o.unreadCount>0});
                             }).catch(function(err) {
+                                leftToDecrypt--;
                                 console.error(err);
                             });
                         });
@@ -320,7 +321,7 @@ var ClubhouseMessagingMixin = {
             }
             if (message.reactions) { 
                 Object.keys(message.reactions).forEach(function(emoji) {
-                    console.log('emoji ', emoji);
+                    console.debug('emoji ', emoji);
                     if (emoji) {
                         var people = message.reactions[emoji] || [];
                         var processed = self.processReactionEmoji(emoji, people);
@@ -347,7 +348,7 @@ var ClubhouseMessagingMixin = {
             });
             html = converter.makeHtml(html);
             html = html.replace(/<a/g, '<a target="_blank"');
-            
+            markdown = $.trim(markdown);
             
             if (markdown.length > 0 && markdown.indexOf(':') === 0 && markdown.indexOf(' ') === -1 && markdown.lastIndexOf(':') === markdown.length -1) {
                 if (html.indexOf('<p>') === 0) {
@@ -417,7 +418,7 @@ var ClubhouseMessagingMixin = {
             return m;
         },
         socketStatusChange: function(cur, prev) {
-            console.log('socketStatus change', cur, prev);
+            console.debug('socketStatus change', cur, prev);
             if (!cur.state || !prev.state) {
                 return;
             }
@@ -427,13 +428,13 @@ var ClubhouseMessagingMixin = {
         },
         onReconnect: function() {
             var self = this;
-            console.log('messaging-mixin:onReconnect');
+            console.debug('messaging-mixin:onReconnect');
             stallion.request({
                 url: '/clubhouse-api/messaging/count-channel-messages-since',
                 data: {channelId: self.channelId, mostRecentMessageAt: self.mostRecentMessageAt},
                 method: 'POST',
                 success: function(o) {
-                    console.log('since last update, message count was ', o.count);
+                    console.debug('since last update, message count was ', o.count);
                     self.mostRecentMessageAt = o.retrievedAt;
                     if (o.count > 0) {
                         self.onRoute();
@@ -450,12 +451,12 @@ var ClubhouseMessagingMixin = {
             self.mostRecentMessageAt = incoming.updatedAt * 1000;
 
             self.messages.forEach(function(msg) {
-                console.log('msg.id ', msg.id, incoming.id);
+                console.debug('msg.id ', msg.id, incoming.id);
                 if (msg.id === incoming.id) {
                     existing = msg;
                 }
             });
-            console.log('isEdit', isEdit);
+            console.debug('isEdit', isEdit);
             if (!isEdit && existing) {
                 return;
             } else if (isEdit && !existing) {
@@ -480,7 +481,7 @@ var ClubhouseMessagingMixin = {
                 message.showUser = showUser;
                 message.$index = self.messages.length;
             } else {
-                console.log('editing message ', message);
+                console.debug('editing message ', message);
                 message = self.initMessageForFeed(incoming);
                 message.edited = true;
                 message.showUser = existing.showUser;
@@ -495,12 +496,12 @@ var ClubhouseMessagingMixin = {
                     hexToArray(incoming.encryptedPasswordHex),//ep.encryptedPasswordBytes,
                     hexToArray(incoming.passwordVectorHex)//ep.passwordVector,
                 ).then(function(bodyJson) {
-                        console.log('decrypted message ', bodyJson);
+                        console.debug('decrypted message ', bodyJson);
                         var data = JSON.parse(bodyJson);
                         message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
                         message.text = data.bodyMarkdown;
                         message.widgets = data.widgets || [];
-                        console.log('message.html! ', message.html);
+                        console.debug('message.html! ', message.html);
                         if (isEdit) {
                             $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
                             Vue.set(self.messages, message.$index, message);
@@ -531,10 +532,10 @@ var ClubhouseMessagingMixin = {
                             }
                             // If we are near the bottom, scroll down
                             var scrollBottom = $(window).height() + window.scrollY;
-                            if (document.body.scrollHeight < (scrollBottom + 100)) {
+                            console.log('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
+                            if (document.body.scrollHeight < (scrollBottom + 160)) {
                                 Vue.nextTick(function() {
-                                    ifvisible.ignoreScrollForTwoSeconds();
-                                    window.scrollTo(0, document.body.scrollHeight);
+                                    self.scrollToTopOfLatestMessages();
                                 });
                             }
                         }
@@ -552,6 +553,15 @@ var ClubhouseMessagingMixin = {
                     $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
 
                 } else {
+                    // If we are near the bottom, scroll down
+                    var scrollBottom = $(window).height() + window.scrollY;
+                    console.debug('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
+                    if (document.body.scrollHeight < (scrollBottom + 160)) {
+                        Vue.nextTick(function() {
+                            self.scrollToTopOfLatestMessages();
+                        });
+                    }                
+                    
                     self.messages.push(message);
                     if (self.pages && self.pages.length && self.pages[self.pages.length-1] !== null) {
                         self.pages[self.pages.length-1].push(message);
@@ -639,7 +649,7 @@ var ClubhouseMessagingMixin = {
         },
         postEncryptedMessage: function() {
             var self = this;
-            console.log('post message!');
+            console.debug('post message!');
             self.messageAreaDisabled = true;
             var text = self.newMessage;
             var mentions = self.mentionsFromText(text);
@@ -652,14 +662,14 @@ var ClubhouseMessagingMixin = {
                     userId: member.id,
                     publicKey: member.publicKey
                 });
-                console.log('prepping to encrypt for ', member.username);
+                console.debug('prepping to encrypt for ', member.username);
             });
 
-            new Encrypter().encryptMessage(
+            clubhouseEncryptMessage(
                 messageJson,
-                tos,
-                function(result) {
-                    console.log('encryption complete ', result);
+                tos
+            ).then(function(result) {
+                    console.debug('encryption complete ', result);
                     stallion.request({
                         url: '/clubhouse-api/messaging/post-encrypted-message',
                         method: 'POST',
@@ -673,7 +683,7 @@ var ClubhouseMessagingMixin = {
                             hereMentioned: mentions.hereMentioned
                         },
                         success: function(o) {
-                            console.log('encrypted message posted!', o);
+                            console.debug('encrypted message posted!', o);
                             self.newMessage = '';
                             //self.messages.push(message);
                             self.messageAreaDisabled = false;
@@ -683,11 +693,18 @@ var ClubhouseMessagingMixin = {
                                     $('#post-message-box').focus();
                                 }
                             });
-                            
+                        },
+                        error: function(e) {
+                            console.error('error posting message ', e);
+                            stallion.showError(e.message || e);
+                            self.messageAreaDisabled = false;
                         }
                     });
-                }
-            );
+            }).catch(function(e) {
+                console.error('error encrypting new message', e);
+                self.messageAreaDisabled = false;
+            });
+                  
 
 
         },
@@ -696,7 +713,7 @@ var ClubhouseMessagingMixin = {
         },
         postPlainMessage: function() {
             var self = this;
-            console.log('post message!');
+            console.debug('post message!');
             self.messageAreaDisabled = true;
             var mentions = self.mentionsFromText(self.newMessage);
             var messageData = {'bodyMarkdown': self.newMessage, widgets: []};
@@ -713,7 +730,7 @@ var ClubhouseMessagingMixin = {
                         hereMentioned: mentions.hereMentioned
                     },
                     success: function(o) {
-                        console.log('message posted!', o);
+                        console.debug('message posted!', o);
                         var messageData = JSON.parse(o.messageJson);
                         // TODO: strip out HTML, parse Markdown
                         var message = {
@@ -723,7 +740,7 @@ var ClubhouseMessagingMixin = {
                             fromUsername: o.fromUsername,
                             id: o.id
                         };
-                        console.log('o.id ', o.id);
+                        console.debug('o.id ', o.id);
                         self.newMessage = '';
                         //self.messages.push(message);
                         self.messageAreaDisabled = false;
@@ -763,7 +780,20 @@ var ClubhouseMessagingMixin = {
             //var matches = m.exec(self.newMessage);
             
         },
-        
+        leaveChannel: function() {
+            var self = this;
+            stallion.request({
+                url: '/clubhouse-api/channels/remove-channel-member',
+                method: 'POST',
+                data: {
+                     userId: self.$store.state.user.id,
+                     channelId: self.channel.id
+                },
+                success: function() {
+                    window.location.hash = '/channel/' + self.$store.state.defaultChannelId;
+                }
+            });
+        },
         
         /////// EDITING A MESSAGE ///////////
         openEditMessage: function(message) {
@@ -858,7 +888,7 @@ var ClubhouseMessagingMixin = {
             this.$refs.emojipopup.toggle(event);
         },
         convertEmoji: function(emoji) {
-            console.log('convert emoji ', emoji);
+            console.debug('convert emoji ', emoji);
             return emoji;
         },
         onCloseReactionEmoji: function() {
@@ -879,7 +909,7 @@ var ClubhouseMessagingMixin = {
         },
         addReaction: function(message, emoji) {
             var self = this;
-            console.log('add reaction', message.id, emoji);
+            console.debug('add reaction', message.id, emoji);
             stallion.request({
                 url: '/clubhouse-api/messaging/add-reaction',
                 method: 'POST',
@@ -901,7 +931,7 @@ var ClubhouseMessagingMixin = {
         },
         removeReaction: function(message, emoji) {
             var self = this;
-            console.log('remove reaction', message.id, emoji);
+            console.debug('remove reaction', message.id, emoji);
             stallion.request({
                 url: '/clubhouse-api/messaging/remove-reaction',
                 method: 'POST',
@@ -997,11 +1027,12 @@ var ClubhouseMessagingMixin = {
             this.$refs.messageemojipopup.toggle(event);
         },
         insertEmoji: function(emoji) {
-            console.log('insert emoji ', emoji);
+            var self = this;
+            console.debug('insert emoji ', emoji);
             var ta = $(this.$el).find('#post-message-box').get(0);
             this.insertAtCursor(ta, emoji);
             setTimeout(function() {
-                $(this.$el).find('#post-message-box').focus();
+                $(self.$el).find('#post-message-box').focus();
             }, 20);
         },
         insertAtCursor(myField, myValue) {
@@ -1011,7 +1042,7 @@ var ClubhouseMessagingMixin = {
                 myField.focus();
                 sel = document.selection.createRange();
                 sel.text = myValue;
-                console.log('IE!');
+                console.debug('IE!');
             }
             //MOZILLA and others
             else if (myField.selectionStart || myField.selectionStart == '0') {

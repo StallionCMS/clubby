@@ -1,6 +1,7 @@
 package io.clubby.server;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static io.stallion.utils.Literals.*;
@@ -24,50 +25,72 @@ public class Notifier {
     }
 
     public static void sendNotification(Long userId, String title, String body, Map messageData) {
-        MobileSession session = MobileSessionController
+        UserProfile profile = UserProfileController.instance().forStallionUser(userId);
+        if (profile == null) {
+            return;
+        }
+        List<MobileSession> sessions = MobileSessionController
                 .instance()
                 .filter("userId", userId)
                 .exclude("registrationToken", "")
                 .sortBy("id", SortDirection.DESC)
-                .first();
-        if (session == null) {
+                .all();
+        if (sessions == null) {
             return;
         }
-
-
-        if (ClubbyDynamicSettings.isUseClubbyHostForPushNotification()) {
-            CentralHostApiConnector.sendMobilePushNotification(title, body, messageData, list(session.getRegistrationToken()));
-            return;
-        }
-        if (empty(ClubbySettings.getInstance().getFirebaseServerKey())) {
-            Log.warn("Tried to send a mobile push notification but no firebaseServerKey setting in conf/clubby.toml was configured.");
-            return;
-        }
-
-
-        RequestBody b = new RequestBody()
-                .setNotification(
-                        new Notification()
-                        .setBody(or(body, title))
-                        .setTitle(title)
-                )
-                .setTo(session.getRegistrationToken())
-                ;
-        String json = JSON.stringify(b);
-        try {
-            HttpResponse<String> response = Unirest
-                    .post("https://fcm.googleapis.com/fcm/send")
-                    .header("Authorization", "key=" + ClubbySettings.getInstance().getFirebaseServerKey())
-                    .header("Content-type", "application/json")
-                    .body(json)
-                    .asString();
-            if (response.getStatus() == 200) {
-                Log.info("Response from FCM was: {0}", response.getBody());
-            } else {
-                Log.warn("Error Response from FCM was: {0} {1}", response.getStatus(), response.getBody());
+        Map<String, List<String>> tokensByPlatform = map(val("ANDROID", list()), val("IOS", list()));
+        for(MobileSession sess: sessions) {
+            if (sess.getDeviceOperatingSystem().equals(MobileSession.OperatingSystems.IOS)) {
+                tokensByPlatform.get("IOS").add(sess.getRegistrationToken());
+            } else if (MobileSession.OperatingSystems.ANDROID.equals(sess.getDeviceOperatingSystem())) {
+                tokensByPlatform.get("ANDROID").add(sess.getRegistrationToken());
             }
-        } catch (UnirestException e) {
-            Log.exception(e, "Error sending notification.");
+        }
+        for(Map.Entry<String, List<String>> entry: tokensByPlatform.entrySet()) {
+            if (entry.getValue().size() == 0) {
+                continue;
+            }
+            if (ClubbyDynamicSettings.isUseClubbyHostForPushNotification()) {
+                CentralHostApiConnector.sendMobilePushNotification(entry.getKey(), profile.getMobileNotifyPreference().toString(), title, body, messageData, entry.getValue());
+                continue;
+            }
+            if (empty(ClubbySettings.getInstance().getFirebaseServerKey())) {
+                Log.warn("Tried to send a mobile push notification but no firebaseServerKey setting in conf/clubby.toml was configured.");
+                continue;
+            }
+
+
+
+            RequestBody b = new RequestBody();
+
+            if ("IOS".equals(entry.getKey())) {
+                b.setNotification(
+                        new Notification()
+                                .setBody(or(body, title))
+                                .setTitle(title)
+                );
+            }
+            if (entry.getValue().size() == 1) {
+                b.setTo(entry.getValue().get(1));
+            } else {
+                b.setRegistration_ids(entry.getValue());
+            }
+            String json = JSON.stringify(b);
+            try {
+                HttpResponse<String> response = Unirest
+                        .post("https://fcm.googleapis.com/fcm/send")
+                        .header("Authorization", "key=" + ClubbySettings.getInstance().getFirebaseServerKey())
+                        .header("Content-type", "application/json")
+                        .body(json)
+                        .asString();
+                if (response.getStatus() == 200) {
+                    Log.info("Response from FCM was: {0}", response.getBody());
+                } else {
+                    Log.warn("Error Response from FCM was: {0} {1}", response.getStatus(), response.getBody());
+                }
+            } catch (UnirestException e) {
+                Log.exception(e, "Error sending notification.");
+            }
         }
         /*
 
@@ -87,6 +110,7 @@ public class Notifier {
         private Notification notification;
         private String priority = "high";
         private boolean content_available = true;
+        private List<String> registration_ids;
 
         public Notification getNotification() {
             return notification;
@@ -122,6 +146,15 @@ public class Notifier {
 
         public RequestBody setContent_available(boolean content_available) {
             this.content_available = content_available;
+            return this;
+        }
+
+        public List<String> getRegistration_ids() {
+            return registration_ids;
+        }
+
+        public RequestBody setRegistration_ids(List<String> registration_ids) {
+            this.registration_ids = registration_ids;
             return this;
         }
     }

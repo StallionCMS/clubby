@@ -1,4 +1,4 @@
-console.log("executing app.js");
+console.log("executing clubby assets/app.js");
 
 (function() {
     window.stallionClubhouseApp = window.stallionClubhouseApp || {};
@@ -254,7 +254,7 @@ console.log("executing app.js");
 
         router.beforeEach(function(to, from, next) {
             // No auth required for the view? Carry on.
-            console.log('go to ', to);
+            console.debug('go to ', to);
             if (!to.meta.keyRequired && to.meta.authRequired === false) {
                 if (to.path.indexOf('/login') === 0 && to.query.password && to.query.username) {
 
@@ -310,7 +310,7 @@ console.log("executing app.js");
 
             // Always do this in case there is an error in the normal mark route loaded and
             // we want to see what happened.
-            console.log('routed to ', to);
+            console.debug('routed to ', to);
 
             if (!sentRouteLoadedMessage && store.state.privateKey) {
                 
@@ -330,7 +330,7 @@ console.log("executing app.js");
             router: router,
             watch: {
                 '$store.state.websocketStatus': function(newStatus) {
-                    console.log('new web socket status', newStatus);
+                    console.log('new web socket status', newStatus.state, newStatus.failedCount);
                 }
             }
         });
@@ -558,6 +558,7 @@ function encodeUTF8(s) {
 
 // Unmarshals an Uint8Array to string.
 function decodeUTF8(bytes) {
+    try {
 	var s = '';
 	var i = 0;
 	while (i < bytes.length) {
@@ -584,6 +585,10 @@ function decodeUTF8(bytes) {
 		} else throw 'UTF-8 decode: code point 0x' + c.toString(16) + ' exceeds UTF-16 reach';
 	}
 	return s;
+    } catch(e) {
+        console.error(e, 'Error decoding message', bytes);
+        return '';
+    }
 }
 
 

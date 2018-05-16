@@ -97,7 +97,20 @@ public class ChannelEndpoints implements EndpointResource {
         return ctx;
     }
 
-
+    @POST
+    @Path("/leave-channel/:channelId")
+    public Object leaveChannel(@PathParam("channelId") Long channelId) {
+        Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
+        ChannelMember channelMember = ChannelMemberController.instance()
+                .filter("channelId", channelId)
+                .filter("userId", Context.getUser().getId())
+                .first();
+        if (channel == null || channelMember == null) {
+            return map();
+        }
+        ChannelMemberController.instance().hardDelete(channelMember);
+        return map(val("succeeded", true));
+    }
 
 
     @POST

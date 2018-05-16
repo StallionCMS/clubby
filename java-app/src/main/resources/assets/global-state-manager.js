@@ -2,7 +2,8 @@ function ClubhouseMakeVuex() {
         var store = new Vuex.Store({
             state: {
                 appLoading: true,
-                defaultChannelId: 0,
+                defaultChannelId: theApplicationContext.defaultChannelId,
+                channelCount: 0,
                 user: null,
                 userProfile: null,
                 publicKey: null,
@@ -46,7 +47,7 @@ function ClubhouseMakeVuex() {
                     state.sidebarPoppedUp = isActive;
                 },
                 userStateChange: function(state, data) {
-                    console.log('commit state change ', data.userId, data.newState);
+                    console.debug('commit state change ', data.userId, data.newState);
                     if (state.user && data.userId === state.user.id) {
                         return;
                     }
@@ -80,6 +81,11 @@ function ClubhouseMakeVuex() {
                     Object.keys(channel).forEach(function(key) {
                         existing[key] = channel[key];
                     });
+                    if (channel.channelType === 'FORUM') {
+                        state.forumChannels = state.forumChannels;
+                    } else {
+                        state.standardChannels = state.standardChannels;
+                    }                    
                     checkUpdateFavicon(state.channelById);
                 },                
                 generalContext: function(state, ctx) {
@@ -136,14 +142,14 @@ function ClubhouseMakeVuex() {
                         o.userProfile.encryptedPrivateKeyInitializationVectorHex,
                         sessionStorage.privateKeyPassphrase,
                         function(privateKey) {
-                            console.log('loaded private key!');
+                            console.debug('loaded private key!');
                             store.commit('privateKey', privateKey);
                         }
                     );
                     */
                 },
                 activeChannelId: function(state, channelId) {
-                    console.log('set active channelid ', channelId);
+                    console.debug('set active channelid ', channelId);
                     state.activeChannelId = channelId;
                 },
                 idleStatus: function(state, status) {
@@ -167,12 +173,15 @@ function ClubhouseMakeVuex() {
         var hasMentions = false;
         var hasNew = false;
         var mentionsCount = 0;
-        console.log('checkUpdateFavicon ' , channelById);
+        console.debug('checkUpdateFavicon ' , channelById);
         if (!channelById) {
             return;
         }
         Object.keys(channelById).forEach(function(channelId) {
             var channel = channelById[channelId];
+            if (channel.deleted) {
+                return;
+            }
             if (channel.mentionsCount > 0) {
                 hasMentions = true;
                 mentionsCount += channel.mentionsCount;
@@ -183,7 +192,7 @@ function ClubhouseMakeVuex() {
         });
 
         if (hasNew === previousHasNew && mentionsCount === previousMentionCount) {
-            console.log('no updates to mentions or hasNew');
+            console.debug('no updates to mentions or hasNew');
             return
         }
         previousHasNew = hasNew;
@@ -215,7 +224,7 @@ function ClubhouseMakeVuex() {
 
             //
 
-            console.log('updated favicon');
+            console.debug('updated favicon');
         } catch (err) {
             console.error('error updating favicon ', err);
         }
@@ -231,12 +240,12 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     manager.reconnectFailCount = 0;
     manager.started = false;
     manager.madeFirstConnection = false;
-    console.log('new global state manager');
+    console.debug('new global state manager');
 
     
     manager.start = function() {
         if (manager.started) {
-            console.log('manager already started');
+            console.debug('manager already started');
             return;
         }
         if (vueApp.$store.state.user && vueApp.$store.state.user.id) {
@@ -253,7 +262,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         if (electronInterop) {
             electronInterop.isHidden = false;
         }
-        console.log('conatiner shown, awake now');
+        console.debug('conatiner shown, awake now');
         vueApp.$store.commit('idleStatus', 'AWAKE');
         manager.updateUserState('AWAKE');
     }
@@ -270,25 +279,25 @@ var ClubhouseGlobalStateManager = function(vueApp) {
     manager.setupIfVisible = function() {
 
         ifvisible.on("idle", function(){
-            console.log('now idle');
+            console.debug('now idle');
             vueApp.$store.commit('idleStatus', 'IDLE');
             manager.updateUserState('IDLE');
         });
         
         ifvisible.on("wakeup", function(){
-            console.log('on wakeup');
+            console.debug('on wakeup');
             vueApp.$store.commit('idleStatus', 'AWAKE');
             manager.updateUserState('AWAKE');
         });
 
         ifvisible.on("blur", function(){
-            console.log('now hidden');
+            console.debug('now hidden');
             vueApp.$store.commit('idleStatus', 'IDLE');
             manager.updateUserState('IDLE');
         });
         
         ifvisible.on("focus", function(){
-            console.log('on focus');
+            console.debug('on focus');
             vueApp.$store.commit('idleStatus', 'AWAKE');
             manager.updateUserState('AWAKE');
         });        
@@ -314,7 +323,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         if (!manager.clubhouseSocket || !manager.clubhouseSocket.readyState === 1) {
             return;
         }
-        console.log('update user state', state);
+        console.debug('update user state', state);
         manager.clubhouseSocket.send('updateUserState\n\n' + JSON.stringify({
             state: state
         }));
@@ -331,11 +340,11 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         var wsUrl = scheme + window.location.host + "/st-wsroot/events/?stUserSession=" + encodeURIComponent(stallion.getCookie("stUserSession") || '') + "&userState=" + (vueApp.$store.state.idleStatus || 'AWAKE');
         manager.clubhouseSocket = new WebSocket(wsUrl);
         
-        console.log('setup web socket.');
+        console.debug('setup web socket.');
 
         
         manager.clubhouseSocket.onopen = function(event) {
-            console.log('websocket opened ', event);
+            console.debug('websocket opened ', event);
             vueApp.$store.commit('websocketStatus', {state: 'OPEN'});
             manager.loadContext();
             if (vueApp.currentChannelComponent && vueApp.currentChannelComponent.isLoaded) {
@@ -365,7 +374,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         
         manager.clubhouseSocket.onmessage = function (event) {
             
-            console.log(event.data);
+            console.debug(event.data);
             var data = JSON.parse(event.data);
             if (data.type === 'channel-changes') {
                 manager.loadContext();
@@ -381,7 +390,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             } else if (data.type === 'member-updated') {
                 vueApp.$store.commit('userUpdated', data.member);
             } else if (data.type === 'state-change') {
-                console.log('state change!', data.userId, data.newState);
+                console.debug('state change!', data.userId, data.newState);
                 vueApp.$store.commit('userStateChange', {userId: data.userId, newState: data.newState});
             } else if (data.type === 'new-reaction') {
                 if (eventMatchesCurrentChannel(data.channelId)) {
@@ -392,7 +401,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                     window.ClubhouseVueApp.currentChannelComponent.handleIncomingRemovedReaction(data.reaction);
                 }
             } else if (data.type === 'new-message' || data.type === 'message-edited') {
-                console.log('new-message');
+                console.debug('new-message');
                 if (eventMatchesCurrentChannel(data.message.channelId)) {
                     window.ClubhouseVueApp.currentChannelComponent.handleIncomingMessage(data.message, data.type, data, event);
                     return;
@@ -400,7 +409,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 if (data.type === 'message-edited') {
                     return;
                 }
-                console.log('message on non-open channel', data.message);
+                console.debug('message on non-open channel', data.message);
                 if (!data.message.read) {
                     if (!vueApp.$store.state.channelById[data.message.channelId]) {
                         ClubhouseVueApp.stateManager.loadContext();
@@ -411,7 +420,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                 if (data.message.mentioned || data.message.hereMentioned && !data.message.read) {
                     
                     
-                    console.log('message is mentioned and not read');
+                    console.debug('message is mentioned and not read');
                     var text = '<click to go to message>';
                     if (data.message.messageJson) {
                         var d = JSON.parse(data.message.messageJson);
@@ -430,7 +439,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
                         link = theApplicationContext.site.siteUrl + '/#/forum/' + data.message.channelId + '/' + data.message.threadId + '?messageId=' + data.message.id;
                     }
 
-                    console.log('call sendNotification');
+                    console.debug('call sendNotification');
                     stallionClubhouseApp.sendNotifiction(
                         'Message from ' + data.message.fromUsername,
                         {
@@ -473,7 +482,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
 
     manager.setupIframeResizeListener = function() {
         window.addEventListener("message", function(e) {
-            console.log('received message!', e);
+            console.debug('received message!', e);
             if (!e.data.iframeId) {
                 return;
             }
@@ -498,7 +507,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
             setTimeout(function() {
                 var objDiv = $('.channel-messages').get(0);
                 if (objDiv) {
-                    console.log('diff is ', diff);
+                    console.debug('diff is ', diff);
                     if (objDiv.scrollTop > (objDiv.scrollHeight / 2)) {
                         var newTop = objDiv.scrollTop + diff;
                         if (newTop < 0) {

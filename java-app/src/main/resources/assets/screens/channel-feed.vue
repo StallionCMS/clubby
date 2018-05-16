@@ -278,7 +278,8 @@
             </div>
             <div v-if="contextMenuShown" class="channel-context-menu">
                 <a href="javascript:;" @click="toggleFavorite"><span v-if="!channel.favorite">Make Favorite</span><span v-if="channel.favorite">Unfavorite</span></a>
-                <a :href="'#/channel-members/' + channelId">View channel members ({{ members ? members.length : '-' }} members)</a>
+                <a :href="'#/channel-members/' + channelId">View members ({{ members ? members.length : '-' }} members)</a>
+                <a v-if="(channel.channelType==='CHANNEL' || channel.channelType==='FORUM') && $store.state.defaultChannelId !== channel.id" class="column-header-icon" href="javascript:;" @click="leaveChannel">Leave Group</a>
                 <a v-if="isChannelOwner && (channel.channelType==='CHANNEL' || channel.channelType==='FORUM')" class="column-header-icon" :href="'#/channel-settings/' + channelId">Settings</a>
                 
             </div>
@@ -414,24 +415,26 @@
                  var animateTo = $msg.offset().top - 300;
                  var newScrollTop = $msg.offset().top;
                  div.scrollTop = newScrollTop;
-                 console.log('scrollTop ', newScrollTop, animateTo);
+                 console.debug('scrollTop ', newScrollTop, animateTo);
                  $div.animate({ scrollTop: animateTo}, 1200);
              } 
          },
+         scrollToTopOfLatestMessages: function() {
+             var self = this;
+             ifvisible.ignoreScrollForTwoSeconds();
+             var scrollTo = document.body.scrollHeight;
+             var div = $(self.$el).find('.channel-messages').get(0);
+             var $div = $(div);
+             var $message = $div.find('#channel-message-' + self.messages[self.messages.length-1].id);
+             var difference = $message.height() - ($(window).height() - 75);
+             if (difference > 0) {
+                 scrollTo = scrollTo - $message.height() - 120;
+             }
+             console.log('scrollTo ', scrollTo, 'difference ', difference);
+             window.scrollTo(0, scrollTo);
+         },
          afterIncomingMessage: function() {
              var self = this;
-             if (self.pages && self.pages.length) {
-                 
-             } else {
-                 var div = $(self.$el).find('.channel-messages').get(0);
-                 var $div = $(div);
-                 var $message = $div.find('#channel-message-' + self.messages[self.messages.length-1].id);
-                 var distance = div.scrollHeight - div.scrollTop - $div.height() - $message.height();
-                 console.log('distance ', distance);
-                 if (distance < 150) {
-                     div.scrollTop = div.scrollHeight + 200;
-                 }
-             }
          },         
          toggleFavorite: function() {
              var self = this;

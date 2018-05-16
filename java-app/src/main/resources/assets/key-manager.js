@@ -54,7 +54,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
             self.encpassphrase
         ).then(
             function(result) {
-                debug('decrypted private key!!! ', result);
+                console.debug('decrypted private key!!! ', result);
                 resolve(result);
             },
             function(e) {
@@ -79,7 +79,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
             true,
             ["encrypt"]
         ).then(function(result) {
-            debug('v1. got publick key ', result);
+            console.debug('v1. got publick key ', result);
             vueStore.commit('publicKey', result);
             step2DecryptPrivate();
         }).catch(function(err) {
@@ -96,7 +96,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
             self.encpassphrase
         ).then(
             function(result) {
-                debug('decrypted private key!!! ', result);
+                console.debug('decrypted private key!!! ', result);
                 vueStore.commit('privateKey', result);
                 step3TestEncrypt();
             },
@@ -121,7 +121,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
         ).then(
             function(result){
                 var encryptedBytes = new Uint8Array(result);
-                debug('encrypted test phrase');
+                console.debug('encrypted test phrase');
                 step4TestDecrypt(message, vector, encryptedBytes);
             }, 
             function(e){
@@ -145,7 +145,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
             function(result){
                 var decryptedMessage = convertArrayBufferViewtoString(result);
                 if (message === decryptedMessage) {
-                    debug('encrypt/decrypt test passed!');
+                    console.debug('encrypt/decrypt test passed!');
                     self.resolve({privateKey: vueStore.state.privateKey, publicKey: vueStore.state.publicKey});
                 } else {
                     throw new Error('The message was ' + message + ' but after decryption was ' + decryptedMessage);
@@ -170,11 +170,11 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
 
     km.generateIfNotExists = function(user, password, callback) {
         if (localStorage['st_clubhouse_public_key_' + user]) {
-            debug('public key exists for ' + user);
+            console.debug('public key exists for ' + user);
             callback();
         }
         new KeyGenerator().generate(user, password, function() {
-            debug('key generated');
+            console.debug('key generated');
             callback();
         });
     };
@@ -198,7 +198,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
             true,
             ["encrypt"]
         ).then(function(result) {
-            debug('got publick key ', result);
+            console.debug('got publick key ', result);
             callback(result);
         }).catch(function(err) {
             console.error(err);
@@ -206,7 +206,7 @@ var KeyImporter = function(encpassphrase, resolve, reject, userProfile) {
     };
 
     km.getMyPrivateKey = function(user, password, callback) {
-        debug('get private key ' + user);
+        console.debug('get private key ' + user);
         new PrivateKeyFetcher().fetchFromLocalStorage(user, password, callback);
     };
 
@@ -226,13 +226,13 @@ var PrivateKeyFetcher = function() {
 
     self.fetchFromLocalStorage = function(user, password, resolve, reject) {
         var privateKeyEncryptedHex = localStorage['st_clubhouse_private_key_' + user];
-        debug('vector json ' + localStorage['st_clubhouse_private_key_vector_' + user]);
+        console.debug('vector json ' + localStorage['st_clubhouse_private_key_vector_' + user]);
         var privateKeyEncryptedVector = localStorage['st_clubhouse_private_key_vector_' + user];
         self.fetch(privateKeyEncryptedHex, privateKeyEncryptedVector, password, resolve, reject);
     };
 
     self.fetch = function(privateKeyJwkEncryptedHex, privateKeyVectorHex, password, resolve, reject) {
-        debug('PrivateKeyFetcher.fetch ');
+        console.debug('PrivateKeyFetcher.fetch ');
         self.password = password;
         self.resolve = resolve;
         self.reject = reject;
@@ -244,19 +244,19 @@ var PrivateKeyFetcher = function() {
     };
 
     function step1LoadEncryptedPrivateKey() {
-        debug('f1. load private key');
+        console.debug('f1. load private key');
         step2DerivePrivateKeyEncryptionKey();
     }
 
     function step2DerivePrivateKeyEncryptionKey() {
-        debug('f2. derive encryption key for ' + self.password);
+        console.debug('f2. derive encryption key for ' + self.password);
         crypto.subtle.digest(
             {
                 name: "SHA-256"
             },
             convertStringToArrayBufferView(self.password)
         ).then(function(result){
-            console.log('passphrase converted to sha-256, now convert to key: ' + result + " of size " + result.byteLength);
+            console.debug('passphrase converted to sha-256, now convert to key: ' + result + " of size " + result.byteLength);
             window.crypto.subtle.importKey(
                 "raw",
                 result,
@@ -266,7 +266,7 @@ var PrivateKeyFetcher = function() {
                 false,
                 ["encrypt", "decrypt"]
             ).then(function(key){
-                debug('f2. derived key ', key);
+                console.debug('f2. derived key ', key);
                 self.passwordDerivedKey = key;
                 step3DecryptPrivateKey();
             }, function(e){
@@ -278,12 +278,12 @@ var PrivateKeyFetcher = function() {
     }
 
     function step3DecryptPrivateKey() {
-        debug('f3. decrypt private key hex ' + self.privateKeyEncryptedHex);
+        console.debug('f3. decrypt private key hex ' + self.privateKeyEncryptedHex);
 
         var keyBytes = hexToArray(self.privateKeyJwkEncryptedHex);
-        debug('f3. decrypt private key bytes ', keyBytes);
-        debug('f3. decrypt private key vector ', self.privateKeyVector);
-        debug('f3. password derived key ', self.passwordDerivedKey);
+        console.debug('f3. decrypt private key bytes ', keyBytes);
+        console.debug('f3. decrypt private key vector ', self.privateKeyVector);
+        console.debug('f3. password derived key ', self.passwordDerivedKey);
         crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
@@ -293,7 +293,7 @@ var PrivateKeyFetcher = function() {
             keyBytes.buffer
         ).then(
             function(privateKeyJwkBytes) {
-                debug('f3. decrypte ', privateKeyJwkBytes);
+                console.debug('f3. decrypte ', privateKeyJwkBytes);
                 var privateJwk = JSON.parse(convertArrayBufferViewtoString(privateKeyJwkBytes));
                 //self.privateKeyPkcs8 = privateKeyPkcs8;
                 step4ImportDecryptedPrivateKey(privateJwk);
@@ -306,7 +306,7 @@ var PrivateKeyFetcher = function() {
     }
 
     function step4ImportDecryptedPrivateKey(privateKeyJwk) {
-        debug('f4. try importing pfivate key');
+        console.debug('f4. try importing pfivate key');
         window.crypto.subtle.importKey(
             'jwk',
             privateKeyJwk,
@@ -319,7 +319,7 @@ var PrivateKeyFetcher = function() {
             false,
             ["decrypt"]
         ).then(function(privateKey) {
-            debug('f4. private key imported ', privateKey);
+            console.debug('f4. private key imported ', privateKey);
             self.resolve(privateKey);
         }, function(e) {
             console.error(e);
@@ -347,7 +347,7 @@ var KeyGenerator = function() {
     };
 
     var step1GenerateMyPublicPrivate = function() {
-        debug('g1. generate public/private keys');
+        console.debug('g1. generate public/private keys');
         var algorithmName = "RSA-OAEP";
         var usages = ["encrypt", "decrypt"];
         window.crypto.subtle.generateKey(
@@ -364,13 +364,13 @@ var KeyGenerator = function() {
             self.privateKey = keyPair.privateKey;
             step2ExportPublicKey();
         }).catch(function(err) {
-            debug(err);
+            console.debug(err);
             self.reject(err);
         });          
     };
 
     function step2ExportPublicKey() {
-        debug('g2. export public key');
+        console.debug('g2. export public key');
         window.crypto.subtle.exportKey('jwk', self.publicKey).then(function(jwk) {
             //window._spki = jwk;
             //var savedObject = {
@@ -381,27 +381,27 @@ var KeyGenerator = function() {
             self.publicKeyJwkJson = JSON.stringify(jwk);
             step3ExportPrivateKey();
         }).catch(function(e) {
-            debug(e);
+            console.debug(e);
             self.reject(e);
         });
     };
 
     function step3ExportPrivateKey() {
         window.crypto.subtle.exportKey('jwk', self.privateKey).then(function(jwk) {
-            debug('g3. privatekey jwk ', jwk);
+            console.debug('g3. privatekey jwk ', jwk);
             //var hexPkcs8 = arrayBufferToHexString(pkcs8);
-            //debug('g3. privateKey after pkcs8 ', hexToArray(arrayBufferToHexString(pkcs8)));
-            //debug('g3. privateKey hex pkcs8 ', hexPkcs8);
+            //console.debug('g3. privateKey after pkcs8 ', hexToArray(arrayBufferToHexString(pkcs8)));
+            //console.debug('g3. privateKey hex pkcs8 ', hexPkcs8);
             self.privateKeyJwk = jwk;
             step4DerivePrivateKeyEncryptionKey();
         }).catch(function(e) {
-            debug(e);
+            console.debug(e);
             self.reject(e);
         });
     };
 
     function step4DerivePrivateKeyEncryptionKey() {
-        debug('g4. derive key to encrypt private key');
+        console.debug('g4. derive key to encrypt private key');
         crypto.subtle.digest(
             {
                 name: "SHA-256"
@@ -417,11 +417,11 @@ var KeyGenerator = function() {
                 false,
                 ["encrypt", "decrypt"]
             ).then(function(key){
-                debug('g4. derived ', key);
+                console.debug('g4. derived ', key);
                 self.encpassphraseDerivedKey = key;
                 step5EncryptPrivateKey();
             }, function(e){
-                debug(e);
+                console.debug(e);
                 self.reject(e);
             });
         });
@@ -444,14 +444,14 @@ var KeyGenerator = function() {
         encryptPromise.then(
             function(result) {
                 var encryptedBytes = new Uint8Array(result);
-                debug('g5. encrypt vector ', vector);
-                debug('g5. encryptedPrivateKeyBytes ', encryptedBytes);                
+                console.debug('g5. encrypt vector ', vector);
+                console.debug('g5. encryptedPrivateKeyBytes ', encryptedBytes);                
                 self.privateKeyJwkEncryptedHex = arrayBufferToHexString(result);
                 //enc.encryptedMessageBytes = result;
                 //info.encryptedMessageHex = arrayBufferToHexString(encrypted_data);
                 //enc.encryptedMessageHex = result;
-                //debug('e2. encryptedMessageHex ', enc.encryptedMessageHex);
-                debug('g5. encryptedPrivateKeyHex ', self.privateKeyEncryptedHex);
+                //console.debug('e2. encryptedMessageHex ', enc.encryptedMessageHex);
+                console.debug('g5. encryptedPrivateKeyHex ', self.privateKeyEncryptedHex);
                 self.callback(self);
             }, 
             function(e){

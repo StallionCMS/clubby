@@ -61,7 +61,7 @@ var Encrypter = function() {
         var password = arrayBufferToHexString(crypto.getRandomValues(new Uint8Array(32)));
         enc.password = password;
         enc.passwordBytes = convertStringToArrayBufferView(password);
-        console.log('e1. password ', password);
+        console.debug('e1. password ', password);
         //password = self.messageFromGeorge;
         //var password = "password";
         var key = null;
@@ -80,7 +80,7 @@ var Encrypter = function() {
                 false,
                 ["encrypt", "decrypt"]
             ).then(function(key){
-                console.log('e1. derived key ', key);
+                console.debug('e1. derived key ', key);
                 enc.symettricKey = key;
                 step2EncryptMessage();
             }, function(e){
@@ -112,7 +112,7 @@ var Encrypter = function() {
                 enc.encryptedMessageBytes = result;
                 //info.encryptedMessageHex = arrayBufferToHexString(encrypted_data);
                 enc.encryptedMessageHex = arrayBufferToHexString(result);
-                console.log('e2. encryptedMessageHex ', enc.encryptedMessageHex);
+                console.debug('e2. encryptedMessageHex ', enc.encryptedMessageHex);
                 step3EncryptPassword();
             }, 
             function(e){
@@ -131,7 +131,7 @@ var Encrypter = function() {
 
         enc.tos.forEach(function(to) {
             var vector = crypto.getRandomValues(new Uint8Array(16));
-            console.log('e3. ', enc.passwordBytes, ' key ', to.publicKey, 'vector ', vector);
+            console.debug('e3. ', enc.passwordBytes, ' key ', to.publicKey, 'vector ', vector);
             var encrypt_promise = crypto.subtle.encrypt(
                 {
                     name: "RSA-OAEP",
@@ -144,11 +144,11 @@ var Encrypter = function() {
             encrypt_promise.then(
                 function(result){
                     var encPasswordBytes = new Uint8Array(result);
-                    console.log('e3. vector ', vector);
-                    console.log('e3. encPasswordResult ', result);
+                    console.debug('e3. vector ', vector);
+                    console.debug('e3. encPasswordResult ', result);
                     var encryptedPasswordHex = arrayBufferToHexString(encPasswordBytes);
-                    console.log('e3. encPasswordBytes ', encPasswordBytes);                     
-                    console.log('e3. encrypted password hex ', encryptedPasswordHex);
+                    console.debug('e3. encPasswordBytes ', encPasswordBytes);                     
+                    console.debug('e3. encrypted password hex ', encryptedPasswordHex);
                     self.encryptedPasswords.push({
                         userId: to.userId,
                         username: to.username,
@@ -167,14 +167,14 @@ var Encrypter = function() {
 
 
         var inter = setInterval(function() {
-            console.log('check for encrypted passwords all generated');
+            console.debug('check for encrypted passwords all generated');
             if (self.encryptedPasswords === null || self.encryptedPasswords === undefined) {
-                console.log('self.encryptedPasswords is undefined ', self.encryptedPasswords, self);
+                console.debug('self.encryptedPasswords is undefined ', self.encryptedPasswords, self);
                 clearInterval(inter);
                 return false;
             }
             if (self.encryptedPasswords.length === enc.tos.length) {
-                console.log("e3+. Generated all encrypted passpharses: ", self.encryptedPasswords);
+                console.debug("e3+. Generated all encrypted passpharses: ", self.encryptedPasswords);
                 clearInterval(inter);
                 enc.callback(self);
                 return false;
@@ -216,7 +216,7 @@ var ReEncrypter = function() {
 
 
     function step1DecryptPassword() {
-        console.log('d1. encryptedPassword ', self.encryptedPasswordBytes);
+        console.debug('d1. encryptedPassword ', self.encryptedPasswordBytes);
         var decryptPromise = crypto.subtle.decrypt(
             {
                 name: "RSA-OAEP",
@@ -229,7 +229,7 @@ var ReEncrypter = function() {
         decryptPromise.then(
             function(result){
                 var decrypted = new Uint8Array(result);
-                console.log('d1. Decrypted passphrase ', result, decrypted, convertArrayBufferViewtoString(decrypted));
+                console.debug('d1. Decrypted passphrase ', result, decrypted, convertArrayBufferViewtoString(decrypted));
                 self.password = convertArrayBufferViewtoString(decrypted);
                 step2PasswordToSymettricKey();
             },
@@ -241,7 +241,7 @@ var ReEncrypter = function() {
     }
 
     function step2PasswordToSymettricKey() {
-        console.log('d2. password to key ', self.password);
+        console.debug('d2. password to key ', self.password);
         crypto.subtle.digest(
             {
                 name: "SHA-256"
@@ -257,7 +257,7 @@ var ReEncrypter = function() {
                 false,
                 ["encrypt", "decrypt"]
             ).then(function(key){
-                console.log('d2. re-derived key ', key);
+                console.debug('d2. re-derived key ', key);
                 self.symettricKey = key;
                 step3EncryptMessage();
             }, function(e){
@@ -272,7 +272,7 @@ var ReEncrypter = function() {
         var vector = crypto.getRandomValues(new Uint8Array(16));
         enc.messageVector = vector;
         enc.messageVectorHex = arrayBufferToHexString(enc.messageVector);
-        console.log('e2. message ', enc.message);
+        console.debug('e2. message ', enc.message);
         encrypt_promise = crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
@@ -287,7 +287,7 @@ var ReEncrypter = function() {
                 enc.encryptedMessageBytes = result;
                 //info.encryptedMessageHex = arrayBufferToHexString(encrypted_data);
                 enc.encryptedMessageHex = arrayBufferToHexString(result);
-                console.log('e2. encryptedMessageHex ', enc.encryptedMessageHex);
+                console.debug('e2. encryptedMessageHex ', enc.encryptedMessageHex);
                 self.callback(self);
             }, 
             function(e){
@@ -322,7 +322,7 @@ var Decrypter = function() {
 
     dec.decryptToken = function(privateKey, token, resolve, reject) {
         var tokenBytes = hexToArray(token);
-        console.log('tokenBytes ', tokenBytes);
+        console.debug('tokenBytes ', tokenBytes);
         crypto.subtle.decrypt(
             {
                 name: "RSA-OAEP",
@@ -334,7 +334,7 @@ var Decrypter = function() {
         ).then(
             function(result){
                 var decrypted = new Uint8Array(result);
-                console.log('d1. Decrypted token ', result, decrypted, convertArrayBufferViewtoString(decrypted));
+                console.debug('d1. Decrypted token ', result, decrypted, convertArrayBufferViewtoString(decrypted));
                 resolve(convertArrayBufferViewtoString(decrypted));
             },
             function(e){
@@ -345,7 +345,7 @@ var Decrypter = function() {
     }
 
     function step1DecryptPassword() {
-        console.log('d1. encryptedPassword ', self.encryptedPasswordBytes);
+        console.debug('d1. encryptedPassword ', self.encryptedPasswordBytes);
         crypto.subtle.decrypt(
             {
                 name: "RSA-OAEP",
@@ -357,7 +357,7 @@ var Decrypter = function() {
         ).then(
             function(result){
                 var decrypted = new Uint8Array(result);
-                console.log('d1. Decrypted passphrase ', result, decrypted, convertArrayBufferViewtoString(decrypted));
+                console.debug('d1. Decrypted passphrase ', result, decrypted, convertArrayBufferViewtoString(decrypted));
                 self.password = convertArrayBufferViewtoString(decrypted);
                 step2PasswordToSymettricKey();
             },
@@ -369,7 +369,7 @@ var Decrypter = function() {
     }
 
     function step2PasswordToSymettricKey() {
-        console.log('d2. password to key ', self.password);
+        console.debug('d2. password to key ', self.password);
         crypto.subtle.digest(
             {
                 name: "SHA-256"
@@ -385,7 +385,7 @@ var Decrypter = function() {
                 false,
                 ["encrypt", "decrypt"]
             ).then(function(key){
-                console.log('d2. re-derived key ', key);
+                console.debug('d2. re-derived key ', key);
                 self.symettricKey = key;
                 step3DecryptMessage();
             }, function(e){
@@ -399,7 +399,7 @@ var Decrypter = function() {
     }
 
     function step3DecryptMessage() {
-        console.log('d3. decrypt message', self.messageVector, self.symettricKey, self.encryptedMessageBytes);
+        console.debug('d3. decrypt message', self.messageVector, self.symettricKey, self.encryptedMessageBytes);
         decrypt_promise = crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
@@ -407,19 +407,16 @@ var Decrypter = function() {
             },
             self.symettricKey,
             self.encryptedMessageBytes
-        );
-        decrypt_promise.then(
-            function(result){
+        ).then(function(result){
                 var bytes = new Uint8Array(result);
                 var message = decodeUTF8(bytes);//convertArrayBufferViewtoString(bytes);
-                console.log('received message ', message);
+                console.debug('received message ', message);
                 self.callback(message);
-            }, 
-            function(e){
+        }).catch(function(e){
                 console.error(e);
                 dec.reject(e);
-            }
-        );            
+        });
+
     }
 
 

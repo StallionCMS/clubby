@@ -111,7 +111,7 @@ public class CentralHostApiConnector {
         }
     }
 
-    public static boolean sendMobilePushNotification(String title, String body, Map messageData, List<String> registrationTokens) {
+    public static boolean sendMobilePushNotification(String platform, String sound, String title, String body, Map messageData, List<String> registrationTokens) {
         try {
             HttpResponse<JsonNode> response = Unirest
                     .post(baseUrl() + "/hosting-api/v1/notify/send-mobile-push-notification")
@@ -120,6 +120,8 @@ public class CentralHostApiConnector {
                             val("title", title),
                             val("body", body),
                             val("data", messageData),
+                            val("platform", platform),
+                            val("sound", sound),
                             val("registrationTokens", registrationTokens),
                             val("clubbyVersion", version())
                     )))

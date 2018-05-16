@@ -167,6 +167,7 @@
      created: function() {
          this.fetchData();
      },
+    
      computed: {
          activeChannelId: function() {
              return stallionClubhouseApp.store.state.activeChannelId;
