@@ -106,6 +106,11 @@
              font-size: 13px;
          }
      }
+     .wiki-style-explanation {
+         color: #BBB;
+         font-weight: 500;
+         font-style: italic;
+     }
      .add-reactions-buttons {
          position: absolute;
          left: 60px;
@@ -348,7 +353,7 @@
                     {{ topic.title }}
                 </div>
                 <div class="header-meta">
-                    Created {{ formatFullDate(topic.createdAt) }} by {{ topic.fromUsername }}
+                    Created {{ formatFullDate(topic.createdAt) }} by {{ topic.fromUsername }}.
                     <a title="Toggle watching this thread" class="topic-watch-toggle" href="javascript:;" @click="toggleWatched"><i v-if="topic.watched" class="material-icons watched-on">visibility</i><i v-if="!topic.watched" class="material-icons watched-off">visibility_off</i></a>
                 </div>
             </div>
@@ -363,22 +368,23 @@
                 </div>
             </div>
             <div class="topic-body">
-                <div class="topic-messages" @click="expanded=false">
+                <div class="topic-messages channel-messages" @click="expanded=false">
                     <div class="wrap-loading"><loading-div v-if="beginningLoading"></loading-div></div>
-                    <template v-for="pageMessages in pages" v-if="pageMessages != null">
-                        <div :class="['a-message-outer', 'a-message-with-meta', message.$index===0 ? 'a-message-first':'']" v-for="message in pageMessages" :data-message-id="message.id" :data-thread-index="message.threadIndex" :key="message.id" v-if="!message.deleted">
+                    <template v-for="(pageMessages, pIndex) in pages" v-if="pageMessages != null">
+                        <div :class="['a-message-outer', 'a-message-with-meta', message.$index===0 ? 'a-message-first':'']" v-for="(message, mIndex) in pageMessages" :data-message-id="message.id" :data-thread-index="message.threadIndex" :key="message.id" v-if="!message.deleted">
                             <div class="add-reactions-buttons">
-                                <a href="javascript:;" @click="openAddReaction($event, message)"><i class="material-icons">tag_faces</i></a><a v-if="message.fromUsername===$store.state.user.username" href="javascript:;" @click="openEditMessage(message)"><i class="material-icons">mode_edit</i></a><a v-if="isChannelOwner || message.fromUsername===$store.state.user.username" href="javascript:;" @click="openDeleteModal(message)"><i class="material-icons">delete</i></a>
+                                <a href="javascript:;" @click="openAddReaction($event, message)"><i class="material-icons">tag_faces</i></a><a v-if="message.fromUsername===$store.state.user.username || (channel.wikiStyle && message.threadId === message.id)" href="javascript:;" @click="openEditMessage(pIndex, mIndex)"><i class="material-icons">mode_edit</i></a><a v-if="isChannelOwner || message.fromUsername===$store.state.user.username" href="javascript:;" @click="openDeleteModal(message)"><i class="material-icons">delete</i></a>
                             </div>
                             <div class="a-message" :id="'channel-message-' + message.id">
-                                <div class="a-message-header">
+                                <div v-if="channel.wikiStyle && message.id === message.threadId" class="wiki-style-explanation a-message-header">This is a wiki-style post created by {{ message.fromUsername }} on {{ message.createdAtFullFormatted }} and last edited by {{ topic.lastEditedTopicUsername }}</div>
+                                <div v-else class="a-message-header">
                                     <div class="a-message-left">
                                         <div class="a-message-avatar-wrap"><img class="a-message-avatar" :src="$store.state.allUsersById[message.fromUserId].avatarUrl"></div>
                                     </div>
                                     <div class="a-message-meta">
                                         <div>
                                             <a class="a-message-permalink" :href="'#/forum/' + channelId + '/' + threadId + '?messageId=' + message.id">#{{ message.threadIndex + 1 }}</a>
-                                            <a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a><br>
+                                            <span><a :href="'#/user/' + message.fromUserId" class="a-message-from">{{ message.fromUsername }}</a></span>
                                             <span class="a-message-created">{{ message.createdAtFullFormatted }}</span> 
                                         </div>
                                     </div>
@@ -397,7 +403,8 @@
                     <div class="wrap-loading"><loading-div v-if="endLoading"></loading-div></div>
                 </div>
                 <div class="topic-post" v-if="pages[pages.length-1]!==null">
-                    <h5>Post a message</h5>
+                    <hr style="margin-bottom: 1em;">
+                    <div style="color: #777; margin-top: 0px; margin-bottom: 1em;">Post a new comment to this thread</div>
                     <forum-text-editor ref="editor" @input-debounced="onReplyTextInput" :original-content="replyMarkdown" :widgets="replyWidgets"></forum-text-editor>
                     <div class="form-group p">
                         <button tabindex="2" class="btn btn-primary btn-submit" @click="submitReply">Post Reply</button>
@@ -452,15 +459,15 @@
          var self = this;
      },
      methods: {
-         openEditMessage: function(message) {
-             this.editingMessage = message;
+         openEditMessage: function(pIndex, mIndex) {
+             this.editingMessage = this.pages[pIndex][mIndex];
          },
          onReplyTextInput: function(editor) {
              var self = this;
              var d = editor.getData();
              this.replyWidgets = d.widgets;
              this.replyMarkdown = d.originalContent;
-             ClubhouseMessageAutoSaver.autoSave(self.channelId, self.threadId, self.replyMarkdown, self.replyWidgets);
+             ClubhouseMessageAutoSaver.autoSave(self.channelId, self.threadId, 0, self.replyMarkdown, self.replyWidgets);
          },
          submitReply: function() {
              var self = this;
@@ -485,7 +492,7 @@
                  title: self.title,
                  widgets: self.widgets,
                  success: function(message) {
-                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, self.threadId);
+                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, self.threadId, 0);
                      self.originalContent = '';
                      self.widgets = [];
                      self.replyMarkdown = '';
@@ -518,8 +525,8 @@
                      pageMessages[m].threadIndex = index;
                  }
              }
-             if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, self.threadId)) {
-                 var recent = ClubhouseMessageAutoSaver.loadRecentAutoSaves(self.channelId, self.parentMessageId);
+             if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, self.threadId, 0)) {
+                 var recent = ClubhouseMessageAutoSaver.loadRecentAutoSaves(self.channelId, self.threadId, 0);
                  if (recent !== null) {
                      self.replyMarkdown = recent.text;
                      self.replyWidgets = recent.widgets;

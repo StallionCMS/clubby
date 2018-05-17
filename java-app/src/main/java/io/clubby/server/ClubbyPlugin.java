@@ -50,6 +50,7 @@ public class ClubbyPlugin extends StallionJavaPlugin {
         UserStateController.register();
         SecureTempTokens.register();
         ShortCodeTokenController.register();
+        MessageVersionController.register();
 
         EncryptionHelper.instance();
 

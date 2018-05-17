@@ -32,7 +32,7 @@
                 <div class="modal-footer">
                     <slot name="footer">
                         <button class="btn btn-primary btn-large st-button-submit" v-on:click="saveChanges">{{ confirmLabel }}</button>
-                        <a href="javascript:;" v-on:click="close" style="float:right;">{{ cancelLabel }}</a>
+                        <a href="javascript:;" class="modal-cancel-link" v-on:click="close" style="float:right;">{{ cancelLabel }}</a>
                     </slot>
                 </div>
             </div><!-- end .modal-content -->
@@ -59,6 +59,12 @@
              type: String,
              default: 'Save Changes'
          },
+         backdrop: {
+             default: true
+         },
+         options: {
+             
+         },
          'class': '',
          cssClass: '',
          callback: Function,
@@ -76,7 +82,7 @@
          }
      },
      mounted: function() {
-         console.log('compiled modal');
+         console.log('mounted modal');
          var self = this;
          console.log('tag ', this.tag);
          var $ele = $(self.$el);
@@ -90,7 +96,7 @@
          $ele.on("drop", function(e) { e.preventDefault(); e.stopPropagation(); });
          $ele.modal({
              show: true,
-             backdrop: true,
+             backdrop: self.backdrop,
              width: 800
          });
          $ele.on('hidden.bs.modal', function(e) {
@@ -107,12 +113,12 @@
              
          },
          modalCallback: function() {
-             console.log('callback');
+             console.log('modal close callback');
              this.callback.apply(this, arguments);
              this.close();
          },
          saveChanges: function() {
-             console.log('save changes!');
+             console.log('modal save changes clicked!');
              var funcResult = null;
              if (this.$refs.bodycomponent && this.$refs.bodycomponent.saveChanges) {
                  var result = this.$refs.bodycomponent.saveChanges();

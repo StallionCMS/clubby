@@ -18,7 +18,7 @@
                     <label>Channel Name</label>
                     <input type="text" class="form-control" v-model="channel.name" autofocus="autofocus" required="true">
                 </div>
-                <div class="p">
+                <div class="p" v-if="!channel.id">
                     <div><b>Type</b></div>
                     <div class="radio">
                         <label><input required="true" name="channelType" type="radio" v-model="channel.channelType" value="FORUM"> Forum</label>
@@ -42,6 +42,10 @@
                 <div class="checkbox">
                     <label><input type="checkbox" v-model="channel.defaultForNewUsers"> New users automatically added to this channel?</label>
                 </div>
+                <div class="checkbox" v-if="channel.channelType === 'FORUM'">
+                    <label><input type="checkbox" v-model="channel.wikiStyle"> Wiki style forum? (Top level posts can be edited by anyone)</label>
+                </div>
+                
                 <div class="form-group">
                     <label>Purge after days? (Zero for never purging)</label>
                     <input type="number" class="form-control" style="max-width: 100px;" v-model="channel.purgeAfterDays"> 
@@ -136,7 +140,11 @@
                  success: function(o) {
                      self.$store.commit('channelAdded', o.channel);
                      stallion.showSuccess('Channel added!');
-                     window.location.hash = '#/channel/' + o.channel.id;
+                     if (o.channel.channelType === 'FORUM') {
+                         window.location.hash = '#/forum/' + o.channel.id;
+                     } else {
+                         window.location.hash = '#/channel/' + o.channel.id;
+                     }
                  }
              });
          },

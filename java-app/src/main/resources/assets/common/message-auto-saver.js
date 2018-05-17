@@ -3,16 +3,20 @@
     window.ClubhouseMessageAutoSaver = {};
     var saver = window.ClubhouseMessageAutoSaver;
 
-    saver.clearInProgress = function(channelId, threadId) {
-        delete localStorage['in-progress-' + channelId + '-' + threadId];
+    saver.clearInProgress = function(channelId, threadId, postId) {
+        console.debug('clearInProgress');
+        delete localStorage['in-progress-' + channelId + '-' + threadId + '-' + postId];
     };
 
-    saver.isInProgress = function(channelId, threadId) {
-        return localStorage['in-progress-' + channelId + '-' + threadId];
+    saver.isInProgress = function(channelId, threadId, postId) {
+        var inProgressKey = 'in-progress-' + channelId + '-' + threadId + '-' + postId;
+        var found = localStorage[inProgressKey];
+        return found;
     }
 
-    saver.autoSave = function(channelId, threadId, text, widgets) {
+    saver.autoSave = function(channelId, threadId, postId, text, widgets) {
         threadId = threadId || 0;
+        postId = postId || 0;
         var values = saver.loadAutoSaves();
         var newItem = {
             savedAt: new Date().getTime(),
@@ -35,25 +39,27 @@
         if (values.length > 50) {
             values = values.slice(1);
         }
-        var key = 'autosave-' + channelId + '-' + threadId
-        console.log('autosave ', key, values);
+        var key = 'autosave-' + channelId + '-' + threadId + '-' + postId
+        console.debug('autosave ', key, values);
         localStorage[key] = JSON.stringify(values);
-        localStorage['in-progress-' + channelId + '-' + threadId] = 'true';
-        console.log('saved key ', key);
+        var inProgressKey = 'in-progress-' + channelId + '-' + threadId + '-' + postId;
+        localStorage[inProgressKey] = 'true';
+        console.debug('saved key ', key, inProgressKey);
     };
 
-    saver.loadRecentAutoSaves = function(channelId, threadId) {
-        var saves = saver.loadAutoSaves(channelId, threadId);
+    saver.loadRecentAutoSaves = function(channelId, threadId, postId) {
+        var saves = saver.loadAutoSaves(channelId, threadId, postId);
+        console.debug('found save count was ', saves.length);        
         if (saves.length > 0) {
             return saves[saves.length -1];
         }
         return null;
     }
 
-    saver.loadAutoSaves = function(channelId, threadId) {
-        var key = 'autosave-' + channelId + '-' + threadId;
+    saver.loadAutoSaves = function(channelId, threadId, postId) {
+        var key = 'autosave-' + channelId + '-' + threadId + '-' + postId;
         var value = localStorage[key];
-        console.log('load ', key, value);
+        console.debug('load ', key, value);
         if (!value) {
             return []
         } else {

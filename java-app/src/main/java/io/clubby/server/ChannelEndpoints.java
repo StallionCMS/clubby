@@ -31,7 +31,7 @@ public class ChannelEndpoints implements EndpointResource {
         List<ChannelCombo> channels = DB.instance().queryBean(
                 ChannelCombo.class,
                 " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, " +
-                        " cm.owner, cm.canPost, cm.userId as channelMemberId, c.encrypted, cm.favorite " +
+                        " cm.owner, cm.canPost, cm.userId as channelMemberId, c.encrypted, cm.favorite, c.wikiStyle " +
                         " FROM sch_channels AS c " +
                         " LEFT OUTER JOIN sch_channel_members AS cm ON c.id=cm.channelId AND cm.userId=?" +
                         " WHERE (cm.userId=? OR c.inviteOnly=0) AND c.deleted=0 AND c.channelType='CHANNEL' or c.channelType='FORUM' " +
@@ -120,7 +120,7 @@ public class ChannelEndpoints implements EndpointResource {
 
         new SafeMerger()
                 .nonEmpty("name", "channelType")
-                .optional("inviteOnly", "encrypted", "purgeAfterDays")
+                .optional("inviteOnly", "encrypted", "purgeAfterDays", "wikiStyle")
                 .merge(updatedChannel, channel);
         channel.setName(Sanitize.stripAll(channel.getName()));
         //channel.setChannelType(ChannelType.CHANNEL);
@@ -154,7 +154,7 @@ public class ChannelEndpoints implements EndpointResource {
 
         new SafeMerger()
                 .nonEmpty("name")
-                .optional("inviteOnly", "encrypted", "purgeAfterDays", "channelType")
+                .optional("inviteOnly", "encrypted", "purgeAfterDays", "wikiStyle")
                 .merge(updatedChannel, channel);
 
         ChannelController.instance().save(channel);

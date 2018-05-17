@@ -35,3 +35,6 @@
 00350-alter-sch_user_profiles-add-1
 00360-alter-sch_user_profiles-add-2
 00370-alter-sch_user_messages-add-1
+00380-alter-sch_channels-add-1
+00390-create-table-sch_message_versions
+00400-create-table-sch_message_versions

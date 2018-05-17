@@ -17,6 +17,7 @@ import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
 import io.stallion.dataAccess.db.DB;
 import io.stallion.dataAccess.filtering.FilterOperator;
+import io.stallion.dataAccess.filtering.SortDirection;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
@@ -78,6 +79,10 @@ public class MessageController extends StandardModelController<Message> {
 
     public boolean currentUserCanEdit(Message message) {
         if (message.getFromUserId() == Context.getUser().getId()) {
+            return true;
+        }
+        Channel channel = ChannelController.instance().forId(message.getChannelId());
+        if (channel.isWikiStyle() && message.getId().equals(message.getThreadId())) {
             return true;
         }
         return false;
@@ -203,6 +208,7 @@ public class MessageController extends StandardModelController<Message> {
                 .setEdited(message.isEdited())
                 .setParentMessageId(message.getParentMessageId())
                 .setThreadId(message.getThreadId())
+                .setTitle(message.getTitle())
                 .setEncryptedPasswordHex(um.getEncryptedPasswordHex())
                 .setPasswordVectorHex(um.getPasswordVectorHex())
                 .setFromUserId(message.getFromUserId())
@@ -236,6 +242,7 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.fromUsername," +
                 "    m.createdAt," +
                 "    m.channelId, " +
+                "    m.threadId, " +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
                 "    um.passwordVectorHex, " +
@@ -361,6 +368,19 @@ public class MessageController extends StandardModelController<Message> {
                 .setTitle(parent.getTitle())
                 ;
 
+        if (channel.isWikiStyle()) {
+            MessageVersion mv = MessageVersionController.instance()
+                    .filter("messageId", threadId).sortBy("versionDate", SortDirection.DESC)
+                    .first();
+            if (mv != null) {
+                IUser user = UserController.instance().forIdWithDeleted(mv.getVersionUserId());
+                if (user != null) {
+                    topic.setLastEditedTopicUsername(user.getUsername());
+                    topic.setLastEditedTopicUserId(user.getId());
+                }
+            }
+        }
+
         UserMessage userMessage = UserMessageController.instance()
                 .filter("messageId", threadId)
                 .filter("userId", userId)
@@ -379,7 +399,8 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.edited," +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
-                "    m.createdAt," +
+                "    m.createdAt, " +
+                "    m.threadId, " +
                 "    m.title, " +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
@@ -738,7 +759,8 @@ public class MessageController extends StandardModelController<Message> {
                 "    m.title, " +
                 "    m.fromUserId," +
                 "    m.fromUsername," +
-                "    m.createdAt," +
+                "    m.createdAt, " +
+                "    m.threadId, " +
                 "    um.id AS userMessageId, " +
                 "    um.encryptedPasswordHex, " +
                 "    um.passwordVectorHex," +
@@ -920,6 +942,7 @@ public class MessageController extends StandardModelController<Message> {
         private List<Long[]> allIdsDates = list();
         private int unreadCount = 0;
         private int unreadMentionsCount = 0;
+
 
         public ForumTopic getTopic() {
             return topic;

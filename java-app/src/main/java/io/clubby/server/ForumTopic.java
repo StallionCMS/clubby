@@ -1,5 +1,6 @@
 package io.clubby.server;
 
+import javax.persistence.Column;
 import java.time.ZonedDateTime;
 
 
@@ -11,6 +12,8 @@ public class ForumTopic {
     private String fromUsername = null;
     private Long channelId = 0L;
     private ZonedDateTime threadUpdatedAt = null;
+    private String lastEditedTopicUsername = null;
+    private Long lastEditedTopicUserId = null;
 
 
 
@@ -109,6 +112,25 @@ public class ForumTopic {
 
     public ForumTopic setThreadUpdatedAt(ZonedDateTime threadUpdatedAt) {
         this.threadUpdatedAt = threadUpdatedAt;
+        return this;
+    }
+
+
+    public String getLastEditedTopicUsername() {
+        return lastEditedTopicUsername;
+    }
+
+    public ForumTopic setLastEditedTopicUsername(String lastEditedTopicUsername) {
+        this.lastEditedTopicUsername = lastEditedTopicUsername;
+        return this;
+    }
+
+    public Long getLastEditedTopicUserId() {
+        return lastEditedTopicUserId;
+    }
+
+    public ForumTopic setLastEditedTopicUserId(Long lastEditedTopicUserId) {
+        this.lastEditedTopicUserId = lastEditedTopicUserId;
         return this;
     }
 

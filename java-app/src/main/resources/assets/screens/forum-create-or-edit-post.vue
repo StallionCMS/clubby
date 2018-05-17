@@ -41,8 +41,14 @@
                     <label>Thread Title</label>
                     <input tabindex="1" type="input" class="form-control" v-model="title">
                 </div>
+                <div style="height: 21px;">
+                    <div class="p" v-if="messageId && hasChanges" style="background-color: rgb(252, 242, 213); color: rgb(203, 164, 71); font-weight: bold; padding-left: 5px; padding-right: 5px;">
+                        <span style="display: inline-block; ">You have unsaved changes.</span>
+                        <a style="float: right; font-weight: bold;" @click="revertChanges" href="javascript:;">Revert to last saved version</a>
+                    </div>
+                </div>
                 <div class="p">
-                    <forum-text-editor :config="config" ref="editor" @input-debounced="onInput"  :original-content="originalContent" :widgets="widgets"></forum-text-editor>
+                    <forum-text-editor :config="config" ref="editor" @input-debounced="onInput"  :original-content="currentContent" :widgets="widgets"></forum-text-editor>
                 </div>
                 <div class="p">
                     <a tabindex="3" v-if="isNew && hasTitle" :disabled="!canSubmit" class="btn btn-primary" href="javascript:;" @click="saveChanges">Create Thread</a>
@@ -86,15 +92,19 @@
              parentMessageId: null,
              threadId: null,
              title: '',
-             originalContent: '',
+             previousContent: '',
+             currentContent: '',
+             previousWidgets: [],
              widgets: [],
              config: {}
          };
          if (this.message) {
              d.inModal = true;
              d.widgets = JSON.parse(JSON.stringify(this.message.widgets || []));
+             d.previousWidgets = d.widgets;
              d.channelId = this.theChannel.id;
              d.messageId = this.message.id;
+             d.threadId = this.message.threadId;
              d.parentMessageId = this.message.parentMessageId;
              //d.threadId = this.message.threadId;
              d.title = this.message.title;
@@ -103,7 +113,8 @@
                  d.config.autofocus = true;
              }
              d.isNew = false;
-             d.originalContent = this.message.text;
+             d.previousContent = this.message.text;
+             d.currentContent = d.previousContent;
              d.isLoading = false
              d.channel = this.theChannel;
              d.members = this.theMembers;
@@ -114,6 +125,13 @@
      created: function() {
          if (!this.message) {
              this.onRoute();
+         } else {
+             this.checkLoadFromAutosave();
+         }
+     },
+     computed: {
+         hasChanges: function() {
+             return this.previousContent !== this.currentContent || JSON.stringify(this.widgets) !== JSON.stringify(this.previousWidgets);
          }
      },
      watch: {
@@ -126,16 +144,18 @@
              self.canSubmit = false;
              self.channelId = parseInt(this.$route.params.channelId, 10) || 0;
              self.messageId = parseInt(this.$route.params.messageId, 10) || 0;
-             if (!self.messageId) {
-                 if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, 0)) {
-                     var recent = ClubhouseMessageAutoSaver.loadRecentAutoSaves(self.channelId, 0);
-                     if (recent !== null) {
-                         self.originalContent = recent.text;
-                         self.widgets = recent.widgets;
-                     }
+             self.checkLoadFromAutosave();
+             self.fetchData();
+         },
+         checkLoadFromAutosave: function() {
+             var self = this;
+             if (ClubhouseMessageAutoSaver.isInProgress(self.channelId, 0, self.messageId)) {
+                 var recent = ClubhouseMessageAutoSaver.loadRecentAutoSaves(self.channelId, 0, self.messageId);
+                 if (recent !== null) {
+                     self.currentContent = recent.text;
+                     self.widgets = recent.widgets;
                  }
              }
-             self.fetchData();
          },
          fetchData: function() {
              var self = this;
@@ -148,6 +168,19 @@
                      self.afterFetchedData(self.channel, self.members);
                  }
              });
+         },
+         revertChanges: function() {
+             if (!confirm("Revert all unsaved changes?")) {
+                 return;
+             }
+             var self = this;
+             self.currentContent = self.previousContent;
+             self.widgets = self.previousWidgets;
+             self.$refs.editor.setData({
+                 widgets: self.previousWidgets,
+                 originalContentmarkdown: self.currentContent
+             });
+             ClubhouseMessageAutoSaver.clearInProgress(self.channelId, 0, self.messageId);
          },
          saveChanges: function() {
              var self = this;
@@ -165,14 +198,14 @@
                  return;
              }
              self.widgets = d.widgets;
-             self.originalContent = d.originalContent;
+             self.currentContent = d.originalContent;
              this.postMessage({
                  channelId: self.channelId,
                  channelMembers: self.members,                 
                  encrypted: self.channel.encrypted,
                  message: self.message,
                  messageId: self.message && self.message.id ? self.message.id : 0,
-                 originalContent: self.originalContent,
+                 originalContent: self.currentContent,
                  parentMessageId: self.parentMessageId,
                  threadId: self.parentMessageId,
                  title: self.title || '',
@@ -191,7 +224,7 @@
                          path += '?messageId=' + message.id;
                      }
                      self.$emit('close');
-                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, 0);
+                     ClubhouseMessageAutoSaver.clearInProgress(self.channelId, 0, self.messageId);
                      window.location.hash = path;
                      
                  }
@@ -202,9 +235,9 @@
              var self = this;
              var data = editor.getData();
              self.widgets = data.widgets;
-             self.originalContent = data.originalContent;
+             self.currentContent = data.originalContent;
              console.log('inasdf on input!!');
-             ClubhouseMessageAutoSaver.autoSave(self.channelId, 0, self.originalContent, self.widgets);
+             ClubhouseMessageAutoSaver.autoSave(self.channelId, 0, self.messageId, self.currentContent, self.widgets);
          }
      }
  };

@@ -27,6 +27,7 @@ public class ChannelCombo {
     private boolean encrypted = false;
     private Boolean favorite = false;
     private boolean inviteOnly = false;
+    private boolean wikiStyle = false;
 
 
     public Long getId() {
@@ -164,6 +165,16 @@ public class ChannelCombo {
 
     public ChannelCombo setInviteOnly(boolean inviteOnly) {
         this.inviteOnly = inviteOnly;
+        return this;
+    }
+
+
+    public boolean isWikiStyle() {
+        return wikiStyle;
+    }
+
+    public ChannelCombo setWikiStyle(boolean wikiStyle) {
+        this.wikiStyle = wikiStyle;
         return this;
     }
 }

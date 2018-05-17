@@ -220,6 +220,10 @@ public class MessagingEndpoints implements EndpointResource {
         message.setEdited(true);
         message.setEditedAt(DateUtils.utcNow());
         MessageController.instance().save(message);
+        Channel channel = ChannelController.instance().forIdOrNotFound(message.getChannelId());
+        if (channel.isWikiStyle()) {
+            MessageVersionController.instance().saveVersion(message, Context.getUser().getId(), utcNow());
+        }
         notifyMessageUpdated(message);
         return true;
     }
@@ -241,6 +245,10 @@ public class MessagingEndpoints implements EndpointResource {
         message.setEditedAt(DateUtils.utcNow());
         message.setTitle(updated.getTitle());
         MessageController.instance().save(message);
+        Channel channel = ChannelController.instance().forIdOrNotFound(message.getChannelId());
+        if (channel.isWikiStyle()) {
+            MessageVersionController.instance().saveVersion(message, Context.getUser().getId(), utcNow());
+        }
         notifyMessageUpdated(message);
         return true;
     }
@@ -281,6 +289,11 @@ public class MessagingEndpoints implements EndpointResource {
 
 
         MessageController.instance().save(message);
+
+        if (channel.isWikiStyle()) {
+            MessageVersionController.instance().saveVersion(message, Context.getUser().getId(), utcNow());
+        }
+
 
 
         if (!empty(message.getThreadId()) && !message.getId().equals(message.getThreadId())) {
@@ -361,6 +374,9 @@ public class MessagingEndpoints implements EndpointResource {
             throw new ClientException("You do not have permission to post to this channel.");
         }
         MessageController.instance().save(message);
+        if (channel.isWikiStyle()) {
+            MessageVersionController.instance().saveVersion(message, Context.getUser().getId(), utcNow());
+        }
 
         if (!empty(message.getThreadId()) && !message.getId().equals(message.getThreadId())) {
             Message thread = MessageController.instance().forId(message.getThreadId());

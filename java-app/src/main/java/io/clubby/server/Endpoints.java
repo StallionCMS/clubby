@@ -156,7 +156,7 @@ public class Endpoints implements EndpointResource {
 
         List<ChannelCombo> channels = DB.instance().queryBean(
                 ChannelCombo.class,
-                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, c.encrypted, cm.owner, cm.canPost, cm.favorite, c.inviteOnly " +
+                " SELECT c.id, c.name, c.allowReactions, c.displayEmbeds, c.channelType, c.directMessageUserIds, c.encrypted, cm.owner, cm.canPost, cm.favorite, c.inviteOnly, c.wikiStyle " +
                         " FROM sch_channels AS c " +
                         " INNER JOIN sch_channel_members AS cm ON c.id=cm.channelId" +
                         " WHERE cm.userId=? AND c.deleted=0 ",

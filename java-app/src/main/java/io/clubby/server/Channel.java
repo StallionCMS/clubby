@@ -28,6 +28,7 @@ public class Channel extends ModelBase {
     private boolean encrypted = false;
     private String uniqueHash = null;
     private List<Long> directMessageUserIds = list();
+    private boolean wikiStyle = false;
 
 
     @Column
@@ -161,6 +162,16 @@ public class Channel extends ModelBase {
 
     public Channel setDirectMessageUserIds(List<Long> directMessageUserIds) {
         this.directMessageUserIds = directMessageUserIds;
+        return this;
+    }
+
+    @Column(nullable = false)
+    public boolean isWikiStyle() {
+        return wikiStyle;
+    }
+
+    public Channel setWikiStyle(boolean wikiStyle) {
+        this.wikiStyle = wikiStyle;
         return this;
     }
 }

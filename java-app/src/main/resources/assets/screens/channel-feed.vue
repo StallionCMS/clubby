@@ -419,20 +419,7 @@
                  $div.animate({ scrollTop: animateTo}, 1200);
              } 
          },
-         scrollToTopOfLatestMessages: function() {
-             var self = this;
-             ifvisible.ignoreScrollForTwoSeconds();
-             var scrollTo = document.body.scrollHeight;
-             var div = $(self.$el).find('.channel-messages').get(0);
-             var $div = $(div);
-             var $message = $div.find('#channel-message-' + self.messages[self.messages.length-1].id);
-             var difference = $message.height() - ($(window).height() - 75);
-             if (difference > 0) {
-                 scrollTo = scrollTo - $message.height() - 120;
-             }
-             console.log('scrollTo ', scrollTo, 'difference ', difference);
-             window.scrollTo(0, scrollTo);
-         },
+         
          afterIncomingMessage: function() {
              var self = this;
          },         

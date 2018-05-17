@@ -456,7 +456,7 @@ var ClubhouseMessagingMixin = {
                     existing = msg;
                 }
             });
-            console.debug('isEdit', isEdit);
+            console.log('Incoming message', incoming.id, type, 'existing? ', existing !== null);
             if (!isEdit && existing) {
                 return;
             } else if (isEdit && !existing) {
@@ -496,15 +496,40 @@ var ClubhouseMessagingMixin = {
                     hexToArray(incoming.encryptedPasswordHex),//ep.encryptedPasswordBytes,
                     hexToArray(incoming.passwordVectorHex)//ep.passwordVector,
                 ).then(function(bodyJson) {
-                        console.debug('decrypted message ', bodyJson);
+                    console.log('Decrypted incoming message', message.id, 'isEdit', isEdit);
+                    console.debug('decrypted message ', bodyJson);
                         var data = JSON.parse(bodyJson);
                         message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
                         message.text = data.bodyMarkdown;
                         message.widgets = data.widgets || [];
                         console.debug('message.html! ', message.html);
                         if (isEdit) {
-                            $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
+
                             Vue.set(self.messages, message.$index, message);
+                            var pIndex = 0;
+                            var mIndex = 0;
+                            var found = false;
+                            for (var p = 0; p < self.pages.length; p++) {
+                                var pageMessages = self.pages[p];
+                                if (found) {break;}
+                                for (var m = 0; m < pageMessages.length; m++) {
+                                    var aMsg = pageMessages[m];
+                                    if (aMsg && aMsg.id === message.id) {
+                                        pIndex = p;
+                                        mIndex = m;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (found) {
+                                Vue.set(self.pages[pIndex], mIndex, message);
+                                Vue.set(self.pages, pIndex, self.pages[pIndex]);
+                            }
+                            Vue.set(self.messages, message.$index, message);                    
+                            $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
+
+                            
                         } else {
                             self.messages.push(message);
                             if (self.pages && self.pages.length && self.pages[self.pages.length-1]) {
@@ -535,7 +560,9 @@ var ClubhouseMessagingMixin = {
                             console.log('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
                             if (document.body.scrollHeight < (scrollBottom + 160)) {
                                 Vue.nextTick(function() {
-                                    self.scrollToTopOfLatestMessages();
+                                    if (self.scrollToTopOfLatestMessages) {
+                                        self.scrollToTopOfLatestMessages();
+                                    }
                                 });
                             }
                         }
@@ -550,15 +577,38 @@ var ClubhouseMessagingMixin = {
                 message.widgets = messageData.widgets || [];
                 if (isEdit) {
                     Vue.set(self.messages, message.$index, message);
+                    var pIndex = 0;
+                    var mIndex = 0;
+                    var found = false;
+                    for (var p = 0; p < self.pages.length; p++) {
+                        var pageMessages = self.pages[p];
+                        if (found) {break;}
+                        for (var m = 0; m < pageMessages.length; m++) {
+                            var aMsg = pageMessages[m];
+                            if (aMsg && aMsg.id === message.id) {
+                                pIndex = p;
+                                mIndex = m;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
+                        Vue.set(self.pages[pIndex], mIndex, message);
+                        Vue.set(self.pages, pIndex, self.pages[pIndex]);
+                    }
+                    Vue.set(self.messages, message.$index, message);                    
                     $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
-
+                    
                 } else {
                     // If we are near the bottom, scroll down
                     var scrollBottom = $(window).height() + window.scrollY;
                     console.debug('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
                     if (document.body.scrollHeight < (scrollBottom + 160)) {
                         Vue.nextTick(function() {
-                            self.scrollToTopOfLatestMessages();
+                            if (self.scrollToTopOfLatestMessages) {
+                                self.scrollToTopOfLatestMessages();
+                            }
                         });
                     }                
                     
@@ -586,7 +636,21 @@ var ClubhouseMessagingMixin = {
                 }
             }
         },
-        
+        scrollToTopOfLatestMessages: function() {
+            var self = this;
+            debugger;
+             ifvisible.ignoreScrollForTwoSeconds();
+             var scrollTo = document.body.scrollHeight;
+             var div = $(self.$el).find('.channel-messages').get(0);
+             var $div = $(div);
+             var $message = $div.find('#channel-message-' + self.messages[self.messages.length-1].id);
+             var difference = $message.height() - ($(window).height() - 75);
+             if (difference > 0) {
+                 scrollTo = scrollTo - $message.height() - 120;
+             }
+             console.log('scrollTo ', scrollTo, 'difference ', difference);
+             window.scrollTo(0, scrollTo);
+         },        
         showMessageNotificationMaybe: function(incoming, message) {
             var self = this;
             if (incoming.read) {

@@ -1,0 +1,32 @@
+db.execute('''
+CREATE TABLE IF NOT EXISTS `sch_message_versions` (
+`id` bigint(20) unsigned NOT NULL,
+    `title`  varchar(255)  NULL ,
+    `pinned`  bit(1)  NOT NULL  DEFAULT 0 ,
+    `fromuserid`  bigint(20)  NOT NULL  DEFAULT '0' ,
+    `channelid`  bigint(20)  NOT NULL  DEFAULT '0' ,
+    `wiki`  bit(1)  NOT NULL  DEFAULT 0 ,
+    `purgeat`  datetime  NULL ,
+    `expiresat`  datetime  NULL ,
+    `deletedat`  bigint(20)  NOT NULL  DEFAULT '0' ,
+    `editedat`  datetime  NULL ,
+    `versiondate`  datetime  NULL ,
+    `updatedat`  datetime  NULL ,
+    `threadupdatedat`  datetime  NULL ,
+    `parentmessageid`  bigint(20)  NOT NULL  DEFAULT '0' ,
+    `fromusername`  varchar(255)  NULL ,
+    `messagejson`  longtext  NULL ,
+    `messageencryptedjson`  longtext  NULL ,
+    `messageencryptedjsonvector`  varchar(255)  NULL ,
+    `edited`  bit(1)  NOT NULL  DEFAULT 0 ,
+    `versionuserid`  bigint(20)  NULL ,
+    `messageid`  bigint(20)  NULL ,
+    `createdat`  datetime  NULL ,
+    `threadid`  bigint(20)  NOT NULL  DEFAULT '0' ,
+    `deleted`  bit(1)  NULL ,
+  `row_updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `message_date_key` (`messageId`, `versionDate`), 
+  KEY `row_updated_at_key` (`row_updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 
+''');
