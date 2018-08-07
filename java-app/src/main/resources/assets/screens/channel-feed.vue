@@ -94,7 +94,10 @@
          margin-bottom: 0px;
          margin-top: .5em;
          .message-html {
-             word-break: break-all;
+             /*word-break: break-all;*/
+             word-wrap: break-all;
+             word-break: break-word;
+             
          }
          .message-html p:last-child {
              margin-bottom: 0em;
