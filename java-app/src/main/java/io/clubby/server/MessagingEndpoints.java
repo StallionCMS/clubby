@@ -33,7 +33,7 @@ public class MessagingEndpoints implements EndpointResource {
 
 
     @GET
-    @Path("/channel-messages-context/:channelId")
+    @Path("/channel-messages-context/{channelId}")
     public Object getChannelContext(
             @PathParam("channelId") Long channelId,
             @QueryParam("page") Integer page,
@@ -105,7 +105,7 @@ public class MessagingEndpoints implements EndpointResource {
     }
 
     @GET
-    @Path("/forum-top-level/:channelId")
+    @Path("/forum-top-level/{channelId}")
     public Object forumTopLevel(@PathParam("channelId") Long channelId, @QueryParam("page") Integer page) {
         Map ctx = map();
 
@@ -207,7 +207,7 @@ public class MessagingEndpoints implements EndpointResource {
 
     @POST
     @Path("/update-message")
-    public Object updateMessage(@ObjectParam Message updated) {
+    public Object updateMessage(Message updated) {
 
         Message message = MessageController
                 .instance()
@@ -231,7 +231,7 @@ public class MessagingEndpoints implements EndpointResource {
 
     @POST
     @Path("/update-encrypted-message")
-    public Object updateEncryptedMessage(@ObjectParam Message updated) {
+    public Object updateEncryptedMessage(Message updated) {
 
         Message message = MessageController
                 .instance()
@@ -263,7 +263,7 @@ public class MessagingEndpoints implements EndpointResource {
 
     @POST
     @Path("/post-message")
-    public Object postMessage(@ObjectParam Message rawMessage) {
+    public Object postMessage(Message rawMessage) {
         Channel channel = ChannelController.instance().forIdOrNotFound(rawMessage.getChannelId());
         Message message = new SafeMerger()
                 .optional("usersMentioned", "title", "parentMessageId", "threadId")
@@ -342,7 +342,7 @@ public class MessagingEndpoints implements EndpointResource {
 
     @POST
     @Path("/post-encrypted-message")
-    public Object postEncryptedMessage(@ObjectParam EncryptedMessageContainer container) {
+    public Object postEncryptedMessage(EncryptedMessageContainer container) {
         Channel channel = ChannelController.instance().forIdOrNotFound(container.getChannelId());
         Message message = new Message();
 

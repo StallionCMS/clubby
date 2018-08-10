@@ -46,7 +46,7 @@ public class ChannelEndpoints implements EndpointResource {
     }
 
     @GET
-    @Path("/get-channel-members/:channelId")
+    @Path("/get-channel-members/{channelId}")
     public Object getChannelMembers(@PathParam("channelId") Long channelId) {
         ChannelCombo channel = ChannelController.instance().getChannelCombo(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
@@ -82,7 +82,7 @@ public class ChannelEndpoints implements EndpointResource {
 
 
     @GET
-    @Path("/channel-details/:channelId")
+    @Path("/channel-details/{channelId}")
     public Object channelDetails(@PathParam("channelId") Long channelId) {
         Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
@@ -98,7 +98,7 @@ public class ChannelEndpoints implements EndpointResource {
     }
 
     @POST
-    @Path("/leave-channel/:channelId")
+    @Path("/leave-channel/{channelId}")
     public Object leaveChannel(@PathParam("channelId") Long channelId) {
         Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
@@ -115,7 +115,7 @@ public class ChannelEndpoints implements EndpointResource {
 
     @POST
     @Path("/create-channel")
-    public Object createChannel( @ObjectParam Channel updatedChannel) {
+    public Object createChannel( Channel updatedChannel) {
         Channel channel = new Channel();
 
         new SafeMerger()
@@ -140,8 +140,8 @@ public class ChannelEndpoints implements EndpointResource {
 
 
     @POST
-    @Path("/update-channel/:channelId")
-    public Object updateChannel(@PathParam("channelId") Long channelId, @ObjectParam Channel updatedChannel) {
+    @Path("/update-channel/{channelId}")
+    public Object updateChannel(@PathParam("channelId") Long channelId, Channel updatedChannel) {
         Channel channel = ChannelController.instance().forIdOrNotFound(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
                 .filter("channelId", channelId)
@@ -165,7 +165,7 @@ public class ChannelEndpoints implements EndpointResource {
 
 
     @POST
-    @Path("/archive-channel/:channelId")
+    @Path("/archive-channel/{channelId}")
     public Object archiveChannel(@PathParam("channelId") Long channelId) {
         Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
@@ -183,7 +183,7 @@ public class ChannelEndpoints implements EndpointResource {
 
 
     @POST
-    @Path("/unarchive-channel/:channelId")
+    @Path("/unarchive-channel/{channelId}")
     public Object unarchiveChannel(@PathParam("channelId") Long channelId) {
         Channel channel = ChannelController.instance().forIdWithDeleted(channelId);
         ChannelMember channelMember = ChannelMemberController.instance()
@@ -201,7 +201,7 @@ public class ChannelEndpoints implements EndpointResource {
     }
 
 
-    @Path("/mark-channel-favorite/:channelId")
+    @Path("/mark-channel-favorite/{channelId}")
     @POST
     public Object markChannelFavorite(@PathParam("channelId") Long channelId, @BodyParam("favorite") boolean favorite) {
         ChannelMember cm = ChannelMemberController.instance()

@@ -71,7 +71,7 @@ public class UserEndpoints implements EndpointResource {
     }
 
     @GET
-    @Path("/public-profile/:userId")
+    @Path("/public-profile/{userId}")
     public Object publicProfile(@PathParam("userId") Long userId) {
 
         List<ChannelUserWrapper> users = DB.instance().queryBean(
@@ -328,7 +328,7 @@ public class UserEndpoints implements EndpointResource {
 
     @POST
     @Path("/update-current-user")
-    public Object updateCurrentUser(@ObjectParam UserAndProfile userAndProfile) {
+    public Object updateCurrentUser(UserAndProfile userAndProfile) {
 
         if (!userAndProfile.getUser().getId().equals(Context.getUser().getId())) {
              throw new ClientException("You do not have authorization to update this user.");

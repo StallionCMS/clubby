@@ -177,7 +177,7 @@ public class AdminEndpoints implements EndpointResource {
     @Path("/save-email-settings")
     @MinRole(Role.ADMIN)
     public Object saveEmailSettings(
-            @ObjectParam EmailSettings updatedEmailSettings
+            EmailSettings updatedEmailSettings
     ) {
 
 
@@ -202,7 +202,7 @@ public class AdminEndpoints implements EndpointResource {
     @POST
     @Path("/send-invite")
     @MinRole(Role.ADMIN)
-    public Object sendInvitation(@ObjectParam User newUser) {
+    public Object sendInvitation(User newUser) {
         IUser user = UserController.instance().forEmail(newUser.getEmail());
         if (user != null && !user.getEmailVerified() && user.getApproved()) {
             throw new ClientException("This is already a valid user.");
