@@ -1,20 +1,16 @@
 package io.clubby.server;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.contentPublishing.UploadedFile;
 import io.stallion.contentPublishing.UploadedFileController;
+import io.stallion.dataAccess.SafeMerger;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.exceptions.*;
-import io.stallion.requests.validators.SafeMerger;
-import io.stallion.restfulEndpoints.*;
+import io.stallion.jerseyProviders.BodyParam;
+import io.stallion.jerseyProviders.MinRole;
+import io.stallion.jerseyProviders.XSRF;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
@@ -24,11 +20,18 @@ import io.stallion.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.*;
+import javax.ws.rs.ext.Provider;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 @Path("/clubhouse-api/users")
 @Produces("application/json")
 @MinRole(Role.MEMBER)
-public class UserEndpoints implements EndpointResource {
+@Provider
+@Consumes("application/json")
+public class UserEndpoints  {
 
 
     @POST
@@ -50,7 +53,7 @@ public class UserEndpoints implements EndpointResource {
         if (isCodeValid) {
             return true;
         } else {
-            throw new ClientException("Check google auth", 400);
+            throw new ClientErrorException("Check google auth", 400);
         }
     }
 
@@ -86,7 +89,7 @@ public class UserEndpoints implements EndpointResource {
         );
         ChannelUserWrapper user;
         if (users.size() == 0) {
-            throw new io.stallion.exceptions.NotFoundException("User not found.");
+            throw new NotFoundException("User not found.");
         } else {
             user = users.get(0);
         }
@@ -115,7 +118,7 @@ public class UserEndpoints implements EndpointResource {
         IUser user = UserController.instance().forIdOrNotFound(userId);
         String expectedToken = UserController.instance().readEncryptedToken(user, "invite", token, 60 * 24 *2);
         if (!user.getResetToken().equals(expectedToken)) {
-            throw new ClientException("Invalid invite token.");
+            throw new ClientErrorException("Invalid invite token.", 403);
         }
 
         Map ctx = map();
@@ -148,10 +151,10 @@ public class UserEndpoints implements EndpointResource {
         IUser user = UserController.instance().forIdOrNotFound(userId);
         String expectedToken = UserController.instance().readEncryptedToken(user, "invite", token, 60);
         if (!user.getResetToken().equals(expectedToken)) {
-            throw new ClientException("Invalid invite token.");
+            throw new ClientErrorException("Invalid invite token.", 403);
         }
         if (!UserProfileController.USERNAME_PATTERN.matcher(username).matches()) {
-            throw new ClientException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.");
+            throw new ClientErrorException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.", 400);
         }
 
         user.setApproved(true);
@@ -224,14 +227,14 @@ public class UserEndpoints implements EndpointResource {
     ) {
         int userCount = UserController.instance().filterChain().count();
         if (userCount > 0) {
-            throw new ClientException("This site has already been initialized. You must log in with the admin account.");
+            throw new ClientErrorException("This site has already been initialized. You must log in with the admin account.", 409);
         }
         if (!Settings.instance().getHealthCheckSecret().equals(secretKey)) {
-            throw new ClientException("The secret key you entered is not correct.");
+            throw new ClientErrorException("The secret key you entered is not correct.", 403);
         }
 
         if (!UserProfileController.USERNAME_PATTERN.matcher(username).matches()) {
-            throw new ClientException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.");
+            throw new ClientErrorException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.", 400);
         }
 
 
@@ -331,7 +334,7 @@ public class UserEndpoints implements EndpointResource {
     public Object updateCurrentUser(UserAndProfile userAndProfile) {
 
         if (!userAndProfile.getUser().getId().equals(Context.getUser().getId())) {
-             throw new ClientException("You do not have authorization to update this user.");
+             throw new ClientErrorException("You do not have authorization to update this user.", 403);
         }
         User user = (User)UserController.instance().forIdOrNotFound(Context.getUser().getId());
         UserProfile profile = UserProfileController.instance().forStallionUserOrNotFound(user.getId());

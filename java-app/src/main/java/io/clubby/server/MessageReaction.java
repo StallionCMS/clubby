@@ -1,11 +1,10 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-
 import io.stallion.dataAccess.ModelBase;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.time.ZonedDateTime;
 
 @Table(name="sch_message_reactions")
 public class MessageReaction extends ModelBase {

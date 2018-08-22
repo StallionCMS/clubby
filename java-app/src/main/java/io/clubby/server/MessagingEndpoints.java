@@ -1,21 +1,11 @@
 package io.clubby.server;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
+import io.stallion.dataAccess.SafeMerger;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.exceptions.ClientException;
-import io.stallion.requests.validators.SafeMerger;
-import io.stallion.restfulEndpoints.BodyParam;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.MinRole;
-import io.stallion.restfulEndpoints.ObjectParam;
-import io.stallion.settings.Settings;
+import io.stallion.jerseyProviders.BodyParam;
+import io.stallion.jerseyProviders.MinRole;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.UserController;
@@ -24,11 +14,19 @@ import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.json.JSON;
 
 import javax.ws.rs.*;
+import javax.ws.rs.ext.Provider;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 @Path("/clubhouse-api/messaging")
+@Consumes("application/json")
 @Produces("application/json")
 @MinRole(Role.MEMBER)
-public class MessagingEndpoints implements EndpointResource {
+@Provider
+public class MessagingEndpoints  {
 
 
 
@@ -47,7 +45,7 @@ public class MessagingEndpoints implements EndpointResource {
                 .filter("channelId", channelId)
                 .first();
         if (channelMember == null) {
-            throw new ClientException("You do not have access to this channel.");
+            throw new ClientErrorException("You do not have access to this channel.", 403);
         }
         ChannelCombo channel = ChannelController.instance().getChannelCombo(channelId);
         ctx.put("channel", channel);
@@ -86,7 +84,7 @@ public class MessagingEndpoints implements EndpointResource {
             MessageCombo message = MessageController.instance().getMessageCombo(
                     Context.getUser().getId(), messageId);
             if (!message.getFromUserId().equals(Context.getUser().getId())) {
-                throw new ClientException("You do not have rights to edit this message.");
+                throw new ClientErrorException("You do not have rights to edit this message.", 403);
             }
             ctx.put("message", message);
             channel = ChannelController.instance().getIfViewable(message.getChannelId());
@@ -213,7 +211,7 @@ public class MessagingEndpoints implements EndpointResource {
                 .instance()
                 .forIdOrNotFound(updated.getId());
         if (!MessageController.instance().currentUserCanEdit(message)) {
-            throw new ClientException("You do not have permission to edit this message.", 403);
+            throw new ClientErrorException("You do not have permission to edit this message.", 403);
         }
         message.setTitle(updated.getTitle());
         message.setMessageJson(updated.getMessageJson());
@@ -237,7 +235,7 @@ public class MessagingEndpoints implements EndpointResource {
                 .instance()
                 .forIdOrNotFound(updated.getId());
         if (!MessageController.instance().currentUserCanEdit(message)) {
-            throw new ClientException("You do not have permission to edit this message.", 403);
+            throw new ClientErrorException("You do not have permission to edit this message.", 403);
         }
         message.setMessageEncryptedJson(updated.getMessageEncryptedJson());
         message.setMessageEncryptedJsonVector(updated.getMessageEncryptedJsonVector());
@@ -280,7 +278,7 @@ public class MessagingEndpoints implements EndpointResource {
                 .filter("channelId", message.getChannelId())
                 .first();
         if (member == null || !member.isCanPost()) {
-            throw new ClientException("You do not have permission to post to this channel.");
+            throw new ClientErrorException("You do not have permission to post to this channel.", 403);
         }
         message.setId(DB.instance().getTickets().nextId());
         if (empty(message.getThreadId())) {
@@ -371,7 +369,7 @@ public class MessagingEndpoints implements EndpointResource {
                 .filter("channelId", message.getChannelId())
                 .first();
         if (member == null || !member.isCanPost()) {
-            throw new ClientException("You do not have permission to post to this channel.");
+            throw new ClientErrorException("You do not have permission to post to this channel.", 403);
         }
         MessageController.instance().save(message);
         if (channel.isWikiStyle()) {
@@ -432,14 +430,14 @@ public class MessagingEndpoints implements EndpointResource {
 
         Message message = MessageController.instance().forIdOrNotFound(messageId);
         if (!MessageController.instance().currentUserCanDelete(message)) {
-            throw new ClientException("You are not authorized to delete this message.", 403);
+            throw new ClientErrorException("You are not authorized to delete this message.", 403);
         }
         if (message.getId().equals(message.getThreadId())) {
             Long childCount = DB.instance().queryScalar("SELECT COUNT(*) FROM sch_messages WHERE threadId=? AND id!=? AND deleted=0",
                     message.getThreadId(), messageId
                     );
             if (childCount > 0) {
-                throw new ClientException("You cannot delete a thread while it still has children. Delete all the children first.");
+                throw new ClientErrorException("You cannot delete a thread while it still has children. Delete all the children first.", 409);
             }
         }
         MessageController.instance().hardDelete(message);

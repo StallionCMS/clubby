@@ -1,21 +1,19 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.emailers.MessageEmailer;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.jobs.Job;
 import io.stallion.jobs.JobComplete;
 import io.stallion.jobs.Schedule;
 import io.stallion.services.Log;
 import io.stallion.users.User;
 import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
-import org.apache.commons.lang3.StringUtils;
+
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 
 public class SendNotificationsJob extends JobComplete {

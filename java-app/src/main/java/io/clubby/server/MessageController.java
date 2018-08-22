@@ -1,16 +1,5 @@
 package io.clubby.server;
 
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.dataAccess.DataAccessRegistry;
@@ -25,6 +14,17 @@ import io.stallion.users.UserController;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.json.JSON;
 import org.apache.commons.lang3.StringUtils;
+
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 
 public class MessageController extends StandardModelController<Message> {

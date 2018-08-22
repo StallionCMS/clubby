@@ -1,17 +1,13 @@
 package io.clubby.server.emailers;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.CentralHostApiConnector;
 import io.clubby.server.ClubbyDynamicSettings;
 import io.clubby.server.MessageCombo;
 import io.clubby.server.UserProfile;
 import io.stallion.email.ContactableEmailer;
-import io.stallion.services.Log;
 import io.stallion.users.User;
+
+import java.util.List;
 
 
 public class MessageEmailer extends ContactableEmailer<User> {

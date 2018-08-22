@@ -1,14 +1,12 @@
 package io.clubby.server.webSockets;
 
-import javax.websocket.server.ServerContainer;
-
 import io.stallion.boot.ServeCommandOptions;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-
-
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
+
+import javax.websocket.server.ServerContainer;
 
 
 public class WebSocketBooter {

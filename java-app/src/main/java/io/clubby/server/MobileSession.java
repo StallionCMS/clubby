@@ -1,12 +1,11 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.time.ZonedDateTime;
 
 @Table(name="sch_mobile_sessions")
 public class MobileSession extends ModelBase {

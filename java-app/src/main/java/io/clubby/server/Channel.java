@@ -1,10 +1,5 @@
 package io.clubby.server;
 
-import java.util.List;
-
-import static io.stallion.utils.Literals.*;
-
-import io.stallion.Context;
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 import io.stallion.dataAccess.db.Converter;
@@ -12,6 +7,9 @@ import io.stallion.dataAccess.db.converters.JsonLongListConverter;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.util.List;
+
+import static io.stallion.utils.Literals.list;
 
 @Table(name="sch_channels")
 public class Channel extends ModelBase {

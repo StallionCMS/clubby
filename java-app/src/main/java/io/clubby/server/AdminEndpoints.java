@@ -1,11 +1,5 @@
 package io.clubby.server;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -14,13 +8,10 @@ import io.clubby.server.emailers.TestConfigEmailer;
 import io.clubby.server.emailers.UserInviteEmailer;
 import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
+import io.stallion.dataAccess.SafeMerger;
 import io.stallion.dataAccess.filtering.SortDirection;
-import io.stallion.exceptions.ClientException;
-import io.stallion.requests.validators.SafeMerger;
-import io.stallion.restfulEndpoints.BodyParam;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.MinRole;
-import io.stallion.restfulEndpoints.ObjectParam;
+import io.stallion.jerseyProviders.BodyParam;
+import io.stallion.jerseyProviders.MinRole;
 import io.stallion.settings.Settings;
 import io.stallion.settings.childSections.EmailSettings;
 import io.stallion.users.IUser;
@@ -33,12 +24,20 @@ import org.eclipse.jetty.websocket.common.WebSocketSession;
 
 import javax.websocket.Session;
 import javax.ws.rs.*;
+import javax.ws.rs.ext.Provider;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 
-@Produces("application/json")
 @Path("/clubhouse-api/admin")
+@Consumes("application/json")
+@Produces("application/json")
 @MinRole(Role.ADMIN)
-public class AdminEndpoints implements EndpointResource {
+@Provider
+public class AdminEndpoints {
 
     @GET
     @Path("/clubhouse-settings")
@@ -104,7 +103,7 @@ public class AdminEndpoints implements EndpointResource {
                 ClubbyDynamicSettings.updateLicenseKey(license);
                 return map(val("license", license));
             } else {
-                throw new ClientException("Invalid license.");
+                throw new ClientErrorException("Invalid license.", 403);
             }
         } catch (UnirestException e) {
             throw new RuntimeException(e);
@@ -205,7 +204,7 @@ public class AdminEndpoints implements EndpointResource {
     public Object sendInvitation(User newUser) {
         IUser user = UserController.instance().forEmail(newUser.getEmail());
         if (user != null && !user.getEmailVerified() && user.getApproved()) {
-            throw new ClientException("This is already a valid user.");
+            throw new ClientErrorException("This is already a valid user.", 410);
         } else if (user == null) {
             user = new User();
         }
@@ -214,7 +213,7 @@ public class AdminEndpoints implements EndpointResource {
                 .nonEmpty("username", "givenName", "familyName")
                 .merge(newUser, user);
         if (!UserProfileController.USERNAME_PATTERN.matcher(user.getUsername()).matches()) {
-            throw new ClientException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.");
+            throw new ClientErrorException("Username is not valid. Can only contain lower-case characters and underscores. Must be at least two characters.", 400);
         }
         user.setResetToken(GeneralUtils.randomTokenBase32(24));
         user.setDisplayName(user.getGivenName() + " " + user.getFamilyName());
@@ -273,7 +272,7 @@ public class AdminEndpoints implements EndpointResource {
     @MinRole(Role.ADMIN)
     public Object deactivate(@BodyParam("userId") Long userId) {
         if (Context.getUser().getId().equals(userId)) {
-            throw new ClientException("You cannot deactivate yourself.");
+            throw new ClientErrorException("You cannot deactivate yourself.", 410);
         }
         IUser user = UserController.instance().forId(userId);
         user.setApproved(false);

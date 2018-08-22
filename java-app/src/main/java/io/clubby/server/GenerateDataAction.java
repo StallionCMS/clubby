@@ -1,14 +1,5 @@
 package io.clubby.server;
 
-import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static io.stallion.utils.Literals.*;
-
 import io.stallion.boot.AppContextLoader;
 import io.stallion.boot.CommandOptionsBase;
 import io.stallion.boot.StallionRunAction;
@@ -22,6 +13,15 @@ import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.json.JSON;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static io.stallion.utils.Literals.*;
 
 
 public class GenerateDataAction extends SampleDataGenerator implements StallionRunAction<CommandOptionsBase> {

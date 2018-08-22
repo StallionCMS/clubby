@@ -1,16 +1,12 @@
 package io.clubby.server;
 
-import static io.stallion.utils.Literals.*;
-
 import com.fasterxml.jackson.annotation.JsonView;
 import io.clubby.server.emailers.LoginVerifyEmailer;
 import io.stallion.Context;
-import io.stallion.exceptions.ClientException;
+import io.stallion.jerseyProviders.BodyParam;
+import io.stallion.jerseyProviders.MinRole;
+import io.stallion.jerseyProviders.XSRF;
 import io.stallion.requests.Site;
-import io.stallion.restfulEndpoints.BodyParam;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.MinRole;
-import io.stallion.restfulEndpoints.XSRF;
 import io.stallion.services.*;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
@@ -19,16 +15,19 @@ import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.json.RestrictedViews;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
+import javax.ws.rs.ext.Provider;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Produces("application/json")
+import static io.stallion.utils.Literals.*;
+
 @Path("/clubhouse-api/auth")
-public class AuthEndpoints implements EndpointResource {
+@Consumes("application/json")
+@Produces("application/json")
+@Provider
+public class AuthEndpoints {
 
 
     @POST
@@ -61,7 +60,8 @@ public class AuthEndpoints implements EndpointResource {
     public Object loginNewDeviceStep2CheckPasswordPartial(
             @BodyParam("username") String username,
             @BodyParam("password4chars") String password4,
-            @BodyParam(value = "rememberDeviceToken", required = false, allowEmpty = true) String rememberDeviceToken
+            @BodyParam(value = "rememberDeviceToken", required = false, allowEmpty = true) String rememberDeviceToken,
+            @QueryParam("appLoginStep2") @DefaultValue("") String appLoginStep2
     )
     {
         checkLoginThrottle(username);
@@ -85,7 +85,7 @@ public class AuthEndpoints implements EndpointResource {
         }
 
         // TODO: make this spelled right!
-        if ("true".equals(Context.getRequest().getQueryParams().get("appLoginStep2"))) {
+        if ("true".equals(appLoginStep2)) {
             return map(
                     val("userId", user.getId()),
                     val("iconBase64", ClubbyDynamicSettings.getIconBase64()),
@@ -143,7 +143,7 @@ public class AuthEndpoints implements EndpointResource {
         }
 
         if (!checkDeviceRemembered(rememberDeviceToken, user)) {
-            throw new ClientException("Invalid token, must log in as new device", 403);
+            throw new ClientErrorException("Invalid token, must log in as new device", 403);
         }
 
         Map ctx = makePrivateKeyLoginContext(user);
@@ -215,7 +215,7 @@ public class AuthEndpoints implements EndpointResource {
             user = UserController.instance().forEmail(username);
         }
         if (emptyInstance(user)) {
-            throw new ClientException("Invalid login information.");
+            throw new ClientErrorException("Invalid login information.", 401);
         }
         //String tokenKey = "login-user-" + user.getId();
         TempToken tempToken = SecureTempTokens.instance().getOrCreate(
@@ -224,7 +224,7 @@ public class AuthEndpoints implements EndpointResource {
         );
 
         if (!tempToken.getToken().equals(token)) {
-            throw new ClientException("Invalid login information.");
+            throw new ClientErrorException("Invalid login information.", 401);
         }
 
         UserProfile profile = UserProfileController.instance().forStallionUserOrNotFound(user.getId());
@@ -435,8 +435,8 @@ public class AuthEndpoints implements EndpointResource {
 
     }
 
-    public Object recordAndThrowInvalidLogin(String username) throws ClientException {
+    public Object recordAndThrowInvalidLogin(String username) throws ClientErrorException {
         // TODO:
-        throw new ClientException("Invalid username or password.");
+        throw new ClientErrorException("Invalid username or password.", 401);
     }
 }

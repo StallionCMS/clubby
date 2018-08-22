@@ -1,18 +1,15 @@
 package io.clubby.server.emailers;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.CentralHostApiConnector;
 import io.clubby.server.ClubbyDynamicSettings;
 import io.stallion.email.ContactableEmailer;
-import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.utils.GeneralUtils;
+
+import java.time.format.DateTimeFormatter;
+
+import static io.stallion.utils.Literals.utcNow;
 
 
 public class UserInviteEmailer extends ContactableEmailer<IUser> {

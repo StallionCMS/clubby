@@ -1,9 +1,5 @@
 package io.clubby.server;
 
-import java.util.List;
-
-import static io.stallion.utils.Literals.*;
-
 import io.stallion.dataAccess.ModelBase;
 import io.stallion.dataAccess.UniqueKey;
 import io.stallion.dataAccess.db.Converter;
@@ -12,6 +8,9 @@ import io.stallion.dataAccess.db.converters.JsonTypedListConverter;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.util.List;
+
+import static io.stallion.utils.Literals.list;
 
 @Table(name="sch_user_profiles")
 public class UserProfile extends ModelBase {

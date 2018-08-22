@@ -1,9 +1,9 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-
 import io.stallion.users.IUser;
 import io.stallion.utils.DateUtils;
+
+import java.time.ZonedDateTime;
 
 
 public class ChannelUserWrapper {

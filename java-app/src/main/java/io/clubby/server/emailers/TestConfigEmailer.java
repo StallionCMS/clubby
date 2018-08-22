@@ -1,16 +1,9 @@
 package io.clubby.server.emailers;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static io.stallion.utils.Literals.*;
-
-import io.clubby.server.ClubbyDynamicSettings;
 import io.stallion.email.ContactableEmailer;
-import io.stallion.services.Log;
-import io.stallion.services.ShortCodeToken;
 import io.stallion.users.IUser;
+
+import java.util.UUID;
 
 
 public class TestConfigEmailer extends ContactableEmailer<IUser> {

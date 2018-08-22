@@ -1,13 +1,7 @@
 package io.clubby.server;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
-import io.stallion.services.Log;
-
-import javax.persistence.Column;
+import static io.stallion.utils.Literals.empty;
+import static io.stallion.utils.Literals.mils;
 
 
 public class License {

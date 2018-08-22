@@ -1,14 +1,12 @@
 package io.clubby.server;
 
-import java.util.List;
-
-import static io.stallion.utils.Literals.*;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.stallion.Context;
 import io.stallion.utils.json.JSON;
 
-import javax.persistence.Column;
+import java.util.List;
+
+import static io.stallion.utils.Literals.*;
 
 
 public class ChannelCombo {

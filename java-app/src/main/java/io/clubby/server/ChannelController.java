@@ -1,15 +1,15 @@
 package io.clubby.server;
 
-import java.math.BigInteger;
-import java.util.List;
-
-import static io.stallion.utils.Literals.*;
-
 import io.stallion.Context;
 import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.StandardModelController;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.exceptions.ClientException;
+
+import javax.ws.rs.ClientErrorException;
+import java.math.BigInteger;
+import java.util.List;
+
+import static io.stallion.utils.Literals.empty;
 
 
 public class ChannelController extends StandardModelController<Channel> {
@@ -24,11 +24,11 @@ public class ChannelController extends StandardModelController<Channel> {
     @Override
     public void onPreSaveValidate(Channel obj) {
         if (empty(obj.getName())) {
-            throw new ClientException("Channel must have a name.");
+            throw new ClientErrorException("Channel must have a name.", 400);
         }
         Channel existing = ChannelController.instance().filter("name", obj.getName()).first();
         if (existing != null && !existing.getId().equals(obj.getId())) {
-            throw new ClientException("A channel with the name " + obj.getName() + " already exists.");
+            throw new ClientErrorException("A channel with the name " + obj.getName() + " already exists.", 400);
         }
     }
 
@@ -92,7 +92,7 @@ public class ChannelController extends StandardModelController<Channel> {
                 channelId
         );
         if (channels.size() < 1) {
-            throw new ClientException("Channel not found or you do not have access.");
+            throw new ClientErrorException("Channel not found or you do not have access.", 400);
         }
         return channels.get(0);
     }
@@ -104,7 +104,7 @@ public class ChannelController extends StandardModelController<Channel> {
                 .filter("userId", Context.getUser().getId())
                 .first();
         if (cm == null) {
-            throw new ClientException("You do not have access to this channel.");
+            throw new ClientErrorException("You do not have access to this channel.", 400);
         }
         return channel;
     }

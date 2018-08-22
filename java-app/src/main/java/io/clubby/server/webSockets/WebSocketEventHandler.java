@@ -1,25 +1,24 @@
 package io.clubby.server.webSockets;
 
-import java.io.IOException;
-import java.net.HttpCookie;
-import java.util.*;
-
-import static io.stallion.utils.Literals.*;
-
 import io.clubby.server.*;
-import io.stallion.exceptions.ClientException;
 import io.stallion.services.Log;
 import io.stallion.settings.Settings;
 import io.stallion.users.IUser;
 import io.stallion.users.UserController;
 import io.stallion.utils.json.JSON;
-
 import org.eclipse.jetty.websocket.common.WebSocketSession;
 
-import javax.jws.soap.SOAPBinding;
-import javax.persistence.Column;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
+import javax.ws.rs.ClientErrorException;
+import java.io.IOException;
+import java.net.HttpCookie;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 @ClientEndpoint
 @ServerEndpoint(value="/events/")
@@ -59,7 +58,7 @@ public class WebSocketEventHandler {
         if (!Settings.instance().getSiteUrl().equals(wsSess.getUpgradeRequest().getHeader("Origin"))) {
             String msg = "You are accessing site with URL " + Settings.instance().getSiteUrl() + " but the Origin header was " + wsSess.getUpgradeRequest().getHeader("Origin");
             sess.close(new CloseReason(CloseReason.CloseCodes.NOT_CONSISTENT, msg));
-            throw new ClientException(msg, 403);
+            throw new ClientErrorException(msg, 403);
         }
 
 

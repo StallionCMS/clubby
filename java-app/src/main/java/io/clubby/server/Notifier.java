@@ -1,17 +1,17 @@
 package io.clubby.server;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.stallion.dataAccess.filtering.SortDirection;
 import io.stallion.services.Log;
 import io.stallion.utils.json.JSON;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 
 public class Notifier {

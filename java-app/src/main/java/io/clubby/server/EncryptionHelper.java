@@ -1,21 +1,18 @@
 package io.clubby.server;
 
-;
-import java.nio.charset.Charset;
-
-
-import java.security.Security;
-
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
-import java.util.Arrays;
-
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.RSAKey;
 import io.stallion.services.Log;
 import org.apache.commons.codec.binary.Hex;
+
 import javax.crypto.Cipher;
+import java.nio.charset.Charset;
+import java.security.Security;
+import java.security.spec.InvalidKeySpecException;
+import java.text.ParseException;
+import java.util.Arrays;
+
+;
 
 public class EncryptionHelper {
 

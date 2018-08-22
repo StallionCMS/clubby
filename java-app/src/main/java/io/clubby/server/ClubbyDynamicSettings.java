@@ -1,13 +1,5 @@
 package io.clubby.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import io.stallion.contentPublishing.UploadedFile;
 import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.services.DynamicSettings;
@@ -17,8 +9,13 @@ import io.stallion.settings.childSections.EmailSettings;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.json.JSON;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.comparators.BooleanComparator;
 import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.ZonedDateTime;
+
+import static io.stallion.utils.Literals.empty;
 
 
 public class ClubbyDynamicSettings {

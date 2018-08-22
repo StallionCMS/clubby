@@ -1,11 +1,10 @@
 package io.clubby.server;
 
-import javax.persistence.Column;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static io.stallion.utils.Literals.*;
+import static io.stallion.utils.Literals.map;
 
 
 /**

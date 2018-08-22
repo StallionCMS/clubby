@@ -1,6 +1,5 @@
 package io.clubby.server;
 
-import javax.persistence.Column;
 import java.time.ZonedDateTime;
 
 

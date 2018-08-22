@@ -1,10 +1,11 @@
 package io.clubby.server;
 
-import java.util.regex.Pattern;
-
 import io.stallion.dataAccess.DataAccessRegistry;
 import io.stallion.dataAccess.PartialStash;
 import io.stallion.dataAccess.StandardModelController;
+
+import javax.ws.rs.NotFoundException;
+import java.util.regex.Pattern;
 
 
 public class UserProfileController extends StandardModelController<UserProfile> {
@@ -33,7 +34,7 @@ public class UserProfileController extends StandardModelController<UserProfile> 
     public UserProfile forStallionUserOrNotFound(Long userId) {
         UserProfile up = forStallionUser(userId);
         if (up == null) {
-            throw new io.stallion.exceptions.NotFoundException("User not found for id.");
+            throw new NotFoundException("User not found for id.");
         }
         return up;
     }

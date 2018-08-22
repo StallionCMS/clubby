@@ -1,20 +1,19 @@
 package io.clubby.server;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.nimbusds.jose.util.IOUtils;
 import io.stallion.email.Contactable;
-import io.stallion.exceptions.ClientException;
-import io.stallion.exceptions.WebException;
 import io.stallion.services.Log;
 import io.stallion.utils.json.JSON;
+
+import javax.ws.rs.ServerErrorException;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.map;
+import static io.stallion.utils.Literals.val;
 
 
 public class CentralHostApiConnector {
@@ -50,7 +49,7 @@ public class CentralHostApiConnector {
                 return true;
             } else {
                 Log.warn("Invite email API call response error: {0} {1}", response.getStatus(), response.getBody());
-                throw new WebException("Internal error sending invite email. Is your license key up to date? Contact support or your admin.", 500);
+                throw new ServerErrorException("Internal error sending invite email. Is your license key up to date? Contact support or your admin.", 500);
             }
         } catch (UnirestException e) {
             throw new RuntimeException(e);
@@ -78,7 +77,7 @@ public class CentralHostApiConnector {
                 return true;
             } else {
                 Log.warn("Two-factor email API call response error: {0} {1}", response.getStatus(), response.getBody());
-                throw new WebException("Internal error sending email to verify new client. Please contact support.", 500);
+                throw new ServerErrorException("Internal error sending email to verify new client. Please contact support.", 500);
             }
         } catch (UnirestException e) {
             throw new RuntimeException(e);

@@ -1,11 +1,10 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-
 import io.stallion.dataAccess.ModelBase;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.time.ZonedDateTime;
 
 @Table(name="sch_channel_members")
 public class ChannelMember extends ModelBase {

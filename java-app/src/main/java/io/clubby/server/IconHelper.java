@@ -1,14 +1,5 @@
 package io.clubby.server;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
-import static io.stallion.utils.Literals.*;
-
 import com.amazonaws.util.Md5Utils;
 import io.stallion.Context;
 import io.stallion.services.Log;
@@ -16,6 +7,15 @@ import io.stallion.settings.Settings;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+
+import static io.stallion.utils.Literals.empty;
+import static io.stallion.utils.Literals.list;
 
 
 public class IconHelper {

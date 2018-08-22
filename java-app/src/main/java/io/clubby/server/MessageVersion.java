@@ -1,17 +1,13 @@
 package io.clubby.server;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
-import com.google.api.client.util.Key;
 import io.stallion.dataAccess.ModelBase;
-import io.stallion.services.Log;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.time.ZonedDateTime;
+import java.util.List;
+
+import static io.stallion.utils.Literals.list;
 
 @Table(name="sch_message_versions")
 public class MessageVersion extends ModelBase {

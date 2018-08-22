@@ -1,30 +1,29 @@
 package io.clubby.server;
 
-import io.stallion.boot.ServeCommandOptions;
 import io.clubby.server.webSockets.WebSocketBooter;
+import io.stallion.boot.ServeCommandOptions;
 import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.contentPublishing.UploadedFileEndpoints;
 import io.stallion.jobs.JobCoordinator;
-import io.stallion.jobs.JobDefinition;
-import io.stallion.jobs.Schedule;
 import io.stallion.plugins.StallionJavaPlugin;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.EndpointsRegistry;
 import io.stallion.services.SecureTempTokens;
 import io.stallion.services.ShortCodeTokenController;
 import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-
-import java.util.List;
-
-import static io.stallion.utils.Literals.list;
+import org.glassfish.jersey.server.ResourceConfig;
 
 public class ClubbyPlugin extends StallionJavaPlugin {
     private Server server;
     @Override
     public String getPluginName() {
         return "clubby";
+    }
+
+    @Override
+    public void buildResourceConfig(ResourceConfig rc) {
+        rc.packages("io.clubby.server");
+        rc.register(UploadedFileEndpoints.class);
     }
 
     @Override
@@ -55,18 +54,6 @@ public class ClubbyPlugin extends StallionJavaPlugin {
         EncryptionHelper.instance();
 
 
-        List<EndpointResource> endpoints = list(
-                new AuthEndpoints(),
-                new Endpoints(),
-                new MessagingEndpoints(),
-                new UserEndpoints(),
-                new AdminEndpoints(),
-                new ChannelEndpoints(),
-                new UploadedFileEndpoints<>()
-        );
-        for (EndpointResource ep: endpoints) {
-            EndpointsRegistry.instance().addResource("", ep);
-        }
 
 
 

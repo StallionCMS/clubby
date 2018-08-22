@@ -1,21 +1,13 @@
 package io.clubby.server;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
+import io.stallion.Context;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.requests.ResponseComplete;
-import io.stallion.requests.ServletFileSender;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.MinRole;
+import io.stallion.jerseyProviders.LocalFileToResponse;
+import io.stallion.jerseyProviders.MinRole;
+import io.stallion.requests.MetaInformation;
 import io.stallion.settings.Settings;
 import io.stallion.templating.TemplateRenderer;
-import io.stallion.Context;
 import io.stallion.users.IUser;
 import io.stallion.users.Role;
 import io.stallion.users.UserController;
@@ -23,27 +15,40 @@ import io.stallion.utils.GeneralUtils;
 import io.stallion.utils.Sanitize;
 import io.stallion.utils.json.JSON;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import static io.stallion.utils.Literals.*;
 
-import javax.ws.rs.*;
+
+@Path("/")
+@Produces("application/json")
+@Consumes("application/json")
+@Provider
+public class Endpoints {
 
 
-public class Endpoints implements EndpointResource {
 
 
     @GET
     @Path("/")
     @Produces("text/html")
-    public Object app() {
+    public Object app(@QueryParam("mobileAuthCookie") @DefaultValue("") String mobileAuthCookie) {
         UserProfile profile = new UserProfile();
         Long defaultChannelId = 0L;
         boolean isFirstUser = false;
 
+        MetaInformation meta = new MetaInformation();
+        meta.setBodyCssId("clubhouse-body");
 
-        Context.getResponse().getMeta().setBodyCssId("clubhouse-body");
 
         // Check for auth passed in via query string, used by mobile and desktop apps
-        String newAuthToken = Context.getRequest().getQueryParams().getOrDefault("mobileAuthCookie", "");
+        String newAuthToken = mobileAuthCookie;
         if (!empty(newAuthToken)) {
             UserController.UserValetResult result = UserController.instance().cookieStringToUser(newAuthToken);
             if (result != null && result.getUser() != null && !empty(result.getSessionKey())) {
@@ -51,7 +56,7 @@ public class Endpoints implements EndpointResource {
                         .instance()
                         .forUniqueKey("sessionKey", result.getSessionKey());
                 if (mb != null && mb.getUserId().equals(result.getUser().getId())) {
-                    Context.getResponse().addCookie("stUserSession", newAuthToken);
+                    Context.getRequest().addResponseCookie("stUserSession", newAuthToken);
                     Context.setUser(result.getUser());
                 }
             }
@@ -65,7 +70,8 @@ public class Endpoints implements EndpointResource {
             profile = UserProfileController.instance().forUniqueKey("userId", Context.getUser().getId());
             defaultChannelId = ChannelController.instance().getFirstUserChannel(Context.getUser().getId());
         }
-        Context.getResponse().getMeta().setTitle("Clubby");
+        meta.setTitle("Clubby");
+
 
         if (Context.getUser().isAnon()) {
             if (ChannelController.instance().getStash().getItems().size() == 0) {
@@ -74,6 +80,7 @@ public class Endpoints implements EndpointResource {
         }
 
         Map ctx = map(
+            val("siteMeta", meta),
             val("pluginName", "clubby"),
             val("theApplicationContextJson", Sanitize.htmlSafeJson(
                     map(
@@ -286,14 +293,14 @@ public class Endpoints implements EndpointResource {
     @GET
     @Path("/auto-logo-icon.png")
     @Produces("image/png")
-    public void viewIcon() throws IOException {
-
+    public Response viewIcon() throws IOException {
         File file = new IconHelper().getOrCreateAutoIcon();
-        sendFile(file);
-
+        return sendFile(file);
     }
 
-    private void sendFile(File file) {
+    private Response sendFile(File file) {
+        return new LocalFileToResponse().sendAssetResponse(file);
+        /*
         FileInputStream stream;
         try {
             stream = new FileInputStream(file);
@@ -305,6 +312,7 @@ public class Endpoints implements EndpointResource {
                 Context.getResponse()
         ).sendAssetResponse(stream, file.lastModified(), file.length(), file.getAbsolutePath());
         throw new ResponseComplete();
+        */
 
     }
 
@@ -312,10 +320,13 @@ public class Endpoints implements EndpointResource {
     @GET
     @Path("/oembed-iframe")
     @Produces("text/html")
-    public Object oembedIframe() {
+    public Object oembedIframe(
+            @QueryParam("embedUrl") @DefaultValue("") String embedUrl,
+            @QueryParam("iframeId") @DefaultValue("") String iframeId
+                               ) {
         Map ctx = map(
-                val("embedUrl", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("embedUrl", ""))),
-                val("iframeId", JSON.stringify(Context.getRequest().getQueryParams().getOrDefault("iframeId", "")))
+                val("embedUrl", JSON.stringify(embedUrl)),
+                val("iframeId", JSON.stringify(iframeId))
         );
         return TemplateRenderer.instance().renderTemplate("clubby:oembed.jinja", ctx);
     }

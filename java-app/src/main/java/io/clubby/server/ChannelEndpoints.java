@@ -1,29 +1,28 @@
 package io.clubby.server;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.stallion.utils.Literals.*;
-
-import io.stallion.Context;
 import io.clubby.server.webSockets.WebSocketEventHandler;
+import io.stallion.Context;
+import io.stallion.dataAccess.SafeMerger;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.exceptions.ClientException;
-import io.stallion.requests.validators.SafeMerger;
-import io.stallion.restfulEndpoints.BodyParam;
-import io.stallion.restfulEndpoints.EndpointResource;
-import io.stallion.restfulEndpoints.MinRole;
-import io.stallion.restfulEndpoints.ObjectParam;
+import io.stallion.jerseyProviders.BodyParam;
+import io.stallion.jerseyProviders.MinRole;
 import io.stallion.users.Role;
 import io.stallion.utils.DateUtils;
 import io.stallion.utils.Sanitize;
 
 import javax.ws.rs.*;
+import javax.ws.rs.ext.Provider;
+import java.util.List;
+import java.util.Map;
+
+import static io.stallion.utils.Literals.*;
 
 @Path("/clubhouse-api/channels")
+@Consumes("application/json")
 @Produces("application/json")
 @MinRole(Role.MEMBER)
-public class ChannelEndpoints implements EndpointResource {
+@Provider
+public class ChannelEndpoints  {
 
     @GET
     @Path("/my-channels")
@@ -54,7 +53,7 @@ public class ChannelEndpoints implements EndpointResource {
                 .filter("userId", Context.getUser().getId())
                 .first();
         if (channel == null || channelMember == null) {
-            throw new ClientException("You cannot view this channel's members.");
+            throw new ClientErrorException("You cannot view this channel's members.", 403);
         }
         Map ctx = map();
 
@@ -90,7 +89,7 @@ public class ChannelEndpoints implements EndpointResource {
                 .filter("userId", Context.getUser().getId())
                 .first();
         if (channel == null || channelMember == null || !channelMember.isOwner()) {
-            throw new ClientException("You cannot edit this channel.");
+            throw new ClientErrorException("You cannot edit this channel.", 403);
         }
         Map ctx = map();
         ctx.put("channel", channel);
@@ -148,7 +147,7 @@ public class ChannelEndpoints implements EndpointResource {
                 .filter("userId", Context.getUser().getId())
                 .first();
         if (channelMember == null || !channelMember.isOwner()) {
-            throw new ClientException("You cannot edit this channel.");
+            throw new ClientErrorException("You cannot edit this channel.", 403);
         }
         Map ctx = map();
 
@@ -174,7 +173,7 @@ public class ChannelEndpoints implements EndpointResource {
                 .first();
 
         if (channel == null || channelMember == null || !channelMember.isOwner()) {
-            throw new ClientException("You cannot edit this channel.");
+            throw new ClientErrorException("You cannot edit this channel.", 403);
         }
 
         ChannelController.instance().softDelete(channel);
@@ -192,7 +191,7 @@ public class ChannelEndpoints implements EndpointResource {
                 .first();
 
         if (channel == null || channelMember == null || !channelMember.isOwner()) {
-            throw new ClientException("You cannot edit this channel.");
+            throw new ClientErrorException("You cannot edit this channel.", 403);
         }
         channel.setName(Sanitize.stripAll(channel.getName()));
         channel.setDeleted(false);
@@ -234,7 +233,7 @@ public class ChannelEndpoints implements EndpointResource {
             allowed = true;
         }
         if (!allowed) {
-            throw new ClientException("You are not allowed to add a member to this channel.");
+            throw new ClientErrorException("You are not allowed to add a member to this channel.", 403);
         }
         ChannelMember cm = new ChannelMember();
         cm.setOwner(false);
@@ -266,7 +265,7 @@ public class ChannelEndpoints implements EndpointResource {
             }
         }
         if (!allowed) {
-            throw new ClientException("You are not allowed remove this member from this channel.");
+            throw new ClientErrorException("You are not allowed remove this member from this channel.", 403);
         }
         ChannelMember cm = ChannelMemberController.instance()
                 .filter("userId", memberId)
