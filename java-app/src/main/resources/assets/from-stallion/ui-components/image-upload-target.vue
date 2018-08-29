@@ -49,6 +49,9 @@
          self.dropzone = new Dropzone($(self.$el).find('.image-dropzone').get(0), {
              dictDefaultMessage: self.message,
              uploadMultiple: false,
+             headers: {
+                 'X-Requested-By': 'XMLHttpRequest'
+             },
              //             parallelUploads: true,
              maxFiles: 1,
              acceptedFiles: 'image/*,.jpg,.png,.svg,.gif',
