@@ -26,7 +26,7 @@
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>javax-websocket-server-impl</artifactId>
-            <version>9.3.12.v20160915</version>
+            <version>9.4.7.v20170914</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
         <dependency>

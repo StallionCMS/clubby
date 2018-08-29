@@ -30,6 +30,7 @@ import static io.stallion.utils.Literals.*;
 @Produces("application/json")
 @Consumes("application/json")
 @Provider
+@MinRole(Role.MEMBER)
 public class Endpoints {
 
 
@@ -38,6 +39,7 @@ public class Endpoints {
     @GET
     @Path("/")
     @Produces("text/html")
+    @MinRole(Role.ANON)
     public Object app(@QueryParam("mobileAuthCookie") @DefaultValue("") String mobileAuthCookie) {
         UserProfile profile = new UserProfile();
         Long defaultChannelId = 0L;
@@ -145,7 +147,7 @@ public class Endpoints {
 
     @GET
     @Path("/clubhouse-api/general-context")
-    public Object getGeneralContext() {
+    public Response getGeneralContext() {
 
         /*
             private Long id;
@@ -286,13 +288,14 @@ public class Endpoints {
         }
         ctx.put("users", users);
 
-        return ctx;
+        return Response.ok(JSON.stringify(ctx), "application/json").build();
     }
 
 
     @GET
     @Path("/auto-logo-icon.png")
     @Produces("image/png")
+    @MinRole(Role.ANON)
     public Response viewIcon() throws IOException {
         File file = new IconHelper().getOrCreateAutoIcon();
         return sendFile(file);

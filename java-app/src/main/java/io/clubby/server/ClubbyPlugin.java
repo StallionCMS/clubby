@@ -11,6 +11,7 @@ import io.stallion.services.ShortCodeTokenController;
 import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class ClubbyPlugin extends StallionJavaPlugin {

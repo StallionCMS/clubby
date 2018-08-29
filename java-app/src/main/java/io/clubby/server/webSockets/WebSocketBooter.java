@@ -1,7 +1,9 @@
 package io.clubby.server.webSockets;
 
 import io.stallion.boot.ServeCommandOptions;
+import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
@@ -25,9 +27,19 @@ public class WebSocketBooter {
         // This is also known as the handler tree (in jetty speak)
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/st-wsroot");
+        //context.setVirtualHosts(new String[]{"@Websocket"});
+
+        /*
+        ServerConnector webSocketConnector = new ServerConnector(server);
+        webSocketConnector.setPort(Settings.instance().getPort() + 1);
+        webSocketConnector.setName("Websocket");
+        server.addConnector(webSocketConnector);
+        */
+
 
         //server.setHandler(context);
         handlerCollection.addHandler(context);
+        //context.setVirtualHosts();
         context.setServer(server);
         try
         {

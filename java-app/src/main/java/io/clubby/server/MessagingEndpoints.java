@@ -1,5 +1,6 @@
 package io.clubby.server;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.clubby.server.webSockets.WebSocketEventHandler;
 import io.stallion.Context;
 import io.stallion.dataAccess.SafeMerger;
@@ -72,7 +73,7 @@ public class MessagingEndpoints  {
 
 
 
-        return ctx;
+        return JSON.stringify(ctx);
     }
 
     @GET
@@ -99,7 +100,7 @@ public class MessagingEndpoints  {
                 .filter("channelId", channelId).first());
         ctx.put("members", ChannelController.instance().listChannelUsers(channelId));
 
-        return ctx;
+        return JSON.stringify(ctx);
     }
 
     @GET
@@ -110,7 +111,7 @@ public class MessagingEndpoints  {
         ctx.put("channel", ChannelController.instance().getChannelCombo(channelId));
         ctx.put("channelMembership", ChannelMemberController.instance().filter("userId", Context.getUser().getId()).filter("channelId", channelId).first());
         ctx.put("topicContext", MessageController.instance().loadMessagesForForumTopLevel(Context.getUser().getId(), channelId, page));
-        return ctx;
+        return JSON.stringify(ctx);
     }
 
    /*
@@ -162,7 +163,7 @@ public class MessagingEndpoints  {
 
     @POST
     @Path("/open-direct-message")
-    public Object openDirectMessage(@BodyParam("userIds") List<Long> userIdsInts) {
+    public Object openDirectMessage(@BodyParam("userIds") List userIdsInts) {
         List<Long> userIds = list();
         for(Object userIdInt: userIdsInts) {
             if (userIdInt instanceof Integer) {
@@ -200,7 +201,7 @@ public class MessagingEndpoints  {
             }
         }
         ctx.put("channel", channel);
-        return ctx;
+        return JSON.stringify(ctx);
     }
 
     @POST
@@ -638,6 +639,7 @@ public class MessagingEndpoints  {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class EncryptedUserPasswordsContainer {
         private String encryptedPasswordHex;
         private String passwordVectorHex;

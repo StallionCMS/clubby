@@ -94,6 +94,7 @@ if (window.$ && !window.jQuery) {
         if (xsrfCookie) {
             headers["X-XSRF-TOKEN"] = xsrfCookie; 
         }
+        headers['X-Requested-By'] = 'XMLHttpRequest';
         return $.ajax({
             url: req.url,
             type: method.toLowerCase(),

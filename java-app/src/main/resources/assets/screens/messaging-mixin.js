@@ -638,7 +638,6 @@ var ClubhouseMessagingMixin = {
         },
         scrollToTopOfLatestMessages: function() {
             var self = this;
-            debugger;
              ifvisible.ignoreScrollForTwoSeconds();
              var scrollTo = document.body.scrollHeight;
              var div = $(self.$el).find('.channel-messages').get(0);

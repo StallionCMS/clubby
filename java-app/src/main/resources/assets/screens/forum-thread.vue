@@ -717,7 +717,7 @@
              }
 
              var self = this;
-             var $div = $(window);e//$(this.$el).find('.topic-body');
+             var $div = $(window);//$(this.$el).find('.topic-body');
              var movingDown = true;
              if ($div.scrollTop() === lastScrollTop) {
                  console.log('repeat scroll top');

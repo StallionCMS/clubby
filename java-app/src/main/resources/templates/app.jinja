@@ -1,11 +1,30 @@
-{% extends "stallion:common-base.jinja" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="{{ meta.generator }}" />
+  <meta name="description" content="{{ meta.description|e }}">
+  <meta property="og:title" content="{{ meta.title|e }}" />
+  <meta property="og:type" content="{{ meta.ogType }}" />
+  <meta property="og:url" content="{{ meta.url }}" />
+  <meta property="og:image" content="{{ meta.image }}" />
+  <meta property="og:description" content="{{ meta.description|e }}" />
+
+  <title>{{ siteMeta.title|e }}</title>
+
+  <link rel="canonical" href="{{ meta.url }}" />
+
 
 {% block builtin_head_bundles %}
 <!--<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">-->
 <link rel="icon" href="{{ assets.resource('/images/folkmot-icon-white.png', 'clubby') }}" type="image/x-icon" />
 <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
 
+
 {{ assets.bundle(pluginName, "app3.bundle.css") }}
+
 {% endblock %}
 
 {% block bundle_css %}
@@ -13,6 +32,9 @@
 
 {% block extra_meta %}
 {% endblock %}
+
+</head>
+<body id="st-{{ siteMeta.bodyCssId }}" class="{% for className in meta.cssClasses %}{{className}} {% endfor %}">
 
 {% block body_content %}
 <div class="container-fluid">
@@ -58,3 +80,8 @@
 
 {% block pre_end_body %}
 {% endblock %}
+
+</body>
+</html>
+
+
