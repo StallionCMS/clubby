@@ -1,9 +1,10 @@
 package io.clubby.server;
 
 import io.clubby.server.webSockets.WebSocketBooter;
-import io.stallion.boot.ServeCommandOptions;
+import io.stallion.StallionApplication;
 import io.stallion.contentPublishing.UploadedFileController;
 import io.stallion.contentPublishing.UploadedFileEndpoints;
+import io.stallion.http.ServeCommandOptions;
 import io.stallion.jobs.JobCoordinator;
 import io.stallion.plugins.StallionJavaPlugin;
 import io.stallion.services.SecureTempTokens;
@@ -14,22 +15,38 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class ClubbyPlugin extends StallionJavaPlugin {
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import java.util.List;
+
+import static io.stallion.utils.Literals.list;
+
+public class ClubbyStallionApplication extends StallionApplication {
     private Server server;
+
     @Override
-    public String getPluginName() {
+    public String getName() {
         return "clubby";
     }
 
     @Override
-    public void buildResourceConfig(ResourceConfig rc) {
-        rc.packages("io.clubby.server");
-        rc.register(UploadedFileEndpoints.class);
+    protected void onBuildJerseyResourceConfig(ResourceConfig rc) {
+        List<Class> resources = list(
+                UploadedFileEndpoints.class,
+                AdminEndpoints.class,
+                AuthEndpoints.class,
+                ChannelEndpoints.class,
+                Endpoints.class,
+                MessagingEndpoints.class,
+                UserEndpoints.class
+        );
+        for(Class cls: resources) {
+            rc.register(cls);
+        }
     }
 
     @Override
-    public void boot() throws Exception {
-
+    public void onRegisterAll() {
         AdminSettings.init();
 
         if ("/st-users/login".equals(Settings.instance().getUsers().getLoginPage())) {
@@ -56,13 +73,7 @@ public class ClubbyPlugin extends StallionJavaPlugin {
 
 
 
-
-
-        Notifier.init();
-
-
         JobCoordinator.instance().registerJob(new SendNotificationsJob());
-
 
     }
 
@@ -70,6 +81,7 @@ public class ClubbyPlugin extends StallionJavaPlugin {
     public void preStartJetty(Server server, HandlerCollection handlerCollection, ServeCommandOptions options) {
         server = new WebSocketBooter().boot(server, handlerCollection, options);
     }
+
 
 
 }

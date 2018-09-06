@@ -18,7 +18,7 @@ public class Notifier {
 
 
 
-    public static void init() throws IOException {
+    public static void init()  {
 
 
 

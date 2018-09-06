@@ -1,6 +1,7 @@
 package io.clubby.server.webSockets;
 
-import io.stallion.boot.ServeCommandOptions;
+
+import io.stallion.http.ServeCommandOptions;
 import io.stallion.settings.Settings;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

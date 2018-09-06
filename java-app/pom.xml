@@ -79,6 +79,19 @@
             <version>2.27</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-jetty</artifactId>
+            <version>2.27</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+            <version>2.27</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
     <repositories>
         <repository>
@@ -124,7 +137,7 @@
                             <mainClass>io.clubby.server.MainRunner</mainClass>
                         </manifest>
                         <manifestEntries>
-                            <pluginBooterClass>io.clubby.server.ClubbyPlugin</pluginBooterClass>
+                            <pluginBooterClass>io.clubby.server.ClubbyStallionApplication</pluginBooterClass>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                         </manifestEntries>
                     </archive>

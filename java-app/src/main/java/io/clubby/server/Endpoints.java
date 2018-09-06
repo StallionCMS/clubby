@@ -3,8 +3,8 @@ package io.clubby.server;
 
 import io.stallion.Context;
 import io.stallion.dataAccess.db.DB;
-import io.stallion.jerseyProviders.LocalFileToResponse;
-import io.stallion.jerseyProviders.MinRole;
+import io.stallion.http.LocalFileToResponse;
+import io.stallion.http.MinRole;
 import io.stallion.requests.MetaInformation;
 import io.stallion.settings.Settings;
 import io.stallion.templating.TemplateRenderer;

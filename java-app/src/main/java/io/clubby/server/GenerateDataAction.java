@@ -1,6 +1,5 @@
 package io.clubby.server;
 
-import io.stallion.boot.AppContextLoader;
 import io.stallion.boot.CommandOptionsBase;
 import io.stallion.boot.StallionRunAction;
 import io.stallion.services.Log;
@@ -33,11 +32,6 @@ public class GenerateDataAction extends SampleDataGenerator implements StallionR
     @Override
     public String getHelp() {
         return "";
-    }
-
-    @Override
-    public void loadApp(CommandOptionsBase options) {
-        AppContextLoader.loadCompletely(options);
     }
 
     @Override
