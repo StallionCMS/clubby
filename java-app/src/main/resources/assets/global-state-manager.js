@@ -153,6 +153,7 @@ function ClubhouseMakeVuex() {
                     state.activeChannelId = channelId;
                 },
                 idleStatus: function(state, status) {
+                    console.debug('commit new idle status: ', status, new Date().getTime());
                     if (status === 'AWAKE' && state.idleStatus !== status) {
                         setTimeout(function() {
                             var $box = $('#post-message-box');
@@ -285,7 +286,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         });
         
         ifvisible.on("wakeup", function(){
-            console.debug('on wakeup');
+            console.debug('on wakeup', new Date().getTime());
             vueApp.$store.commit('idleStatus', 'AWAKE');
             manager.updateUserState('AWAKE');
         });
@@ -323,7 +324,7 @@ var ClubhouseGlobalStateManager = function(vueApp) {
         if (!manager.clubhouseSocket || !manager.clubhouseSocket.readyState === 1) {
             return;
         }
-        console.debug('update user state', state);
+        console.debug('manager.updateUserState', state, new Date().getTime());
         manager.clubhouseSocket.send('updateUserState\n\n' + JSON.stringify({
             state: state
         }));

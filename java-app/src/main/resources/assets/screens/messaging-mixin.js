@@ -249,7 +249,7 @@ var ClubhouseMessagingMixin = {
                                         var data = JSON.parse(bodyJson);
                                         message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
                                         message.text = data.bodyMarkdown;
-                                        console.debug('message.html! ', message.html);
+                                        console.debug('message.html! ', message.html, new Date().getTime());
                                         Vue.set(self.messages, message.$index, message);
                                     } catch (err) {
                                         console.error(err);
@@ -498,74 +498,77 @@ var ClubhouseMessagingMixin = {
                 ).then(function(bodyJson) {
                     console.log('Decrypted incoming message', message.id, 'isEdit', isEdit);
                     console.debug('decrypted message ', bodyJson);
-                        var data = JSON.parse(bodyJson);
-                        message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
-                        message.text = data.bodyMarkdown;
-                        message.widgets = data.widgets || [];
-                        console.debug('message.html! ', message.html);
-                        if (isEdit) {
-
-                            Vue.set(self.messages, message.$index, message);
-                            var pIndex = 0;
-                            var mIndex = 0;
-                            var found = false;
-                            for (var p = 0; p < self.pages.length; p++) {
-                                var pageMessages = self.pages[p];
-                                if (found) {break;}
-                                for (var m = 0; m < pageMessages.length; m++) {
-                                    var aMsg = pageMessages[m];
-                                    if (aMsg && aMsg.id === message.id) {
-                                        pIndex = p;
-                                        mIndex = m;
-                                        found = true;
-                                        break;
-                                    }
+                    var data = JSON.parse(bodyJson);
+                    message.html = self.markdownToHtml(data.bodyMarkdown, data, message);
+                    message.text = data.bodyMarkdown;
+                    message.widgets = data.widgets || [];
+                    console.debug('incoming message.html! ', message.html, new Date().getTime());
+                    if (isEdit) {
+                        
+                        Vue.set(self.messages, message.$index, message);
+                        var pIndex = 0;
+                        var mIndex = 0;
+                        var found = false;
+                        for (var p = 0; p < self.pages.length; p++) {
+                            var pageMessages = self.pages[p];
+                            if (found) {break;}
+                            for (var m = 0; m < pageMessages.length; m++) {
+                                var aMsg = pageMessages[m];
+                                if (aMsg && aMsg.id === message.id) {
+                                    pIndex = p;
+                                    mIndex = m;
+                                    found = true;
+                                    break;
                                 }
-                            }
-                            if (found) {
-                                Vue.set(self.pages[pIndex], mIndex, message);
-                                Vue.set(self.pages, pIndex, self.pages[pIndex]);
-                            }
-                            Vue.set(self.messages, message.$index, message);                    
-                            $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
-
-                            
-                        } else {
-                            self.messages.push(message);
-                            if (self.pages && self.pages.length && self.pages[self.pages.length-1]) {
-                                self.pages[self.pages.length-1].push(message);
-                                Vue.set(self.pages, self.page-1, self.pages[self.page-1]);
-                                // Add to offsets dictionary
-                            }
-
-                            
-                            
-                            self.showMessageNotificationMaybe(incoming, message);
-                            if (!message.read) {
-                                if (self.$store.state.idleStatus === 'AWAKE') {
-                                    stallion.request({
-                                        url: '/clubhouse-api/messaging/mark-read',
-                                        method: 'POST',
-                                        data: {messageId: message.id}
-                                    });
-                                } else {
-                                    self.messagesToMarkRead.push(message.id);
-                                }                                
-                                if (self.afterIncomingMessage) {
-                                    Vue.nextTick(self.afterIncomingMessage);
-                                }
-                            }
-                            // If we are near the bottom, scroll down
-                            var scrollBottom = $(window).height() + window.scrollY;
-                            console.log('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
-                            if (document.body.scrollHeight < (scrollBottom + 160)) {
-                                Vue.nextTick(function() {
-                                    if (self.scrollToTopOfLatestMessages) {
-                                        self.scrollToTopOfLatestMessages();
-                                    }
-                                });
                             }
                         }
+                        if (found) {
+                            Vue.set(self.pages[pIndex], mIndex, message);
+                            Vue.set(self.pages, pIndex, self.pages[pIndex]);
+                        }
+                        Vue.set(self.messages, message.$index, message);                    
+                        $(self.$el).find('#channel-message-' + message.id + ' .message-html').html(message.html);
+
+                            
+                    } else {
+                        self.messages.push(message);
+                        if (self.pages && self.pages.length && self.pages[self.pages.length-1]) {
+                            self.pages[self.pages.length-1].push(message);
+                            Vue.set(self.pages, self.page-1, self.pages[self.page-1]);
+                            // Add to offsets dictionary
+                        }
+                        
+                        
+                        
+                        self.showMessageNotificationMaybe(incoming, message);
+                        if (!message.read) {
+                            if (self.$store.state.idleStatus === 'AWAKE') {
+                                console.debug('since awake, mark incoming message as read');
+                                stallion.request({
+                                    url: '/clubhouse-api/messaging/mark-read',
+                                    method: 'POST',
+                                    data: {messageId: message.id}
+                                });
+                            } else {
+                                console.log('add to queue of messages to mark read when we awake');
+                                self.messagesToMarkRead.push(message.id);
+                            }                                
+                            if (self.afterIncomingMessage) {
+                                Vue.nextTick(self.afterIncomingMessage);
+                            }
+                        }
+                        // If we are near the bottom, scroll down
+                        var scrollBottom = $(window).height() + window.scrollY;
+                        console.log('scrollBottom ', scrollBottom, 'scrollHeight ', document.body.scrollHeight);
+                        if (document.body.scrollHeight < (scrollBottom + 160)) {
+                            console.debug('scroll down next tick');
+                            Vue.nextTick(function() {
+                                if (self.scrollToTopOfLatestMessages) {
+                                    self.scrollToTopOfLatestMessages();
+                                }
+                            });
+                        }
+                    }
                     delete self.pendingDecryptionMessageIds[incoming.id];
                 }).catch(function(err) {
                     console.error(err);
@@ -918,6 +921,7 @@ var ClubhouseMessagingMixin = {
         idleStatusChange: function(status, old) {
             var self = this;
             if (status === 'AWAKE' && this.messagesToMarkRead.length > 0) {
+                console.debug('now that is awake, mark read messages ', this.messagesToMarkRead);
                 stallion.request({
                     url: '/clubhouse-api/messaging/mark-read',
                     method: 'POST',

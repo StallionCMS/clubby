@@ -150,20 +150,26 @@
     trackIdleStatus = function() {
       var timer, wakeUp;
       timer = [];
-      wakeUp = function(evt) {
-          if (evt && evt.type === 'scroll' && ifvisible.ignoreScrollUntil > new Date().getTime()) {
-              return;
-          }
-        timer.map(clearTimeout);
-        if (status !== "active") {
-          ifvisible.wakeup();
-        }
-        idleStartedTime = +(new Date());
-        return timer.push(setTimeout(function() {
-          if (status === "active") {
-            return ifvisible.idle();
-          }
-        }, idleTime));
+        wakeUp = function(evt) {
+            //console.debug('ifivisible.wakeUp, evt type: ', status, evt ? evt.type : '<evt is null>', ifvisible.ignoreScrollUntil, new Date().getTime());
+            
+            timer.map(clearTimeout);
+            // For some reason, scrolling triggers a mousemove event even when the window
+            // is hidden
+            if (evt && (evt.type === 'scroll' || evt.type === 'mousemove') && ifvisible.ignoreScrollUntil > new Date().getTime()) {
+                console.debug("ignoring scroll action, don't wake up");
+            } else {
+                //console.debug('continue waking up');
+                if (status !== "active") {
+                    ifvisible.wakeup();
+                }
+            }            
+            idleStartedTime = +(new Date());
+            return timer.push(setTimeout(function() {
+                if (status === "active") {
+                    return ifvisible.idle();
+                }
+            }, idleTime));
       };
       wakeUp();
       addEvent(doc, "mousemove", wakeUp);
