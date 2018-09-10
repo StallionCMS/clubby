@@ -151,7 +151,7 @@
       var timer, wakeUp;
       timer = [];
         wakeUp = function(evt) {
-            //console.debug('ifivisible.wakeUp, evt type: ', status, evt ? evt.type : '<evt is null>', ifvisible.ignoreScrollUntil, new Date().getTime());
+            console.debug('ifivisible.wakeUp, evt type: ', status, evt ? evt.type : '<evt is null>', ifvisible.ignoreScrollUntil, new Date().getTime());
             
             timer.map(clearTimeout);
             // For some reason, scrolling triggers a mousemove event even when the window
