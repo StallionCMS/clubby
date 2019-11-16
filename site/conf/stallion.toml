@@ -3,8 +3,9 @@
 #siteUrl = "https://indyhall.clubby.io"
 #cdnUrl = "https://indyhall.clubby.io"
 
-siteUrl = "https://macbook.clubby.io"
-cdnUrl = "https://macbook.clubby.io"
+#siteUrl = "https://macbook.clubby.io"
+siteUrl = "https://clubhouse.local"
+cdnUrl = ""
 
 
 # The public facing name of your site. Will be included in various standard templates by default.
@@ -20,7 +21,7 @@ healthCheckSecret = "czLrEp2MoaK67BXDFH3R"
 [database]
 url = "jdbc:mysql://localhost:3306/stallion_clubhouse?autoReconnect=true"
 username = "root"
-password = "TB12haz5rings"
+password = "TB12haz9HuntTrophies"
 
 [jerseyInitParams]
 #"jersey.config.server.tracing.type" = "ALL"
